@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" UseFileCache="true" TextQuality="Regular" ReportInfo.Name="Simple List" ReportInfo.Author="Fast Reports Inc" ReportInfo.Description="Demonstrates a simple list report. To create it:&#13;&#10;- go to &quot;Data&quot; menu and select &quot;Choose Report Data...&quot; item to select a datasource;&#13;&#10;- go to &quot;Report|Configure Bands...&quot; menu to create the band structure;&#13;&#10;- return to the report page, doubleclick the data band to show its editor;&#13;&#10;- choose the datasource;&#13;&#10;- drag data from the Data Dictionary window to the band." ReportInfo.Created="01/17/2008 03:05:57" ReportInfo.Modified="05/05/2025 13:15:00" ReportInfo.CreatorVersion="2020.1.17.0">
+  <Dictionary>
+    <JsonDataSourceConnection Name="Connection" ConnectionString="rijcmlq78kdE03xidOcBpwC6RkU+wpAbI69X1bpUbQ0ZQ37GKf8PA7tM4DZnTYMsdaVz0/0//TUJVzaB4KD3eM3USq9E96KrRqUS35Z12tq6mup8cTjiFRJitgfH3sx1OERFMYasItewrJAb7VEaFrYoVqS5IXTdhVuUpPrKLQueJL+/SosDAR1S3R++tnNCMZq3BOWqC5VoGP/ZCKY7M/Io3pNKW3ByU4emawGtYwe/9HFyFfacuguZgHMTXrcB/MHx2j0RFYlteVS9z5XXVG5qbZtY57V1Hkgq8KRTQMvXXV+EgtyZg8YJ6q9MGVH+8LjknzolLL0ImERHtyZuRCExmekOtKcOFv2OOVceTS1CrKxnP43t63ajAybLDmroxG8YMhkyZEh2UfPeP5Geg84eUIbT6go9TUI+hCMxNntW04ir79/tw04KnaydQMwTS1EjY7PxdSbL9b5CcN03SuiBsav6g==">
+      <JsonTableDataSource Name="JSON" DataType="FastReport.Data.JsonConnection.JsonParser.JsonArray" Enabled="true" TableName="JSON">
+        <Column Name="index" DataType="System.Int32"/>
+        <Column Name="item" DataType="FastReport.JsonBase">
+          <Column Name="Descripcion" DataType="System.String"/>
+          <Column Name="Activo" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Id" DataType="System.String"/>
+        </Column>
+        <Column Name="array" DataType="FastReport.JsonBase"/>
+      </JsonTableDataSource>
+    </JsonDataSourceConnection>
+  </Dictionary>
+  <ReportPage Name="Page1" RawPaperSize="9" Watermark.Font="Arial, 60pt">
+    <PageHeaderBand Name="PageHeader1" Width="718.2" Height="160.65">
+      <TableObject Name="Table1" Top="122.85" Width="723.59" Height="37.8" Border.Lines="Top, Bottom">
+        <TableColumn Name="Column9" Width="582.72"/>
+        <TableColumn Name="Column8" Width="140.87"/>
+        <TableRow Name="Row1" Height="37.8">
+          <TableCell Name="Cell2" Fill.Color="WhiteSmoke" Text="  Descripción" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+          <TableCell Name="Cell8" Fill.Color="WhiteSmoke" Text="Activo" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+        </TableRow>
+      </TableObject>
+      <TextObject Name="Text27" Left="491.4" Top="94.5" Width="66.15" Height="18.9" Text="Página  : " VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
+      <TextObject Name="Text28" Left="557.55" Top="94.5" Width="56.7" Height="18.9" Text="[Page#] / [TotalPages#]" VertAlign="Center" Font="Times New Roman, 11pt"/>
+      <TextObject Name="Text53" Left="9.45" Top="94.5" Width="85.05" Height="18.9" Text="Operador  :" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
+      <TextObject Name="Text54" Left="94.5" Top="94.5" Width="47.25" Height="18.9" Text="get" VertAlign="Center" Font="Times New Roman, 11pt"/>
+      <TextObject Name="Text24" Left="491.4" Top="66.15" Width="66.15" Height="18.9" Text="Fecha   :" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
+      <TextObject Name="Text25" Left="557.55" Top="66.15" Width="75.6" Height="18.9" Text="[Day([Date])]/[Month([Date])]/[Year([Date])]" VertAlign="Center" Font="Times New Roman, 11pt"/>
+      <TextObject Name="Text26" Left="623.7" Top="66.15" Width="94.5" Height="18.9" Text="[FormatDateTime([Date],&quot;hh:mm&quot;)] [IIf(Hour([Date]) &gt;= 12,&quot;pm&quot;, &quot;am&quot;)]" Format="Time" Format.Format="t" VertAlign="Center" Font="Times New Roman, 11pt"/>
+      <TextObject Name="Text51" Left="9.45" Top="66.15" Width="85.05" Height="18.9" Text="Entidad     :" Font="Times New Roman, 11pt, style=Bold"/>
+      <TextObject Name="Text50" Left="94.5" Top="66.15" Width="66.15" Height="18.9" Text="Get" Font="Times New Roman, 11pt"/>
+      <TextObject Name="Text52" Left="9.45" Top="37.8" Width="274.05" Height="18.9" Text="ZUNpms&#13;&#10;" VertAlign="Center" Font="Times New Roman, 13pt, style=Bold"/>
+      <TextObject Name="Text2" Left="170.1" Width="311.85" Height="37.8" Text="Listado de Regiones" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 13pt, style=Bold"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="164.65" Width="718.2" Height="28.35" CanGrow="true" DataSource="JSON">
+      <TextObject Name="Text4" Left="9.45" Width="567" Height="28.35" CanGrow="true" Text="[JSON.item.Descripcion]" VertAlign="Center" Font="Arial, 10pt"/>
+      <CheckBoxObject Name="CheckBox1" Left="642.6" Top="3.78" Width="18.9" Height="18.9" UncheckedSymbol="Minus" DataColumn="JSON.item.Activo"/>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="197" Width="718.2"/>
+  </ReportPage>
+</Report>
