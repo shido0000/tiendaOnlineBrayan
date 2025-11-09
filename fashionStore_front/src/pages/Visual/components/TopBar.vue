@@ -104,8 +104,8 @@
             </q-list>
           </q-btn-dropdown>
 
-          <q-btn flat label="Novedades" class="q-ml-md" @click="() => router.push({ name: 'IndexPage', query: { novedades: 1 } })" />
-          <q-btn flat label="Rebajas" class="q-ml-sm" @click="() => router.push({ name: 'IndexPage', query: { rebajas: 1 } })" />
+          <q-btn flat label="Novedades" class="q-ml-md" @click="() => router.push({ name: 'Productos', query: { novedades: 1 } })" />
+          <q-btn flat label="Rebajas" class="q-ml-sm" @click="() => router.push({ name: 'Productos', query: { rebajas: 1 } })" />
         </div>
       </div>
     </div>
