@@ -6,6 +6,6 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
 {
     public interface IInventarioService : IBaseService<Inventario, InventarioValidator>
     {
-        Task<List<ProductoPorCategoriaDto>> ObtenerProductosDelInventarioPorCategoria(Guid categoriaId);
+       // Task<List<ProductoPorCategoriaDto>> ObtenerProductosDelInventarioPorCategoria(Guid categoriaId);
     }
 }

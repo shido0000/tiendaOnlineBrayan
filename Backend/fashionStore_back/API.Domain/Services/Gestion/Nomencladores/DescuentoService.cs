@@ -54,11 +54,11 @@ namespace API.Domain.Services.Gestion.Nomencladores
         //}
 
         public async Task<ResultadoDescuento?> CalcularDescuentoAsync(
-    Guid productoId, int cantidad, bool acumulativo, bool aplicarMayor)
+    Guid productoVariantId, int cantidad, bool acumulativo, bool aplicarMayor)
         {
-            var producto = await _repositorios.Productos
+            var producto = await _repositorios.ProductVariants
                 .GetQuery()
-                .FirstOrDefaultAsync(e => e.Id == productoId)
+                .FirstOrDefaultAsync(e => e.Id == productoVariantId)
                 ?? throw new CustomException
                 {
                     Status = StatusCodes.Status404NotFound,
@@ -73,7 +73,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 .Where(d => d.EsActivo
                          && d.FechaInicio <= ahora
                          && d.FechaFin >= ahora
-                         && d.ProductoDescuentos.Any(pd => pd.ProductoId == productoId))
+                         && d.ProductoDescuentos.Any(pd => pd.ProductVariantId == productoVariantId))
                 .ToListAsync();
 
             if (!descuentos.Any())
@@ -155,8 +155,8 @@ namespace API.Domain.Services.Gestion.Nomencladores
             descuentoExistente.EsActivo = entity.EsActivo;
 
             // --- Sincronizar productos ---
-            var nuevosIds = entity.ProductoDescuentos.Select(pd => pd.ProductoId).ToList();
-            var existentesIds = descuentoExistente.ProductoDescuentos.Select(pd => pd.ProductoId).ToList();
+            var nuevosIds = entity.ProductoDescuentos.Select(pd => pd.ProductVariantId).ToList();
+            var existentesIds = descuentoExistente.ProductoDescuentos.Select(pd => pd.ProductVariantId).ToList();
 
             // Agregar los que faltan
             var paraAgregar = nuevosIds.Except(existentesIds).ToList();
@@ -164,14 +164,14 @@ namespace API.Domain.Services.Gestion.Nomencladores
             {
                 descuentoExistente.ProductoDescuentos.Add(new ProductoDescuento
                 {
-                    ProductoId = id,
+                    ProductVariantId = id,
                     DescuentoId = descuentoExistente.Id
                 });
             }
 
             // Eliminar los que ya no están
             var paraEliminar = descuentoExistente.ProductoDescuentos
-                .Where(pd => !nuevosIds.Contains(pd.ProductoId))
+                .Where(pd => !nuevosIds.Contains(pd.ProductVariantId))
                 .ToList();
 
             foreach (var pd in paraEliminar)

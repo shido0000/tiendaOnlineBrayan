@@ -94,8 +94,9 @@ namespace API.Application.Controllers.Gestion.Nomencladores
         [HttpGet("ObtenerProductosDelInventarioPorCategoria/{categoriaId}")]
         public async Task<IActionResult> ObtenerProductosDelInventarioPorCategoria(Guid categoriaId)
         {
-            var result = await _InventarioService.ObtenerProductosDelInventarioPorCategoria(categoriaId);
-            return Ok(result);
+          //  var result = await _InventarioService.ObtenerProductosDelInventarioPorCategoria(categoriaId);
+            //return Ok(result);
+            return Ok();
         }
     }
 }

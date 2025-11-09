@@ -59,5 +59,28 @@ namespace API.Application.Controllers.Seguridad
             else
                 return Unauthorized(new ResponseDto { Status = StatusCodes.Status401Unauthorized, ErrorMessage = "Usuario o contraseña no válido." });
         }
+
+        //[HttpPost("ForgotPassword")]
+        //public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        //{
+        //    if (string.IsNullOrEmpty(request.Email))
+        //        return BadRequest(new { mensajeError = "El correo es obligatorio" });
+
+        //    var user = await _usuarioService.FindByEmailAsync(request.Email);
+        //    if (user == null)
+        //        return NotFound(new { mensajeError = "Usuario no encontrado" });
+
+        //    // Generar token de reseteo
+        //    var resetToken = await _usuarioService.GeneratePasswordResetTokenAsync(user);
+
+        //    // Construir link de reseteo
+        //    var resetLink = $"https://tudominio.com/reset-password?token={resetToken}&email={request.Email}";
+
+        //    // Enviar correo
+        //    await _usuarioService.SendAsync(request.Email, "Recuperar contraseña",
+        //        $"Haz clic en este enlace para restablecer tu contraseña: {resetLink}");
+
+        //    return Ok(new { mensaje = "Correo de recuperación enviado" });
+        //}
     }
 }

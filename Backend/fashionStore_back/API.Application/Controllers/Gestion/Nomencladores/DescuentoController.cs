@@ -44,7 +44,7 @@ namespace API.Application.Controllers.Gestion.Nomencladores
         }
 
         protected override async Task<Descuento?> ObtenerElementoPorId(Guid id)
-           => await _servicioBase.ObtenerPorId(id,propiedadesIncluidas: query => query.Include(e => e.ProductoDescuentos).ThenInclude(e => e.Producto));
+           => await _servicioBase.ObtenerPorId(id,propiedadesIncluidas: query => query.Include(e => e.ProductoDescuentos).ThenInclude(e => e.ProductVariant));
 
 
         /* protected override async Task<Descuento?> ObtenerElementoPorId(Guid id)

@@ -10,8 +10,8 @@ namespace API.Data.Entidades.Gestion.Nomencladores
 {
     public class ProductoDescuento : EntidadBase
     {
-        public Guid ProductoId { get; set; }
-        public Producto Producto { get; set; } = null!;
+        public Guid ProductVariantId { get; set; }
+        public ProductVariant ProductVariant { get; set; } = null!;
         public Guid DescuentoId { get; set; }
         public Descuento Descuento { get; set; } = null!;
     }

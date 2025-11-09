@@ -62,8 +62,19 @@ namespace API.Application.IoC
 
             services.AddHttpContextAccessor();
 
-            services.AddCors();
+            //services.AddCors();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:9000") // origen exacto de tu frontend
+                              .AllowAnyHeader()
+                              .AllowAnyMethod()
+                              .AllowCredentials();
+                    });
+            });
 
             //Add services to validation
 
@@ -147,12 +158,14 @@ namespace API.Application.IoC
 
             app.UseHttpsRedirection();
 
-            app.UseCors(e => e
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            );
+            //app.UseCors(e => e
+            //.AllowAnyOrigin()
+            //.AllowAnyHeader()
+            //.AllowAnyMethod()
+            //);
 
+            app.UseCors("AllowFrontend");
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

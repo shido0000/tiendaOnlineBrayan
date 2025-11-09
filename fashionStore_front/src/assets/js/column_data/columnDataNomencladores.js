@@ -88,19 +88,34 @@ export const dataColumnProducto = Object.freeze([
         sortable: true
     },
     {
-        name: 'sku',
-        align: 'center',
-        label: 'SKU',
-        field: 'sku',
-        sortable: true
-    },
-    {
         name: "descripcion",
         align: "center",
         label: "Descripción",
         field: "descripcion",
         sortable: true,
     },
+    {
+        name: 'esActivo',
+        align: 'center',
+        label: 'Activo',
+        field: 'esActivo',
+        sortable: true
+    },
+    {
+        name: "action",
+        align: "center",
+        label: "Acciones",
+        field: "action",
+        sortable: true,
+    },
+    /*{
+        name: 'sku',
+        align: 'center',
+        label: 'SKU',
+        field: 'sku',
+        sortable: true
+    },
+
     {
         name: "precioCosto",
         align: "center",
@@ -129,20 +144,7 @@ export const dataColumnProducto = Object.freeze([
         field: "color",
         sortable: true,
     },
-    {
-        name: 'esActivo',
-        align: 'center',
-        label: 'Activo',
-        field: 'esActivo',
-        sortable: true
-    },
-    {
-        name: "action",
-        align: "center",
-        label: "Acciones",
-        field: "action",
-        sortable: true,
-    },
+    */
 ]);
 
 
