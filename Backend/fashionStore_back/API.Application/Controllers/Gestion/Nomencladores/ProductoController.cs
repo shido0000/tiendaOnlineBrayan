@@ -41,7 +41,7 @@ namespace API.Application.Controllers.Gestion.Nomencladores
                 filtros.Add(p => p.Inventario == null);
             }
 
-            return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento, propiedadesIncluidas: query => query.Include(e => e.Moneda).Include(e => e.Fotos).Include(e=>e.Inventario), filtros.ToArray());
+            return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento, propiedadesIncluidas: query => query.Include(e => e.Moneda).Include(e => e.Fotos).Include(e=>e.Inventario).Include(e=>e.ProductoCategorias), filtros.ToArray());
         }
 
         protected override async Task<Producto?> ObtenerElementoPorId(Guid id)

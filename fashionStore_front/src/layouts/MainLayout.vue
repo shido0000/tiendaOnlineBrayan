@@ -19,8 +19,11 @@
             FASHION STORE</q-toolbar-title
           >
         </div>
-        <q-space />
-        <q-btn class="q-mr-xl" flat round dense icon="group_add" />
+  <q-space />
+
+  <q-btn class="q-mr-md" flat round dense icon="group_add" />
+  <!-- Cart button with badge -->
+
       </q-toolbar>
     </q-header>
 
@@ -47,12 +50,14 @@
 import { defineComponent, ref } from 'vue'
 import { emp } from 'src/boot/axios'
 import EssentialLink from 'components/EssentialLink.vue'
+import CartButton from 'components/CartButton.vue'
+import WishlistButton from 'components/WishlistButton.vue'
 
 export default defineComponent({
   name: 'MainLayout',
 
-  components: {
-    EssentialLink
+    components: {
+    EssentialLink,
   },
 
   setup () {
