@@ -11,19 +11,17 @@ namespace API.Application.Mapper.Gestion.Nomencladores
         {
             MapProductoDto();
             MapProductoListadoDto();
+            MapProductVariantDto();
         }
 
         public void MapProductoDto()
         {
-            //CreateMap<Producto, ListadoPaginadoProductoDto>()
-            //    .ForMember(dto => dto.MonedaCodigo, opt => opt.MapFrom(e => e.Moneda.Codigo))
-            //    .ForMember(dto => dto.Fotos, opt => opt.MapFrom(e => e.Fotos.Select(f => f.Url).ToList()))
-            //    .ReverseMap();
-
-   
             CreateMap<Producto, DetallesProductoDto>()
-              .ForMember(dto => dto.CategoriaIds, opt => opt.MapFrom(e => e.ProductoCategorias.Select(f => f.CategoriaId).ToList()))
-              .ReverseMap();
+                .ForMember(dto => dto.CategoriaIds,
+                    opt => opt.MapFrom(e => e.ProductoCategorias.Select(pc => pc.CategoriaId).ToList()))
+                .ForMember(dto => dto.Variants,
+                    opt => opt.MapFrom(e => e.Variants)) // 👈 ahora sí mapea variantes
+                .ReverseMap();
         }
 
         public void MapProductoListadoDto()
@@ -32,6 +30,16 @@ namespace API.Application.Mapper.Gestion.Nomencladores
             CreateMap<Producto, ListadoPaginadoProductoDto>()
                 .ForMember(dto => dto.CategoriaIds, opt => opt.MapFrom(e => e.ProductoCategorias.Select(f => f.CategoriaId).ToList()))
                 .ReverseMap();
+        }
+
+        public void MapProductVariantDto()
+        {
+            CreateMap<ProductVariant, DetallesProductVariantDto>()
+                .ForMember(dto => dto.ProductoId, opt => opt.MapFrom(v => v.ProductoId))
+                .ForMember(dto => dto.FotosExistentes,
+                    opt => opt.MapFrom(v => v.Fotos.Select(f => f.Url).ToList()))
+                .ReverseMap()
+                .ForMember(v => v.Fotos, opt => opt.Ignore());
         }
     }
 }

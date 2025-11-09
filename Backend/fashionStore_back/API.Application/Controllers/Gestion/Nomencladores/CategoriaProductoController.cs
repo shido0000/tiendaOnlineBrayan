@@ -1,9 +1,12 @@
 ﻿using API.Application.Dtos.Gestion.Nomencladores.CategoriaProducto;
+using API.Application.Dtos.Gestion.Nomencladores.Producto;
 using API.Data.Entidades.Gestion.Nomencladores;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace API.Application.Controllers.Gestion.Nomencladores
 {
@@ -16,6 +19,21 @@ namespace API.Application.Controllers.Gestion.Nomencladores
         {
             _CategoriaProductoService = CategoriaProductoService;
         }
+
+        protected override Task<(IEnumerable<CategoriaProducto>, int)> AplicarFiltrosIncluirPropiedades(FiltrarConfigurarListadoPaginadoCategoriaProductoIntputDto inputDto)
+        {
+            //agregando filtros
+            List<Expression<Func<CategoriaProducto, bool>>> filtros = new();
+            if (!string.IsNullOrEmpty(inputDto.TextoBuscar))
+                filtros.Add(Categoria => Categoria.Descripcion.Contains(inputDto.TextoBuscar));
+
+           
+            return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento, propiedadesIncluidas: query => query.Include(e => e.ProductoCategorias).ThenInclude(e => e.Producto), filtros.ToArray());
+        }
+
+        protected override async Task<CategoriaProducto?> ObtenerElementoPorId(Guid id)
+       => await _servicioBase.ObtenerPorId(id, propiedadesIncluidas: query => query.Include(e => e.ProductoCategorias).ThenInclude(e => e.Producto));
+
 
         [HttpPost("CrearConFotos")]
         public async Task<IActionResult> CrearCategoriaAsync(

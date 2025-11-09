@@ -2,7 +2,7 @@
 {
     public class ActualizarProductoInputDto : ProductoDto
     {
-        public List<string> FotosExistentes { get; set; } = new();
+       // public List<string> FotosExistentes { get; set; } = new();
 
     }
 }

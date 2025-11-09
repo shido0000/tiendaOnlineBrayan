@@ -1,6 +1,7 @@
 ﻿using API.Data.Dto;
 using API.Data.Entidades.Gestion.Nomencladores;
 using API.Data.IUnitOfWorks.Interfaces;
+using API.Domain.Exceptions;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
 using Microsoft.AspNetCore.Http;
@@ -165,7 +166,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     await _repositorios.ProductosFotos.AddRangeAsync(fotosVariante);
                 }
             }
-             
+
             // Asociar categorías
             if (dto.CategoriaIds != null && dto.CategoriaIds.Any())
             {
@@ -266,7 +267,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     .ToList();
 
                 var fotosAEliminar = variante.Fotos
-                    .Where(f => !nombresMantener.Contains(Path.GetFileNameWithoutExtension(f.Url)))
+                    .Where(f => nombresMantener.Contains(Path.GetFileNameWithoutExtension(f.Url)))
                     .ToList();
 
                 if (fotosAEliminar.Any())
@@ -323,6 +324,109 @@ namespace API.Domain.Services.Gestion.Nomencladores
             await _repositorios.SaveChangesAsync();
 
             return producto.Id;
+        }
+
+        public async Task<Producto> ObtenerProductoEspecifico(Guid id)
+        {
+            var producto = await _repositorios.Productos
+                                .GetQuery()
+                                .Where(e => e.Id == id)
+                                .AsNoTracking()
+                                .Select(e => new Producto
+                                {
+                                    Id = e.Id,
+                                    Codigo = e.Codigo,
+                                    Descripcion = e.Descripcion,
+                                    EsActivo = e.EsActivo,
+                                    ProductoCategorias = e.ProductoCategorias
+                                                        .Select(pc => new ProductoCategoria
+                                                        {
+                                                            Id = pc.Id,
+                                                            CategoriaId = pc.CategoriaId,   // aquí va el Id (clave foránea)
+                                                            Categoria = new CategoriaProducto
+                                                            {
+                                                                Id = pc.Categoria.Id,
+                                                                Nombre = pc.Categoria.Nombre
+                                                            }
+                                                        }).ToList(),
+                                    Variants = e.Variants
+                                                        .Select(pc => new ProductVariant
+                                                        {
+                                                            Id = pc.Id,
+                                                            Color = pc.Color,
+                                                            MonedaCostoId = pc.MonedaCostoId,
+                                                            MonedaVentaId = pc.MonedaVentaId,
+                                                            PrecioCosto = pc.PrecioCosto,
+                                                            PrecioVenta = pc.PrecioVenta,
+                                                            Talla = pc.Talla,
+                                                            SKU = pc.SKU,
+                                                            Stock = pc.Stock,
+                                                            Fotos = pc.Fotos
+                                                            .Select(fo => new ProductoFoto
+                                                            {
+                                                                Descripcion = fo.Descripcion,
+                                                                Url = fo.Url,
+                                                                ProductVariantId = fo.ProductVariantId,
+                                                                Id = fo.Id,
+                                                            })
+                                                            .ToList(),
+                                                        }).ToList(),
+                                })
+                                .FirstOrDefaultAsync() ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Elemento producto no encontrado." };
+
+            return producto;
+        }
+
+
+        public async Task<List<Producto>> ObtenerProductoPorCategoriaEspecifico(List<Guid> categoriaIds)
+        {
+            var productos = await _repositorios.Productos
+                                .GetQuery()
+                                .Where(e => e.ProductoCategorias.Any(pc => categoriaIds.Contains(pc.CategoriaId)))
+                                .AsNoTracking()
+                                .Select(e => new Producto
+                                {
+                                    Id = e.Id,
+                                    Codigo = e.Codigo,
+                                    Descripcion = e.Descripcion,
+                                    EsActivo = e.EsActivo,
+                                    ProductoCategorias = e.ProductoCategorias
+                                                        .Select(pc => new ProductoCategoria
+                                                        {
+                                                            Id = pc.Id,
+                                                            CategoriaId = pc.CategoriaId,   // aquí va el Id (clave foránea)
+                                                            Categoria = new CategoriaProducto
+                                                            {
+                                                                Id = pc.Categoria.Id,
+                                                                Nombre = pc.Categoria.Nombre
+                                                            }
+                                                        }).ToList(),
+                                    Variants = e.Variants
+                                                        .Select(pc => new ProductVariant
+                                                        {
+                                                            Id = pc.Id,
+                                                            Color = pc.Color,
+                                                            MonedaCostoId = pc.MonedaCostoId,
+                                                            MonedaVentaId = pc.MonedaVentaId,
+                                                            PrecioCosto = pc.PrecioCosto,
+                                                            PrecioVenta = pc.PrecioVenta,
+                                                            Talla = pc.Talla,
+                                                            SKU = pc.SKU,
+                                                            Stock = pc.Stock,
+                                                            Fotos = pc.Fotos
+                                                            .Select(fo => new ProductoFoto
+                                                            {
+                                                                Descripcion = fo.Descripcion,
+                                                                Url = fo.Url,
+                                                                ProductVariantId = fo.ProductVariantId,
+                                                                Id = fo.Id,
+                                                            })
+                                                            .ToList(),
+                                                        }).ToList(),
+                                })
+                                .ToListAsync() ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Elemento producto no encontrado." };
+
+            return productos;
         }
 
 

@@ -20,6 +20,6 @@ namespace API.Application.Dtos.Gestion.Nomencladores.ProductVariant
 
         // Fotos asociadas a la variante
        // public List<ProductoFotoDto> Fotos { get; set; } = new();
-        public List<IFormFile> Fotos { get; set; } = new();
+       public List<IFormFile> Fotos { get; set; } = new();
     }
 }

@@ -20,6 +20,21 @@ const routes = [
         component: () => import('src/pages/Visual/CategoriaProductosPage.vue')
     },
     {
+        path: '/lista_deseos',
+        name: 'ListaDeseos',
+        component: () => import('src/pages/Visual/ListaDeseosPage.vue')
+    },
+    {
+        path: '/producto/:id',
+        name: 'ProductoDetalle',
+        component: () => import('src/pages/Visual/ProductoDetallePage.vue')
+    },
+    {
+        path: '/carrito',
+        name: 'Carrito',
+        component: () => import('src/pages/Visual/CarritoPage.vue')
+    },
+    {
         path: '/',
         component: () => import('layouts/MainLayout.vue'),
         children: [
@@ -73,6 +88,7 @@ const routes = [
 
         ]
     },
+
     {
         path: '/:catchAll(.*)*',
         component: () => import('src/ErrorNotFound.vue')

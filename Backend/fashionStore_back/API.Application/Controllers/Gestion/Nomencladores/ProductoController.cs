@@ -1,5 +1,4 @@
 ﻿using API.Application.Dtos.Gestion.Nomencladores.Producto;
-using API.Application.Dtos.Gestion.Nomencladores.ProductVariant;
 using API.Data.Entidades.Gestion.Nomencladores;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
@@ -94,7 +93,7 @@ namespace API.Application.Controllers.Gestion.Nomencladores
                 Descripcion = objeto.Descripcion,
                 EsActivo = objeto.EsActivo,
                 CategoriaIds = objeto.CategoriaIds,
-                Variants = new ()
+                Variants = new()
             };
 
             // Mapear variantes
@@ -114,7 +113,7 @@ namespace API.Application.Controllers.Gestion.Nomencladores
 
                     // 👇 separar fotos existentes y nuevas
                     Fotos = variant.Fotos,
-                  //  FotosNuevas = variant.FotosNuevas
+                    //  FotosNuevas = variant.FotosNuevas
                 };
 
                 dtoData.Variants.Add(elemento);
@@ -122,6 +121,34 @@ namespace API.Application.Controllers.Gestion.Nomencladores
 
             var idActualizado = await _ProductoService.ActualizarAsync(id, dtoData);
             return Ok(new { Id = idActualizado });
+        }
+
+        /// <summary>
+        /// Obtener Producto especifico por Id
+        /// </summary>
+        /// <param name="id">Id del elemento</param>
+        /// <response code="200">Completado con exito!</response>
+        /// <response code="400">Ha ocurrido un error</response>
+        /// <response code="404">Elemento no encontrado</response>
+        [HttpGet("[action]/{id}")]
+        public async Task<IActionResult> ObtenerProductoEspecifico(Guid id)
+        {
+            var result = await _ProductoService.ObtenerProductoEspecifico(id);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Obtener Productos por listado de categorias
+        /// </summary>
+        /// <param name="categoriaIds">Listado de Ids de categorías</param>
+        /// <response code="200">Completado con éxito!</response>
+        /// <response code="400">Ha ocurrido un error</response>
+        /// <response code="404">Elemento no encontrado</response>
+        [HttpGet("[action]")]
+        public async Task<IActionResult> ObtenerProductoPorCategoriaEspecifico([FromQuery] List<Guid> categoriaIds)
+        {
+            var result = await _ProductoService.ObtenerProductoPorCategoriaEspecifico(categoriaIds);
+            return Ok(result);
         }
 
 

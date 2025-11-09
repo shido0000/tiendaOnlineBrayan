@@ -10,5 +10,7 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
         Task<Guid> CrearAsync(CrearProductoInputDto dto);
         Task<Guid> ActualizarAsync(Guid id, ActualizarProductoInputDto dto);
         Task<List<Producto>> ObtenerProductosNovedades();
+        Task<Producto> ObtenerProductoEspecifico(Guid id);
+        Task<List<Producto>> ObtenerProductoPorCategoriaEspecifico(List<Guid> categoriaIds);
     }
 }

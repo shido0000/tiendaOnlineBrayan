@@ -39,7 +39,7 @@
           style="width: 20px"
           color="primary"
           icon="add"
-          @click="dialog = true"
+          @click="abrirDialogoCrear()"
         >
           <q-tooltip
             class="bg-primary"
@@ -333,7 +333,7 @@
     @mouseleave="autoplay = true"
   >
     <q-carousel-slide
-      v-for="(foto, idx) in validFotos"
+      v-for="(foto, idx) in getValidFotosVariant(variant)"
       :key="idx"
       :name="idx + 1"
       class="relative-position"
@@ -350,7 +350,7 @@
         icon="close"
         size="sm"
         class="absolute-top-right q-mt-sm q-mr-sm z-max"
-        @click.stop="confirmarEliminarFoto(idx)"
+        @click.stop="confirmarEliminarFotoVariant(idx, variant)"
       />
     </q-carousel-slide>
   </q-carousel>
@@ -391,12 +391,12 @@
             </q-form>
           </q-card>-->
 
-       <q-card style="width: 1000px; max-width: 80vw; height: auto">
+       <q-card style="width: 1200px; max-width: 80vw; height: auto">
         <header class="q-px-sm bg-primary">
               <q-toolbar>
                 <q-toolbar-title class="text-subtitle6 text-white">
                   {{
-                    objeto.id ? "Editar Producto" : "Adicionar Producto"
+                    producto.id ? "Editar Producto" : "Adicionar Producto"
                   }}</q-toolbar-title
                 >
               </q-toolbar>
@@ -681,6 +681,18 @@
                     </q-select>
 
         </div>
+      <!-- Botón para eliminar variante -->
+      <div class="row q-mt-sm">
+        <q-btn
+        color="negative"
+        icon="delete"
+        label="Eliminar Variante"
+        outline
+        dense
+        @click="eliminarVariante(index)"
+        class="q-my-md"
+        />
+      </div>
 
         <!-- Fotos -->
        <!-- <div class="q-mt-md">
@@ -699,70 +711,74 @@
               style="width: 100px; height: 100px; border-radius: 8px;"
             />
           </div>-->
-          <q-uploader
-  class="col-12 q-pa-sm q-mt-md"
-  label="Seleccionar fotos"
-  accept="image/*"
-  multiple
-  :auto-upload="false"
-    @added="files => variant.fotos = files"
-/>
-
-     <div v-if="variant.fotos && variant.fotos.length" class="row q-pa-sm col-12">
-  <q-carousel
-    v-model="slide"
-    animated
-    navigation
-    infinite
-    :autoplay="autoplay"
-    arrows
-  height="350px"
-  class="bg-grey-2 full-width"
-  style="width: 100%;"
-    transition-prev="slide-right"
-    transition-next="slide-left"
-    @mouseenter="autoplay = false"
-    @mouseleave="autoplay = true"
-  >
-    <q-carousel-slide
-      v-for="(foto, idx) in validFotos"
-      :key="idx"
-      :name="idx + 1"
-      class="relative-position"
-    >
-      <q-img
-        :src="foto.img"
-        :alt="foto.alt"
-        style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"
-      />
-      <q-btn
-        dense
-        round
-        color="negative"
-        icon="close"
-        size="sm"
-        class="absolute-top-right q-mt-sm q-mr-sm z-max"
-        @click.stop="confirmarEliminarFoto(idx)"
-      />
-    </q-carousel-slide>
-  </q-carousel>
-  <q-dialog v-model="dialogEliminarFoto">
-    <q-card>
-      <q-card-section class="row items-center">
-        <q-icon name="warning" color="warning" size="md" class="q-mr-md" />
-        <span>¿Está seguro que desea eliminar esta foto del producto?</span>
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn flat label="Cancelar" color="primary" @click="cancelarEliminarFoto" />
-        <q-btn flat label="Eliminar" color="negative" @click="eliminarFotoCarruselConfirmada" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</div>
-<div v-else class="q-pa-sm text-grey">No hay imágenes para mostrar.</div>
-
-        </div>
-
+          <div class="row col-12 ">
+            <div class="col-12 col-md-3 q-mr-xs q-pr-md q-mt-sm">
+              <q-uploader
+                class="w-full"
+                 style="height: 150px;"
+                label="Seleccionar fotos"
+                accept="image/*"
+                multiple
+                :auto-upload="false"
+                @added="files => variant.fotos = files"
+              />
+            </div>
+            <div class="col-12 col-md-8 q-mt-sm q-ml-auto">
+              <div v-if="variant.fotos && variant.fotos.length">
+                <q-carousel
+                  v-model="slide"
+                  animated
+                  navigation
+                  infinite
+                  :autoplay="autoplay"
+                  arrows
+                  height="150px"
+                  class="bg-grey-2 full-width"
+                  style="width: 100%;"
+                  transition-prev="slide-right"
+                  transition-next="slide-left"
+                  @mouseenter="autoplay = false"
+                  @mouseleave="autoplay = true"
+                >
+                  <q-carousel-slide
+                    v-for="(foto, idx) in getValidFotosVariant(variant)"
+                    :key="idx"
+                    :name="idx + 1"
+                    class="relative-position"
+                  >
+                    <q-img
+                      :src="foto.img"
+                      :alt="foto.alt"
+                      style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"
+                    />
+                    <q-btn
+                      dense
+                      round
+                      color="negative"
+                      icon="close"
+                      size="sm"
+                      class="absolute-top-right q-mt-sm q-mr-sm z-max"
+                      @click.stop="confirmarEliminarFotoVariant(idx, variant)"
+                    />
+                  </q-carousel-slide>
+                </q-carousel>
+                <q-dialog v-model="dialogEliminarFoto">
+                  <q-card>
+                    <q-card-section class="row items-center">
+                      <q-icon name="warning" color="warning" size="md" class="q-mr-md" />
+                      <span>¿Está seguro que desea eliminar esta foto del producto?</span>
+                    </q-card-section>
+                    <q-card-actions align="right">
+                      <q-btn flat label="Cancelar" color="primary" @click="cancelarEliminarFoto" />
+                      <q-btn flat label="Eliminar" color="negative" @click="eliminarFotoCarruselConfirmada" />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+              </div>
+              <div v-else class="q-pa-sm text-grey">No hay imágenes para mostrar.</div>
+            </div>
+          </div>
+          </div>
 
 
       <q-separator class="q-my-md" />
@@ -973,7 +989,7 @@ import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
 import DialogEliminar from 'components/DialogBoxes/DialogEliminar.vue'
 
 import { dataColumnProducto } from 'src/assets/js/column_data/columnDataNomencladores'
-import { closeDialog, eliminarElemento, filterOptions, isValorRepetido, loadGet, loadGetHastaData, obtener, saveData, saveDataParaObjetosConFotos } from 'src/assets/js/util/funciones'
+import { closeDialog, eliminarElemento, filterOptions, isValorRepetido, loadGet, loadGetHastaData, obtener, obtenerHastaData, saveData, saveDataParaObjetosConFotos } from 'src/assets/js/util/funciones'
 import { PonerPuntosSupensivosACampo } from 'src/assets/js/util/extras'
 import { api, apiFotosBaseUrl } from 'src/boot/axios'
 
@@ -988,10 +1004,10 @@ const autoplay = ref(true)
 import { computed } from 'vue'
 const validFotos = computed(() =>
   (objeto.fotos || [])
-    .filter(foto => !!getFotoUrl(foto))
+    .filter(foto => !!getPreviewUrl(foto))
     .map((foto, idx) => ({
       name: idx,
-      img: getFotoUrl(foto),
+      img: getPreviewUrl(foto),
       alt: `Foto ${idx + 1}`
     }))
 )
@@ -1102,13 +1118,61 @@ const Guardar = () => {
 
 // Funcion para Obtener los datos para editar
 const obtenerElementoPorId = async (id) => {
-  await obtener('Producto/ObtenerPorId', id, objeto, dialogLoad, dialog)
-  // Guardar copia de las fotos originales (rutas)
-fotosOriginales = Array.isArray(objeto.fotos) ? [...objeto.fotos] : []
+  //await obtener('Producto/ObtenerPorId', id, objeto, dialogLoad, dialog)
+await obtenerHastaData('Producto/ObtenerProductoEspecifico', id, objeto, dialogLoad, dialog)
+
+//Object.assign(producto.value,objeto)
+//llenarCategoriasIds()
+
+ producto.value = {
+    id: objeto.id,
+    codigo: objeto.codigo,
+    descripcion: objeto.descripcion,
+    esActivo: objeto.esActivo,
+    categoriaIds: objeto.productoCategorias.map(pc => pc.categoriaId),
+    variants: objeto.variants.map(v => ({
+      id: v.id,
+      sku: v.sku,
+      talla: v.talla,
+      color: v.color,
+      precioCosto: v.precioCosto,
+      precioVenta: v.precioVenta,
+      monedaCostoId: v.monedaCostoId,
+      monedaVentaId: v.monedaVentaId,
+      stock: v.stock,
+      fotos: (v.fotos || []).map(f => ({
+        id: f.id,
+        url: f.url,
+        descripcion: f.descripcion
+      }))
+    }))
+  };
+
+console.log("objeto: ",producto.value)
+  // Guardar copia de las fotos originales (rutas) y poblar objeto.fotos con todas las fotos de las variantes
+  fotosOriginales = []
+  try {
+    fotosOriginales = (objeto.variants || []).flatMap(v => (v.fotos || []).map(f => f.url || f))
+  } catch (e) {
+    fotosOriginales = []
+  }
+  // Poblamos objeto.fotos (usado por el carrusel principal) con las rutas encontradas
+  objeto.fotos = fotosOriginales.slice()
   filtradoMoneda.value = itemsMoneda.value
   filtradoCategoria.value=itemsCategoria.value
 
 }
+
+function llenarCategoriasIds() {
+  // Limpio el array antes de llenarlo, para evitar duplicados
+  producto.value.categoriaIds = [];
+
+  for (let i = 0; i < objeto.productoCategorias.length; i++) {
+    let catId = objeto.productoCategorias[i].categoriaId; // acceso a la propiedad Id
+    producto.value.categoriaIds.push(catId);
+  }
+}
+
 
 // Funcion para eliminar elemento
 const eliminar = async () => {
@@ -1196,23 +1260,40 @@ const quitarFormatoPrecioVenta = () => {
 // Estado para el diálogo de confirmación de eliminación de foto
 const dialogEliminarFoto = ref(false)
 const idxFotoAEliminar = ref(null)
+const variantAFotoEliminar = ref(null)
 
 function confirmarEliminarFoto(idx) {
+  // Confirm deletion for main objeto.fotos
+  variantAFotoEliminar.value = null
+  idxFotoAEliminar.value = idx
+  dialogEliminarFoto.value = true
+}
+
+function confirmarEliminarFotoVariant(idx, variant) {
+  // Confirm deletion for a specific variant's fotos
+  variantAFotoEliminar.value = variant
   idxFotoAEliminar.value = idx
   dialogEliminarFoto.value = true
 }
 
 function eliminarFotoCarruselConfirmada() {
-  if (Array.isArray(objeto.fotos) && idxFotoAEliminar.value !== null) {
-    objeto.fotos.splice(idxFotoAEliminar.value, 1)
+  try {
+    if (variantAFotoEliminar.value && Array.isArray(variantAFotoEliminar.value.fotos)) {
+      variantAFotoEliminar.value.fotos.splice(idxFotoAEliminar.value, 1)
+    } else if (Array.isArray(objeto.fotos) && idxFotoAEliminar.value !== null) {
+      objeto.fotos.splice(idxFotoAEliminar.value, 1)
+    }
+  } finally {
+    dialogEliminarFoto.value = false
+    idxFotoAEliminar.value = null
+    variantAFotoEliminar.value = null
   }
-  dialogEliminarFoto.value = false
-  idxFotoAEliminar.value = null
 }
 
 function cancelarEliminarFoto() {
   dialogEliminarFoto.value = false
   idxFotoAEliminar.value = null
+  variantAFotoEliminar.value = null
 }
 
 // Este método lo defines tú
@@ -1223,21 +1304,37 @@ function archivosAgregados (files) {
 // Función para obtener la URL de una foto guardada
 function getFotoUrl(foto) {
   if (!foto) return ''
-  if (/^https?:\/\//.test(foto)) return foto
-  const url = apiFotosBaseUrl + (foto.startsWith('/') ? foto : '/' + foto)
+  // foto puede ser string o un objeto con propiedad 'url'
+  const path = typeof foto === 'string' ? foto : (foto && foto.url ? foto.url : '')
+  if (!path) return ''
+  if (/^https?:\/\//.test(path)) return path
+  const url = apiFotosBaseUrl + (path.startsWith('/') ? path : '/' + path)
   return url
 }
 
 // Función para obtener la URL de previsualización de un archivo nuevo
 function getPreviewUrl(file) {
-  if (typeof file === 'string') {
-    return getFotoUrl(file)
-  }
-  return URL.createObjectURL(file)
+  if (!file) return ''
+  // Si es string (ruta)
+  if (typeof file === 'string') return getFotoUrl(file)
+  // Si es un objeto con propiedad url
+  if (typeof file === 'object' && file.url) return getFotoUrl(file.url)
+  // Si es un File (subido por el usuario)
+  if (typeof File !== 'undefined' && file instanceof File) return URL.createObjectURL(file)
+  return ''
+}
+
+// Devuelve fotos válidas para una variante (para uso en el template)
+function getValidFotosVariant(variant) {
+  if (!variant || !Array.isArray(variant.fotos)) return []
+  return variant.fotos
+    .filter(f => !!getPreviewUrl(f))
+    .map((f, idx) => ({ img: getPreviewUrl(f), alt: `Foto ${idx + 1}` }))
 }
 
 
 const producto = ref({
+  id: undefined,
   codigo: '',
   descripcion: '',
   esActivo: true,
@@ -1259,43 +1356,65 @@ function agregarVariante() {
   })
 }
 
+// Eliminar variante por índice
+function eliminarVariante(index) {
+  if (producto.value.variants.length > 1) {
+    producto.value.variants.splice(index, 1)
+  } else {
+    // Si solo hay una variante, puedes mostrar un mensaje o simplemente limpiar el array
+    producto.value.variants = []
+  }
+}
+
 
 function guardarProducto() {
-const formData = new FormData()
- const url = producto.value.id ? 'Producto/ActualizarConFotos' : 'Producto/CrearConFotos'
+  const formData = new FormData()
+  const url = producto.value && producto.value.id ? 'Producto/ActualizarConFotos' : 'Producto/CrearConFotos'
 
   // --- Datos generales del producto ---
-  formData.append('Codigo', producto.value.codigo)
-  formData.append('Descripcion', producto.value.descripcion)
-  formData.append('EsActivo', producto.value.esActivo)
+  formData.append('Codigo', producto.value ? producto.value.codigo : '')
+  formData.append('Descripcion', producto.value ? producto.value.descripcion : '')
+  formData.append('EsActivo', producto.value ? producto.value.esActivo : true)
 
   // Categorías
-  if (Array.isArray(producto.value.categoriaIds)) {
+  if (producto.value && Array.isArray(producto.value.categoriaIds)) {
     producto.value.categoriaIds.forEach(id => {
       formData.append('CategoriaIds', id)
     })
   }
 
   // --- Variantes ---
-  producto.value.variants.forEach((variant, index) => {
-    formData.append(`Variants[${index}].SKU`, variant.sku || '')
-    formData.append(`Variants[${index}].Talla`, variant.talla || '')
-    formData.append(`Variants[${index}].Color`, variant.color || '')
-    formData.append(`Variants[${index}].PrecioCosto`, variant.precioCosto || 0)
-    formData.append(`Variants[${index}].PrecioVenta`, variant.precioVenta || 0)
-    formData.append(`Variants[${index}].MonedaCostoId`, variant.monedaCostoId || '')
-    formData.append(`Variants[${index}].MonedaVentaId`, variant.monedaVentaId || '')
-    formData.append(`Variants[${index}].Stock`, variant.stock || 0)
+  if (producto.value && Array.isArray(producto.value.variants)) {
+    producto.value.variants.forEach((variant, index) => {
+      formData.append(`Variants[${index}].SKU`, variant.sku || '')
+      formData.append(`Variants[${index}].Talla`, variant.talla || '')
+      formData.append(`Variants[${index}].Color`, variant.color || '')
+      formData.append(`Variants[${index}].PrecioCosto`, variant.precioCosto || 0)
+      formData.append(`Variants[${index}].PrecioVenta`, variant.precioVenta || 0)
+      formData.append(`Variants[${index}].MonedaCostoId`, variant.monedaCostoId || '')
+      formData.append(`Variants[${index}].MonedaVentaId`, variant.monedaVentaId || '')
+      formData.append(`Variants[${index}].Stock`, variant.stock || 0)
+      if (variant.id) formData.append(`Variants[${index}].Id`, variant.id)
 
-    // --- Fotos de la variante ---
-    if (variant.fotos && variant.fotos.length > 0) {
-      variant.fotos.forEach((file, fotoIndex) => {
-        formData.append(`Variants[${index}].Fotos`, file)
-      })
-    }
+      // Fotos: archivos nuevos (File) vs existentes (id/url)
+      if (variant.fotos && variant.fotos.length > 0) {
+        variant.fotos.forEach((file) => {
+          if (typeof File !== 'undefined' && file instanceof File) {
+            formData.append(`Variants[${index}].Fotos`, file)
+          } else if (file && file.id) {
+            formData.append(`Variants[${index}].FotosExistentes`, file.id)
+          } else if (typeof file === 'string') {
+            formData.append(`Variants[${index}].FotosExistentes`, file)
+          } else if (file && file.url) {
+            formData.append(`Variants[${index}].FotosExistentes`, file.url)
+          }
+        })
+      }
+    })
+  }
 
-          saveDataParaObjetosConFotos(url, formData, load, close, dialogLoad, true, producto.value.id)
-  })
+  // Enviar todo junto
+  saveDataParaObjetosConFotos(url, formData, load, close, dialogLoad, true, producto.value ? producto.value.id : null)
 }
 
 function cancelar() {
@@ -1308,4 +1427,14 @@ function cancelar() {
   }
 }
 
+function abrirDialogoCrear(){
+producto.value.id=undefined
+ producto.value.codigo=''
+producto.value.descripcion=''
+producto.value.esActivo=true
+producto.value.categoriaIds=[]
+producto.value.variants=[]
+
+    dialog.value = true
+}
 </script>
