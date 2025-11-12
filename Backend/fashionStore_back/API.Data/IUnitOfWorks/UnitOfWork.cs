@@ -46,7 +46,6 @@ namespace API.Data.IUnitOfWorks
         public IProductoDescuento ProductosDescuentos { get; }
         public IProductoFoto ProductosFotos { get; }
         public IReview Reviews { get; }
-        public IProductVariant ProductVariants { get; }
 
 
         // CONTABILIDAD 
@@ -89,7 +88,6 @@ namespace API.Data.IUnitOfWorks
             ProductosDescuentos = new ProductoDescuentoRepository(context);
             ProductosFotos = new ProductoFotoRepository(context);
             Reviews = new ReviewRepository(context);
-            ProductVariants = new ProductVariantRepository(context);
 
             // CONTABILIDAD
             CuentasContables = new CuentaContableRepository(context);

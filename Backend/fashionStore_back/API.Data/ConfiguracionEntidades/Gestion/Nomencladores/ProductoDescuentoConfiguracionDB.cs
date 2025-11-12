@@ -10,16 +10,16 @@ public class ProductoDescuentoConfiguracionDB
         modelBuilder.Entity<ProductoDescuento>().ToTable("ProductosDescuentos");
         EntidadBaseConfiguracionBD<ProductoDescuento>.SetEntityBuilder(modelBuilder);
 
-        modelBuilder.Entity<ProductoDescuento>().Property(e => e.ProductVariantId).IsRequired();
+        modelBuilder.Entity<ProductoDescuento>().Property(e => e.ProductoId).IsRequired();
         modelBuilder.Entity<ProductoDescuento>().Property(e => e.DescuentoId).IsRequired();
 
         //modelBuilder.Entity<ProductoDescuento>().HasIndex(e => e.ProductoId e.CategoriaId).IsUnique();
 
 
         modelBuilder.Entity<ProductoDescuento>()
-            .HasOne(ci => ci.ProductVariant)
+            .HasOne(ci => ci.Producto)
             .WithMany(ci => ci.ProductoDescuentos)
-            .HasForeignKey(ci => ci.ProductVariantId)
+            .HasForeignKey(ci => ci.ProductoId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ProductoDescuento>()

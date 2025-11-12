@@ -38,7 +38,6 @@ namespace API.Data.IUnitOfWorks.Interfaces
         IProductoDescuento ProductosDescuentos { get; }
         IProductoFoto ProductosFotos { get; }
         IReview Reviews { get; }
-        IProductVariant ProductVariants { get; }
 
         // CONTABILIDAD 
         IAsientoContable AsientosContables { get; }

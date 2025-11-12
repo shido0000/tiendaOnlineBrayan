@@ -11,12 +11,24 @@ public class ProductoConfiguracionDB
         EntidadBaseConfiguracionBD<Producto>.SetEntityBuilder(modelBuilder);
 
         modelBuilder.Entity<Producto>().Property(e => e.Codigo).HasMaxLength(50).IsRequired();
+        modelBuilder.Entity<Producto>().Property(e => e.SKU).HasMaxLength(50).IsRequired();
         modelBuilder.Entity<Producto>().Property(e => e.Descripcion).HasMaxLength(200).IsRequired();
         
         modelBuilder.Entity<Producto>().Property(e => e.EsActivo).HasDefaultValue(true);
 
+        modelBuilder.Entity<Producto>().HasIndex(e => e.SKU).IsUnique();
         modelBuilder.Entity<Producto>().HasIndex(e => e.Codigo).IsUnique();
-         
- 
+
+        modelBuilder.Entity<Producto>()
+                  .HasOne(ci => ci.MonedaCosto)
+                  .WithMany(ci => ci.ProductosCosto)
+                  .HasForeignKey(ci => ci.MonedaCostoId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Producto>()
+                   .HasOne(ci => ci.MonedaVenta)
+                   .WithMany(ci => ci.ProductosVentas)
+                    .HasForeignKey(x => x.MonedaVentaId)
+                   .OnDelete(DeleteBehavior.Restrict);
     }
 }

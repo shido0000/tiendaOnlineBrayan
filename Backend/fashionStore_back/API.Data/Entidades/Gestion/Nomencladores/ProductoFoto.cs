@@ -2,8 +2,8 @@
 {
     public class ProductoFoto : EntidadBase
     {
-        public Guid ProductVariantId { get; set; }
-        public ProductVariant ProductVariant { get; set; } = null!;
+        public Guid ProductoId { get; set; }
+        public Producto Producto { get; set; } = null!;
         public string Url { get; set; } = string.Empty;   // ruta o URL de la foto
         public string? Descripcion { get; set; }          // opcional
         public bool EsPrincipal { get; set; } = false;    // para marcar la foto principal

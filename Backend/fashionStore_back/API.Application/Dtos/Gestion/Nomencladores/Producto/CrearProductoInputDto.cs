@@ -1,5 +1,4 @@
-﻿using API.Application.Dtos.Gestion.Nomencladores.ProductVariant;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace API.Application.Dtos.Gestion.Nomencladores.Producto
 {
@@ -10,7 +9,5 @@ namespace API.Application.Dtos.Gestion.Nomencladores.Producto
         [JsonIgnore]
         public new bool EsActivo { get; set; }
 
-        // Variantes que se crean junto con el producto
-        public List<CrearProductVariantInputDto> CrearVariants { get; set; } = new();
     }
 }
