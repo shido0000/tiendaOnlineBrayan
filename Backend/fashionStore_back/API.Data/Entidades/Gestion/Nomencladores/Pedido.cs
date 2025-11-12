@@ -15,6 +15,9 @@ namespace API.Data.Entidades.Gestion.Nomencladores
         public Guid UsuarioId { get; set; }
         public Usuario Usuario { get; set; } = null!;
         public EstadoPedido Estado { get; set; } = EstadoPedido.Pendiente;
+        public decimal Subtotal { get; set; }
+        public decimal Shipping { get; set; }
+        public decimal Discount { get; set; }
         public decimal Total { get; set; }
         public Guid MonedaId { get; set; }
         public Moneda Moneda { get; set; } = null!;

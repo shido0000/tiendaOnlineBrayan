@@ -10,7 +10,8 @@ import { reactive } from 'vue'
 // for each client)
 const api = axios.create({
     baseURL: 'https://localhost:6005/api',
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    withCredentials: true, // Se incluirán las cookies en todas las peticiones.
 })
 
 const apiDatosInicio = axios.create({
@@ -33,6 +34,28 @@ const emp = reactive({
 const sistemStatus = reactive({
     loading: false
 })
+
+// Configurar el interceptor de Axios
+api.interceptors.request.use((config) => {
+    const token = sessionStorage.getItem("token");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`; // <-- Token en todas las solicitudes
+    }
+    return config;
+});
+
+// Interceptor de respuestas (Axios)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            sessionStorage.removeItem("token"); // Eliminar token inválido
+            sessionStorage.removeItem("usuario"); // Eliminar token inválido
+            window.location.href = "/login"; // Redirigir al login
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default boot(({ app }) => {
     // for use inside Vue files (Options API) through this.$axios and this.$api

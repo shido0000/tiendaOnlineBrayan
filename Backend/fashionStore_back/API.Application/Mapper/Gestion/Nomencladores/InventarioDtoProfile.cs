@@ -18,19 +18,19 @@ namespace API.Application.Mapper.Gestion.Nomencladores
         public void MapDetallesInventarioDto()
         {
             CreateMap<Inventario, DetallesInventarioDto>()
-                .ForMember(dto => dto.ProductoCodigo, opt => opt.MapFrom(e => e.Producto.Codigo))
-                .ForMember(dto => dto.ProductoDescripcion, opt => opt.MapFrom(e => e.Producto.Descripcion))
-                .ForMember(dto => dto.ProductoSku, opt => opt.MapFrom(e => e.Producto.SKU))
-                .ForMember(dto => dto.EstadoProductoInventario, opt => opt.MapFrom(e => e.EstadoProductoInventario.ToString()))
+                //.ForMember(dto => dto.ProductoCodigo, opt => opt.MapFrom(e => e.Producto.Codigo))
+                //.ForMember(dto => dto.ProductoDescripcion, opt => opt.MapFrom(e => e.Producto.Descripcion))
+                //.ForMember(dto => dto.ProductoSku, opt => opt.MapFrom(e => e.Producto.SKU))
+                //.ForMember(dto => dto.EstadoProductoInventario, opt => opt.MapFrom(e => e.EstadoProductoInventario.ToString()))
                 .ReverseMap();
         }
         public void MapListadoInventarioDto()
         {
             CreateMap<Inventario, ListadoPaginadoInventarioDto>()
-                .ForMember(dto => dto.ProductoCodigo, opt => opt.MapFrom(e => e.Producto.Codigo))
-                .ForMember(dto => dto.ProductoDescripcion, opt => opt.MapFrom(e => e.Producto.Descripcion))
-                .ForMember(dto => dto.ProductoSku, opt => opt.MapFrom(e => e.Producto.SKU))
-                .ForMember(dto => dto.EstadoProductoInventario, opt => opt.MapFrom(e => e.EstadoProductoInventario.ToString()))
+                //.ForMember(dto => dto.ProductoCodigo, opt => opt.MapFrom(e => e.Producto.Codigo))
+                //.ForMember(dto => dto.ProductoDescripcion, opt => opt.MapFrom(e => e.Producto.Descripcion))
+                //.ForMember(dto => dto.ProductoSku, opt => opt.MapFrom(e => e.Producto.SKU))
+                //.ForMember(dto => dto.EstadoProductoInventario, opt => opt.MapFrom(e => e.EstadoProductoInventario.ToString()))
                 .ReverseMap();
         }
     }

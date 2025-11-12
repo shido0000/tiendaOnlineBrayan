@@ -1,4 +1,5 @@
 ﻿using API.Application.Dtos.Comunes;
+using API.Application.Dtos.Gestion.Nomencladores.ProductVariant;
 using API.Data.Entidades.Gestion.Nomencladores;
 
 namespace API.Application.Dtos.Gestion.Nomencladores.Producto
@@ -7,16 +8,12 @@ namespace API.Application.Dtos.Gestion.Nomencladores.Producto
     {
         public string Codigo { get; set; } = string.Empty;
         public string Descripcion { get; set; } = string.Empty;
-        public string? Color { get; set; }
-        public string? SKU { get; set; }
-        public decimal PrecioCosto { get; set; }
-        public decimal PrecioVenta { get; set; }
-        public Guid MonedaId { get; set; }
         public bool EsActivo { get; set; }
+
+        // Categorías asociadas al producto
         public List<Guid> CategoriaIds { get; set; } = new();
 
-
-        // 👇 Lista de URLs de fotos
-        public List<string> Fotos { get; set; } = new();
+        // Variantes del producto
+        public List<ProductVariantDto> Variants { get; set; } = new();
     }
 }

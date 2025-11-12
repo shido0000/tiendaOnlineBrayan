@@ -22,22 +22,10 @@ namespace API.Domain.Validators.Gestion.Nomencladores
             RuleFor(m => m.Descripcion).NotEmpty().WithMessage("No puede ser un texto vacio.")
                                      .NotNull().WithMessage("Es un campo obligatorio.")
                                      .MaximumLength(200).WithMessage("Debe tener {MaxLength} caracteres máximo.");
-
-
-            RuleFor(m => m.Color).NotEmpty().WithMessage("No puede ser un texto vacio.")
-                                     .NotNull().WithMessage("Es un campo obligatorio.");
-
-            RuleFor(m => m.SKU).NotEmpty().WithMessage("No puede ser un texto vacio.")
-                                    .NotNull().WithMessage("Es un campo obligatorio.");
-
-            RuleFor(m => m.PrecioCosto).NotEmpty().WithMessage("No puede ser un texto vacio.")
-                                .NotNull().WithMessage("Es un campo obligatorio.");
-
-            RuleFor(m => m.PrecioVenta).NotEmpty().WithMessage("No puede ser un texto vacio.")
-                                    .NotNull().WithMessage("Es un campo obligatorio.");
+             
 
             RuleFor(m => m).MustAsync(async (elemento, cancelacion) => !(await _repositorios.BasicRepository.AnyAsync(e => e.Codigo == elemento.Codigo && e.Id != elemento.Id)))
-          .WithMessage("Ya existe un Codigo con el mismo texto.");
+          .WithMessage("Ya existe un Nombre con el mismo texto.");
         }
 
     }

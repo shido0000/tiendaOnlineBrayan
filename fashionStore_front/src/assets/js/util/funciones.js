@@ -935,6 +935,23 @@ const obtener = async (endpoint, id, objeto, dialogLoad, dialog) => {
     dialogLoad.value = false;
 };
 
+const obtenerHastaData = async (endpoint, id, objeto, dialogLoad, dialog) => {
+    dialogLoad.value = true;
+    await api
+        .get(`${endpoint}/${id}`)
+        .then((r) => {
+            Object.assign(objeto, r.data);
+            title.value = `Editar ${endpoint}`;
+            dialog ? (dialog.value = true) : null;
+        })
+        .catch((error) => {
+            error.response === undefined
+                ? Error(error.message)
+                : Error(error.response.data.mensajeError);
+        });
+    dialogLoad.value = false;
+};
+
 /**
  * Funcion para Obtener datos por id esto se utiliza para cargar un elemento de la BD no hay que pasarle dialog
  * @param {String} endpoint - Url de la petición
@@ -1692,4 +1709,5 @@ export {
     cerrarSesion,
     saveDataParaObjetosConFotos,
     loadGetDatosInicio,
+    obtenerHastaData,
 };

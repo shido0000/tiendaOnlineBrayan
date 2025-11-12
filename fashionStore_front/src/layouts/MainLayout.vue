@@ -19,11 +19,18 @@
             FASHION STORE</q-toolbar-title
           >
         </div>
-  <q-space />
-
-  <q-btn class="q-mr-md" flat round dense icon="group_add" />
-  <!-- Cart button with badge -->
-
+        <q-space />
+      <!-- Botón de Logout -->
+        <q-btn
+          class="q-mr-xl"
+          flat
+          round
+          dense
+          icon="logout"
+          @click="onLogout"
+        >
+          <q-tooltip>Salir</q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 
@@ -50,18 +57,28 @@
 import { defineComponent, ref } from 'vue'
 import { emp } from 'src/boot/axios'
 import EssentialLink from 'components/EssentialLink.vue'
-import CartButton from 'components/CartButton.vue'
-import WishlistButton from 'components/WishlistButton.vue'
+import { useRouter } from 'vue-router'
 
 export default defineComponent({
   name: 'MainLayout',
 
-    components: {
-    EssentialLink,
+  components: {
+    EssentialLink
   },
 
+
   setup () {
+     const router = useRouter()
     const leftDrawerOpen = ref(false)
+
+      const onLogout = () => {
+      // Aquí puedes limpiar tokens, storage, etc.
+      localStorage.removeItem('token')
+      sessionStorage.clear()
+
+      // Redirigir al login
+      router.push('/login')
+    }
     return {
       emp,
       displayHtml: ref(false),
@@ -70,10 +87,12 @@ export default defineComponent({
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value
-      }
+      },
+      onLogout
     }
   }
 })
+
 </script>
 <style>
 .h {

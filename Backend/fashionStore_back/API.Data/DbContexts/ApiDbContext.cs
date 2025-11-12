@@ -38,6 +38,8 @@ namespace API.Data.DbContexts
         public DbSet<ComprobanteVenta> ComprobantesVentas { get; set; }
         public DbSet<ProductoDescuento> ProductosDescuentos { get; set; }
         public DbSet<ProductoFoto> ProductosFotos { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<ProductVariant> ProductVariants { get; set; }
 
 
 
@@ -81,6 +83,8 @@ namespace API.Data.DbContexts
             ComprobanteVentaConfiguracionDB.SetEntityBuilder(modelBuilder);
             ProductoDescuentoConfiguracionDB.SetEntityBuilder(modelBuilder);
             ProductoFotoConfiguracionDB.SetEntityBuilder(modelBuilder);
+            ReviewConfiguracionDB.SetEntityBuilder(modelBuilder);
+            ProductVariantConfiguracionDB.SetEntityBuilder(modelBuilder);
 
 
             // CONTABILIDAD

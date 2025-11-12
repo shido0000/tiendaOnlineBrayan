@@ -11,6 +11,6 @@ public class ListaDeseosDetalleConfiguracionDB
         EntidadBaseConfiguracionBD<ListaDeseosDetalle>.SetEntityBuilder(modelBuilder);
 
         modelBuilder.Entity<ListaDeseosDetalle>().Property(e => e.ListaDeseosId).IsRequired();
-        modelBuilder.Entity<ListaDeseosDetalle>().Property(e => e.ProductoId).IsRequired();
+        modelBuilder.Entity<ListaDeseosDetalle>().Property(e => e.ProductVariantId).IsRequired();
     }
 }

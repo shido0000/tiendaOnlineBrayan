@@ -71,14 +71,14 @@ export default {
   width: 350px;
   padding: 40px 32px 32px 32px;
   border-radius: 32px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
+
 .login-btn {
   background: linear-gradient(90deg, $bry-secondary 0%, $bry-primary 100%);
   color: $bry-white;

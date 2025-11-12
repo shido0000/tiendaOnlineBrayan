@@ -15,6 +15,7 @@ namespace API.Data.Entidades.Gestion.Nomencladores
         public decimal TasaCambio { get; set; }
         public bool EsActiva { get; set; } = true;
 
-        public ICollection<Producto> Productos { get; set; } = new List<Producto>();
+        public ICollection<ProductVariant> ProductosCosto { get; set; } = new List<ProductVariant>();
+        public ICollection<ProductVariant> ProductosVentas { get; set; } = new List<ProductVariant>();
     }
 }

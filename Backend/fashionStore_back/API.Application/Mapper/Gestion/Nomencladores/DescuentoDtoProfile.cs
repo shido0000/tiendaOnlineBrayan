@@ -24,14 +24,14 @@ namespace API.Application.Mapper.Gestion.Nomencladores
             // Entity → DTO
             CreateMap<Descuento, DetallesDescuentoDto>()
                 .ForMember(dest => dest.ProductosIds,
-                    opt => opt.MapFrom(src => src.ProductoDescuentos.Select(pd => pd.ProductoId).ToList()));
+                    opt => opt.MapFrom(src => src.ProductoDescuentos.Select(pd => pd.ProductVariantId).ToList()));
 
             // DTO → Entity
             CreateMap<DetallesDescuentoDto, Descuento>()
                 .ForMember(dest => dest.ProductoDescuentos,
                     opt => opt.MapFrom(src => src.ProductosIds.Select(id => new ProductoDescuento
                     {
-                        ProductoId = id
+                        ProductVariantId = id
                     }).ToList()));
         }
 
@@ -41,10 +41,10 @@ namespace API.Application.Mapper.Gestion.Nomencladores
             CreateMap<CrearDescuentoInputDto, Descuento>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductoDescuentos, opt => opt.MapFrom(src =>
-                    src.ProductosIds.Select(productoId => new ProductoDescuento
+                    src.ProductosIds.Select(ProductVariantId => new ProductoDescuento
                     {
                         DescuentoId=src.Id,
-                        ProductoId = productoId
+                        ProductVariantId = ProductVariantId
                     })
                 ));
 
@@ -52,7 +52,7 @@ namespace API.Application.Mapper.Gestion.Nomencladores
             CreateMap<Descuento, CrearDescuentoInputDto>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductosIds, opt => opt.MapFrom(src =>
-                    src.ProductoDescuentos.Select(pd => pd.ProductoId).ToList()
+                    src.ProductoDescuentos.Select(pd => pd.ProductVariantId).ToList()
                 ));
         }
 
@@ -66,7 +66,7 @@ namespace API.Application.Mapper.Gestion.Nomencladores
                     var nuevosIds = src.ProductosIds ?? new List<Guid>();
 
                     // IDs que ya existen en la entidad
-                    var existentesIds = dest.ProductoDescuentos.Select(pd => pd.ProductoId).ToList();
+                    var existentesIds = dest.ProductoDescuentos.Select(pd => pd.ProductVariantId).ToList();
 
                     // --- Agregar los que faltan ---
                     var paraAgregar = nuevosIds.Except(existentesIds).ToList();
@@ -74,14 +74,14 @@ namespace API.Application.Mapper.Gestion.Nomencladores
                     {
                         dest.ProductoDescuentos.Add(new ProductoDescuento
                         {
-                            ProductoId = id,
+                            ProductVariantId = id,
                             DescuentoId = dest.Id
                         });
                     }
 
                     // --- Eliminar los que ya no están ---
                     var paraEliminar = dest.ProductoDescuentos
-                        .Where(pd => !nuevosIds.Contains(pd.ProductoId))
+                        .Where(pd => !nuevosIds.Contains(pd.ProductVariantId))
                         .ToList();
 
                     foreach (var pd in paraEliminar)

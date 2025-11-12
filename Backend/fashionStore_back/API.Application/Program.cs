@@ -1,4 +1,5 @@
 using API.Application.IoC;
+using API.Data.ClasesAuxiliares.Correo;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,6 @@ app.UseStaticFiles();
 
 IoCRegister.AddRegistration(app, app.Environment);
 
-
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
 
 

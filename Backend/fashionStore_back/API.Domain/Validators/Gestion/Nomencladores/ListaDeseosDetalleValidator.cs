@@ -16,7 +16,7 @@ namespace API.Domain.Validators.Gestion.Nomencladores
             _repositorios = repositorios;
 
 
-            RuleFor(m => m.ProductoId).NotEmpty().WithMessage("No puede ser un texto vacio.")
+            RuleFor(m => m.ProductVariantId).NotEmpty().WithMessage("No puede ser un texto vacio.")
                                      .NotNull().WithMessage("Es un campo obligatorio.");
         }
     }
