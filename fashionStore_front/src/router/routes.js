@@ -49,6 +49,11 @@ const routes = [
                 component: () => import('src/pages/Nomenclators/NomenclatorsCard.vue')
             },
             {
+                path: 'Dashboard',
+                name: 'Dashboard',
+                component: () => import('src/pages/DashboardPage.vue')
+            },
+            {
                 path: 'Moneda',
                 name: 'Moneda',
                 component: () => import('src/pages/Nomenclators/Moneda.vue')
@@ -88,6 +93,11 @@ const routes = [
                 path: 'Usuario',
                 name: 'Usuario',
                 component: () => import('src/pages/Nomenclators/Usuario.vue')
+            },
+            {
+                path: 'Perfil',
+                name: 'Perfil',
+                component: () => import('src/pages/ProfilePage.vue')
             },
 
 
