@@ -120,7 +120,7 @@
       <div class="text-h6 text-weight-bold">Rebajas</div>
     </div>
     <div class="col-auto">
-      <q-btn flat label="Ver ofertas" @click="$router.push('/ofertas')" />
+      <q-btn flat label="Ver ofertas" @click="$router.push('/productos?rebajas=1')" />
     </div>
   </div>
 

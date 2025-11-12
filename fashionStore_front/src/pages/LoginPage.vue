@@ -32,7 +32,17 @@ export default {
   },
   methods: {
     onLogin() {
-      // Aquí va la lógica de login
+      // Lógica de login SIMULADO: persistimos una sesión mínima en localStorage
+      const simulated = {
+        nombre: 'Usuario Simulado',
+        correo: this.email || 'demo@local',
+        rol: 'Cliente'
+      }
+      try {
+        localStorage.setItem('fashion_profile_sim', JSON.stringify(simulated))
+      } catch (e) {
+        // ignore
+      }
       this.$q.notify({ type: 'positive', message: 'Login simulado' });
       this.$router.push('/NomenclatorsCard');
     },

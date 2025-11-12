@@ -38,8 +38,21 @@ export default {
         this.$q.notify({ type: 'negative', message: 'Las contraseñas no coinciden' })
         return
       }
-      // Aquí va la lógica de registro
+      // Registro SIMULADO: persistimos la sesión mínima para trabajar localmente
+      const simulated = {
+        nombre: this.name,
+        correo: this.email,
+        rol: 'Cliente',
+        // en modo simulado guardamos la contraseña bajo el campo que espera el backend
+        contrasenna: this.password
+      }
+      try {
+        localStorage.setItem('fashion_profile_sim', JSON.stringify(simulated))
+      } catch (e) {
+        // ignore
+      }
       this.$q.notify({ type: 'positive', message: 'Registro simulado' })
+      this.$router.push('/NomenclatorsCard')
     }
   }
 }

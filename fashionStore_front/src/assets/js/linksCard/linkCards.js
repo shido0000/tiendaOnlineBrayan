@@ -32,12 +32,6 @@ export const cardsNomencladores = Object.freeze([
         icon: "view_quilt",
         link: "Pedido",
     },
-
-    {
-        title: "Inventario",
-        icon: "view_quilt",
-        link: "Inventario",
-    },
     {
         title: "Usuarios",
         icon: "view_quilt",
