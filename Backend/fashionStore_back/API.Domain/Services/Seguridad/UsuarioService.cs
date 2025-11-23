@@ -1,4 +1,5 @@
-﻿using API.Data.Entidades.Seguridad;
+﻿using API.Data.Dto.Usuario;
+using API.Data.Entidades.Seguridad;
 using API.Data.IUnitOfWorks.Interfaces;
 using API.Domain.Exceptions;
 using API.Domain.Interfaces.Seguridad;
@@ -14,6 +15,7 @@ namespace API.Domain.Services.Seguridad
 {
     public class UsuarioService : BasicService<Usuario, UsuarioValidator>, IUsuarioService
     {
+
 
         public UsuarioService(IUnitOfWork<Usuario> repositorios, IHttpContextAccessor httpContext) : base(repositorios, httpContext)
         {
@@ -58,6 +60,32 @@ namespace API.Domain.Services.Seguridad
         }
 
 
+        public async Task<Guid> ActualizarPerfil(Guid id, UsuarioActualizarDto usuarioDto)
+        {
+            var usuarioExistente = await _repositorios.Usuarios
+                                            .GetQuery()
+                                            .FirstOrDefaultAsync(e => e.Id == id)
+                                            ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Usuario no encontrado." };
+
+            usuarioExistente.Nombre = usuarioDto.Nombre;
+            usuarioExistente.Apellidos = usuarioDto.Apellidos;
+            usuarioExistente.Username = usuarioDto.Username;
+            usuarioExistente.Correo = usuarioDto.Correo;
+
+            if (!string.IsNullOrEmpty(usuarioDto.Contrasenna))
+            {
+                usuarioExistente.Contrasenna = Crypto.HashPassword(usuarioDto.Contrasenna);
+                usuarioExistente.DebeCambiarContrasenna = false;
+            }
+
+            await ValidarAntesCrear(usuarioExistente);
+
+            _repositorios.Usuarios.Update(usuarioExistente);
+            await _repositorios.Usuarios.SaveChangesAsync();
+            return usuarioExistente.Id;
+        }
+
+
         public override async Task ValidarAntesActualizar(Usuario usuario)
         {
             ///validando los datos insertados por el usuario
@@ -72,7 +100,7 @@ namespace API.Domain.Services.Seguridad
             //if (!await _repositorios.BasicRepository.AnyAsync(e => e.Id == entity.Id))
             //    throw new CustomException { Status = StatusCodes.Status404NotFound, Message = "Elemento no encontrado." };
         }
-        public async Task<Usuario?> ObtenerPorUsername(string username, Func<IQueryable<Usuario>, IIncludableQueryable<Usuario, object>>? propiedadesIncluidas = null) => await _repositorios.BasicRepository.FirstAsync(entity => entity.Username == username, propiedadesIncluidas);
+        public async Task<Usuario?> ObtenerPorUsername(string username, Func<IQueryable<Usuario>, IIncludableQueryable<Usuario, object>>? propiedadesIncluidas = null) => await _repositorios.BasicRepository.FirstAsync(entity => entity.Username == username, propiedadesIncluidas: query => query.Include(e => e.Rol));
 
         public async Task<List<Permiso>> ObtenerPermisos(string username)
             => (await _repositorios.Usuarios.FirstAsync(e => e.Username == username, query => query.Include(e => e.Rol.RolPermiso).ThenInclude(e => e.Permiso)))?.Rol.RolPermiso.Select(e => e.Permiso).ToList() ?? new();

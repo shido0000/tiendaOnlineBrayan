@@ -7,6 +7,8 @@ using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace API.Application.Controllers.Seguridad
 {
@@ -59,6 +61,41 @@ namespace API.Application.Controllers.Seguridad
             else
                 return Unauthorized(new ResponseDto { Status = StatusCodes.Status401Unauthorized, ErrorMessage = "Usuario o contraseña no válido." });
         }
+
+        [HttpGet("UsuarioActual")]
+        [Authorize] // requiere token válido
+        public async Task<ActionResult> ObtenerUsuarioActual()
+        {
+            // El claim UniqueName lo pusiste como el username
+            var username = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(username))
+                return Unauthorized(new ResponseDto { Status = StatusCodes.Status401Unauthorized, ErrorMessage = "Token inválido." });
+
+            // Buscar info del usuario en tu servicio/repositorio
+            var usuario = await _usuarioService.ObtenerPorUsername(username);
+
+            if (usuario == null)
+                return NotFound(new ResponseDto { Status = StatusCodes.Status404NotFound, ErrorMessage = "Usuario no encontrado." });
+
+            return Ok(new ResponseDto
+            {
+                Status = StatusCodes.Status200OK,
+                Result = new
+                {
+                    Id=usuario.Id,
+                    Username=usuario.Username,
+                    NombreCompleto=usuario.NombreCompleto,
+                    Nombre=usuario.Nombre,
+                    Apellidos=usuario.Apellidos,
+                    Correo=usuario.Correo,
+                    RolNombre = usuario.Rol.Nombre,
+                    RolId = usuario.Rol.Id,
+                    Permisos = await _usuarioService.ObtenerPermisos(username)
+                }
+            });
+        }
+
 
         //[HttpPost("ForgotPassword")]
         //public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
