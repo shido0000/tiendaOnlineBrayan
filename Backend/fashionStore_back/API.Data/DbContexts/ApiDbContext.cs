@@ -39,6 +39,10 @@ namespace API.Data.DbContexts
         public DbSet<ProductoDescuento> ProductosDescuentos { get; set; }
         public DbSet<ProductoFoto> ProductosFotos { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<OtraVariante> OtraVariantes { get; set; }
+        public DbSet<ProductoVariante> ProductoVariantes { get; set; }
+        public DbSet<Gestor> Gestores { get; set; }
+        public DbSet<GestorPedido> GestorPedidos { get; set; }
 
 
 
@@ -83,6 +87,10 @@ namespace API.Data.DbContexts
             ProductoDescuentoConfiguracionDB.SetEntityBuilder(modelBuilder);
             ProductoFotoConfiguracionDB.SetEntityBuilder(modelBuilder);
             ReviewConfiguracionDB.SetEntityBuilder(modelBuilder);
+            OtraVarianteConfiguracionDB.SetEntityBuilder(modelBuilder);
+            ProductoVarianteConfiguracionDB.SetEntityBuilder(modelBuilder);
+            GestorConfiguracionDB.SetEntityBuilder(modelBuilder);
+            GestorPedidoConfiguracionDB.SetEntityBuilder(modelBuilder);
 
 
             // CONTABILIDAD

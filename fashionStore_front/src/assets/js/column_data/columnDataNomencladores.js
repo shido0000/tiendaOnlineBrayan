@@ -95,6 +95,48 @@ export const dataColumnProducto = Object.freeze([
         sortable: true,
     },
     {
+        name: 'sku',
+        align: 'center',
+        label: 'SKU',
+        field: 'sku',
+        sortable: true
+    },
+    {
+        name: 'stockTotal',
+        align: 'center',
+        label: 'Stock Total',
+        field: 'stockTotal',
+        sortable: true
+    },
+    {
+        name: "precioCosto",
+        align: "center",
+        label: "Precio de Costo",
+        field: "precioCosto",
+        sortable: true,
+    },
+    {
+        name: "monedaCostoCodigo",
+        align: "center",
+        label: "Moneda Costo",
+        field: "monedaCostoCodigo",
+        sortable: true,
+    },
+    {
+        name: "precioVenta",
+        align: "center",
+        label: "Precio de Venta",
+        field: "precioVenta",
+        sortable: true,
+    },
+    {
+        name: "monedaVentaCodigo",
+        align: "center",
+        label: "Moneda Venta",
+        field: "monedaVentaCodigo",
+        sortable: true,
+    },
+    {
         name: 'esActivo',
         align: 'center',
         label: 'Activo',
@@ -108,43 +150,6 @@ export const dataColumnProducto = Object.freeze([
         field: "action",
         sortable: true,
     },
-    /*{
-        name: 'sku',
-        align: 'center',
-        label: 'SKU',
-        field: 'sku',
-        sortable: true
-    },
-
-    {
-        name: "precioCosto",
-        align: "center",
-        label: "Precio de Costo",
-        field: "precioCosto",
-        sortable: true,
-    },
-    {
-        name: "precioVenta",
-        align: "center",
-        label: "Precio de Venta",
-        field: "precioVenta",
-        sortable: true,
-    },
-    {
-        name: "monedaCodigo",
-        align: "center",
-        label: "Moneda",
-        field: "monedaCodigo",
-        sortable: true,
-    },
-    {
-        name: "color",
-        align: "center",
-        label: "Color",
-        field: "color",
-        sortable: true,
-    },
-    */
 ]);
 
 

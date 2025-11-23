@@ -1,72 +1,190 @@
 <template>
   <div class="login-bg">
     <div class="login-card">
-      <q-avatar size="80px" class="q-mb-md bg-white"><q-icon name="person_add" size="60px" color="grey-5" /></q-avatar>
+<div class="row justify-center q-mb-md">
+  <q-avatar size="80px" class="bg-white">
+    <q-icon name="person_add" size="60px" color="grey-5" />
+  </q-avatar>
+</div>
+
+
       <q-form @submit.prevent="onRegister">
-        <q-input v-model="name" label="Nombre completo" type="text" dense outlined class="q-mb-md" prepend-inner-icon="person" />
-        <q-input v-model="email" label="Email" type="email" dense outlined class="q-mb-md" prepend-inner-icon="mail" />
-        <q-input v-model="password" label="Password" type="password" dense outlined class="q-mb-md" prepend-inner-icon="lock" />
-        <q-input v-model="confirmPassword" label="Confirmar Password" type="password" dense outlined class="q-mb-md" prepend-inner-icon="lock" />
-        <q-btn type="submit" label="REGISTRARSE" color="purple-7" class="full-width login-btn q-mb-md" />
+        <q-input
+          v-model="objeto.nombre"
+          label="Nombre"
+          type="text"
+          dense
+          outlined
+          class="q-mb-md col-12"
+          prepend-inner-icon="person"
+        />
+        <q-input
+          v-model="objeto.apellidos"
+          label="Apellido"
+          type="text"
+          dense
+          outlined
+          class="q-mb-md"
+          prepend-inner-icon="person"
+        />
+         <q-input
+          v-model="objeto.username"
+          label="Username"
+          type="text"
+          dense
+          outlined
+          class="q-mb-md"
+          prepend-inner-icon="person"
+        />
+        <q-input
+          v-model="objeto.correo"
+          label="Email"
+          type="email"
+          dense
+          outlined
+          class="q-mb-md"
+          prepend-inner-icon="mail"
+        />
+        <q-input
+          v-model="objeto.contrasenna"
+          label="Password"
+          type="password"
+          dense
+          outlined
+          class="q-mb-md"
+          prepend-inner-icon="lock"
+        />
+        <q-input
+          v-model="objeto.contrasennaConfirmada"
+          label="Confirmar Password"
+          type="password"
+          dense
+          outlined
+          class="q-mb-md"
+          prepend-inner-icon="lock"
+        />
+        <q-btn
+          type="submit"
+          label="REGISTRARSE"
+          color="purple-7"
+          class="full-width login-btn q-mb-md"
+        />
       </q-form>
+
       <div class="text-center q-mt-md">
-        <span class="text-grey-4">¿Ya tienes cuenta?</span>
-        <q-btn flat label="Inicia sesión" color="purple-4" @click="$router.push('/login')" />
+        <span class="text-black-4">¿Ya tienes cuenta?</span>
+        <q-btn
+          flat
+          label="Inicia sesión"
+          color="purple-4"
+          @click="goToLogin"
+        />
       </div>
     </div>
   </div>
+  <DialogLoad :dialogLoad="dialogLoad" />
+
 </template>
 
-<script>
-export default {
-  name: 'RegisterPage',
-  data() {
-    return {
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    }
-  },
-  methods: {
-    onRegister() {
-      if (!this.name || !this.email || !this.password || !this.confirmPassword) {
-        this.$q.notify({ type: 'negative', message: 'Completa todos los campos' })
-        return
-      }
-      if (this.password !== this.confirmPassword) {
-        this.$q.notify({ type: 'negative', message: 'Las contraseñas no coinciden' })
-        return
-      }
-      // Registro SIMULADO: persistimos la sesión mínima para trabajar localmente
-      const simulated = {
-        nombre: this.name,
-        correo: this.email,
-        rol: 'Cliente',
-        // en modo simulado guardamos la contraseña bajo el campo que espera el backend
-        contrasenna: this.password
-      }
-      try {
-        localStorage.setItem('fashion_profile_sim', JSON.stringify(simulated))
-      } catch (e) {
-        // ignore
-      }
-      this.$q.notify({ type: 'positive', message: 'Registro simulado' })
-      this.$router.push('/NomenclatorsCard')
-    }
-  }
+<script setup>
+import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
+import { loadGet, saveData, saveDataPronosticoEnviarObjeto } from 'src/assets/js/util/funciones'
+import { Error } from 'src/assets/js/util/notify'
+import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
+
+const dialogLoad = ref(false)
+
+
+const objetoInicial = {
+  // id: null,
+  nombreCompleto: null,
+  nombre: null,
+  apellidos: null,
+  username: null,
+  correo: null,
+  rolId:null,
+  esActivo:true,
+  contrasenna:null,
+  contrasennaConfirmada:null,
 }
+
+const objeto = reactive({ ...objetoInicial })
+
+
+const router = useRouter()
+const $q = useQuasar()
+
+const itemsRol = ref([])
+
+
+const onRegister = () => {
+    Guardar()
+}
+
+const goToLogin = () => {
+  router.push('/login')
+}
+
+const Guardar = async() => {
+  //const url = objeto.id ? 'Usuario/Actualizar' : 'Usuario/Crear'
+  const url =  'Usuario/Crear'
+ if (!objeto.nombre || !objeto.apellidos || !objeto.username || !objeto.correo || !objeto.contrasenna || !objeto.contrasennaConfirmada) {
+    $q.notify({ type: 'negative', message: 'Completa todos los campos' })
+    return
+  }
+  if (objeto.contrasenna !== objeto.contrasennaConfirmada) {
+    $q.notify({ type: 'negative', message: 'Las contraseñas no coinciden' })
+    return
+  }
+
+  await saveDataPronosticoEnviarObjeto(url, objeto, dialogLoad).then(
+    (respuesta) => {
+      if (!!respuesta?.mensajeError) {
+           if (respuesta?.mensajeError?.includes('NombreCompleto')) {
+                         Error("Ya existe un usuario con este mismo nombre completo.")
+                      }
+                      else  if (respuesta?.mensajeError?.includes('Username')) {
+                         Error("Ya existe un usuario con este mismo username.")
+                      }
+                      else{
+        Error(respuesta?.mensajeError)
+        }
+      } else {
+         $q.notify({ type: 'positive', message: 'Registro exitoso' })
+  router.push('/login')
+      }
+    }
+  )
+
+    // Aquí va la lógica de registro real
+}
+
+
+onMounted(async () => {
+  itemsRol.value = await loadGet('Rol/ObtenerListadoPaginado')??[]
+  let clienteId= (itemsRol.value.find(e=>e.nombre==="Cliente")).id
+  objeto.rolId=clienteId
+})
+
 </script>
 
 <style scoped lang="scss">
 @import '../css/quasar.variables.scss';
+
 .login-bg {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 30%, $bry-primary 0%, $bry-secondary 100%);
+  background: radial-gradient(
+    circle at 50% 30%,
+    $bry-white 0%,
+    $primary 100%
+  );
 }
+
 .login-card {
   width: 350px;
   padding: 40px 32px 32px 32px;

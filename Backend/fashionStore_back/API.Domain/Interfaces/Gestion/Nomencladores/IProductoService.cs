@@ -7,10 +7,11 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
 {
     public interface IProductoService : IBaseService<Producto, ProductoValidator>
     {
-        Task<Guid> CrearAsync(CrearProductoInputDto dto, List<IFormFile> fotos);
-        Task<Guid> ActualizarAsync(Guid id, ActualizarProductoInputDto dto, List<IFormFile> fotos);
+        Task<Guid> CrearProducto(ProductoACrear producto);
+        Task<Guid> ActualizarProducto(Guid productoId, ProductoAActualizar producto);
+        Task<ProductoEspecificoDto> ObtenerProductoEspecifico(Guid id);
         Task<List<Producto>> ObtenerProductosNovedades();
-        Task<List<ProductosAgrupados>> ObtenerProductosAgrupados();
-        Task<ProductosAgrupados?> ObtenerProductoAgrupadoPorSku(string sku);
+        //Task<List<ProductosAgrupados>> ObtenerProductosAgrupados();
+        //Task<ProductosAgrupados?> ObtenerProductoAgrupadoPorSku(string sku);
     }
 }

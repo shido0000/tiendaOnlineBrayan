@@ -236,6 +236,7 @@ namespace API.Application.IoC
             services.AddScoped<ICarritoDetalleService, CarritoDetalleService>();
             services.AddScoped<IComprobanteVentaService, ComprobanteVentaService>();
             services.AddScoped<IDatosInicioService, DatosInicioService>();
+            services.AddScoped<IOtraVarianteService, OtraVarianteService>();
 
 
             // CONTABILIDAD
