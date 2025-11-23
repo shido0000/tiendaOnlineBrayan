@@ -154,16 +154,12 @@ function onLogout() {
 
 // --- Ciclo de vida ---
 onMounted(async () => {
-  console.log('ProfilePage montado')
   const hasSession = checkUserSession()
-  console.log('hasSession: ', hasSession)
   if (!hasSession) {
-    console.log('No hay sesión válida, redirigiendo a login')
     router.push({ name: 'LoginPage' })
     return
   }
 
-  console.log('Intentando cargar usuario desde backend...')
   const loaded = await loadUserFromBackend()
 
   if (!loaded) {

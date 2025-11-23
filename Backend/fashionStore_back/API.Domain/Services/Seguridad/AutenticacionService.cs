@@ -33,6 +33,8 @@ namespace API.Domain.Services.Seguridad
             Usuario usuario = await _usuarioService.ObtenerPorUsername(username) ??
                 throw new CustomException { Status = StatusCodes.Status401Unauthorized, Message = "Usuario o contraseña no válido." };
 
+            if(!usuario.EsActivo) throw new CustomException { Status = StatusCodes.Status401Unauthorized, Message = "Acceso denegado." };
+
             if (usuario.DebeCambiarContrasenna)
                 throw new CustomException { Status = StatusCodes.Status307TemporaryRedirect, Message = "El usuario debe cambiar la contraseña." };
 
