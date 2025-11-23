@@ -7,13 +7,13 @@
         icon="dashboard"
         @click="$router.push('/NomenclatorsCard')"
       />
-      <q-breadcrumbs-el label="Usuarios" />
+      <q-breadcrumbs-el label="Mensajerías" />
     </q-breadcrumbs>
     <q-table
       class="q-pa-md"
       :filter="filter"
       :rows="items"
-      :columns="dataColumnUsuario"
+      :columns="dataColumnMensajeria"
       row-key="id"
       no-data-label="No hay elementos disponibles"
       no-results-label="No hay elementos disponibles"
@@ -22,7 +22,7 @@
     >
       <template v-slot:top>
         <div class="col-4 q-table__title">
-          <span>Usuarios</span>
+          <span>Mensajerías</span>
           <q-input
             outline
             color="primary"
@@ -62,176 +62,58 @@
           </q-tooltip>
         </q-btn>
         <q-dialog v-model="dialog" persistent>
-          <q-card style="width: 900px; max-width: 80vw; height: auto">
+          <q-card style="width: 700px; max-width: 80vw; height: auto">
             <header class="q-pa-sm bg-primary">
               <q-toolbar>
                 <q-toolbar-title class="text-subtitle6 text-white">
                   {{
-                    objeto.id ? "Editar Usuario" : "Adicionar Usuario"
+                    objeto.id ? "Editar Mensajería" : "Adicionar Mensajería"
                   }}</q-toolbar-title
                 >
               </q-toolbar>
             </header>
             <q-form @submit.prevent="Guardar()" @reset="close" ref="myForm">
               <div class="h row q-ma-md">
-                <q-input
-                  class="col-xs-12 col-md-12 q-pa-sm"
-                  :disable="!!objeto.id"
-                  label="Nombre *"
-                  v-model="objeto.nombre"
-                  color="primary"
-                  counter
-                  maxlength="50"
-                  lazy-rules
-                  :rules="[
-                    (val) =>
-                      (val && val.length > 0) || 'Debe insertar un nombre',
-
-                  ]"
-                />
-                <q-input
-                  class="col-xs-12 col-md-12 q-pa-sm"
-                  :disable="!!objeto.id"
-                  label="Apellidos *"
-                  v-model="objeto.apellidos"
-                  color="primary"
-                  counter
-                  maxlength="50"
-                  lazy-rules
-                  :rules="[
-                    (val) =>
-                      (val && val.length > 0) || 'Debe insertar un apellido',
-
-                  ]"
-                />
 
                 <q-input
-                :disable="!!objeto.id"
                   class="col-xs-12 q-pa-sm"
-                  label="Username *"
-                  v-model="objeto.username"
+                  label="Descripción *"
+                  v-model="objeto.descripcion"
                   color="primary"
                   counter
                   autogrow
-                  maxlength="50"
+                  maxlength="100"
                   lazy-rules
                   :rules="[
                     (val) =>
-                      (val && val.length > 0) || 'Debe insertar un Username',
-                      (val) =>
-                      (items.length > 0
-                        ? !isValorRepetido(val, 'username', objeto, items)
-                        : true) || 'Ya existe un username con ese valor',
-
+                      (val && val.length > 0) || 'Debe insertar un Descripción',
                   ]"
                 />
-                <q-input
-                :disable="!!objeto.id"
-                  class="col-xs-12 q-pa-sm"
-                  label="Teléfono *"
-                  v-model="objeto.telefono"
-                  color="primary"
-                  counter
-                  autogrow
-                  maxlength="50"
-                  lazy-rules
-                  :rules="[
-                    (val) =>
-                      (val && val.length > 0) || 'Debe insertar un teléfono',
-                      (val) =>
-                      (items.length > 0
-                        ? !isValorRepetido(val, 'telefono', objeto, items)
-                        : true) || 'Ya existe un teléfono con ese valor',
 
-                  ]"
-                />
-              <q-input
-  v-if="!objeto.id"
-  class="col-xs-12 q-pa-sm"
-  label="Contraseña *"
-  v-model="objeto.contrasenna"
-  :type="isPwd ? 'password' : 'text'"
-  color="primary"
-  counter
-  maxlength="50"
-  lazy-rules
-  :rules="[
-    val => (val && val.length > 0) || 'Debe insertar una Contraseña'
-  ]"
->
-  <template v-slot:append>
-    <q-icon
-      :name="isPwd ? 'visibility_off' : 'visibility'"
-      class="cursor-pointer"
-      @click="isPwd = !isPwd"
-    />
-  </template>
-</q-input>
-
-<q-input
-  v-if="!objeto.id"
-  class="col-xs-12 q-pa-sm"
-  label="Confirmar Contraseña *"
-  v-model="objeto.contrasennaConfirmada"
-  :type="isPwdConfirm ? 'password' : 'text'"
-  color="primary"
-  counter
-  maxlength="50"
-  lazy-rules
-  :rules="[
-    val => (val && val.length > 0) || 'Debe insertar una Contraseña'
-  ]"
->
-  <template v-slot:append>
-    <q-icon
-      :name="isPwdConfirm ? 'visibility_off' : 'visibility'"
-      class="cursor-pointer"
-      @click="isPwdConfirm = !isPwdConfirm"
-    />
-  </template>
-</q-input>
-
-
-                             <q-input
-  :disable="!!objeto.id"
-  class="col-xs-12 col-sm-12 col-md-9 q-pa-sm"
-  label="Correo *"
-  v-model="objeto.correo"
-  color="primary"
-  counter
-  autogrow
-  maxlength="50"
-  lazy-rules
-  :rules="[
-    val => (val && val.length > 0) || 'Debe insertar un Correo',
-   // val => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val) || 'Formato de correo no válido',
-    val => (items.length > 0
-      ? !isValorRepetido(val, 'correo', objeto, items)
-      : true) || 'Ya existe un correo con ese valor'
-  ]"
-/>
-
-                <q-select
-                        class="col-xs-12 col-sm-12 col-md-3 q-pa-sm"
-                        v-model="objeto.rolId"
-                        label="Rol *"
+  <q-input v-model.number="objeto.precio" label="Precio *" type="number" :min="0" outlined dense class="col-xs-12 col-md-6 q-py-md q-px-sm q-mt-sm"  @input="objeto.precio = Math.floor(objeto.precio)" />
+        <q-select
+                       class="col-xs-12 col-md-6 q-py-md q-px-sm q-mt-sm"
+                        v-model="objeto.monedaId"
+                              outlined
+            dense
+                        label="Moneda *"
                         emit-value
                         map-options
                         :use-input="
-                            objeto.rolId === null ||
-                            objeto.rolId === ''
+                            objeto.monedaId === null ||
+                            objeto.monedaId === ''
                         "
-                        option-label="nombre"
+                        option-label="codigo"
                         option-value="id"
-                        :options="filtradoRol"
+                        :options="filtradoMoneda"
                         @filter="
                             (val, update) => {
-                                filtradoRol = filterOptions(
+                                filtradoMoneda = filterOptions(
                                     val,
                                     update,
-                                    filtradoRol,
-                                    'nombre',
-                                    itemsRol
+                                    filtradoMoneda,
+                                    'codigo',
+                                    itemsMoneda
                                 );
                             }
                         "
@@ -250,14 +132,6 @@
                             </q-item>
                         </template>
                     </q-select>
- <q-checkbox v-show="objeto.id"
-                        aling="right"
-                        class="col-xs-6 col-sm-6 col-md-5 q-mt-sm"
-                        right-label
-                        v-model="objeto.esActivo"
-                        label="Activo"
-                        color="primary"
-                    />
 
                 <q-card-actions class="col-12 q-mt-lg justify-end">
                   <q-btn
@@ -281,23 +155,23 @@
         <DialogEliminar
           v-if="isDialogoEliminarAbierto"
           :isOpen="isDialogoEliminarAbierto"
-          :idElemento="Number(idElementoSeleccionado)"
+          :idElemento="idElementoSeleccionado"
           @eliminar="eliminar"
           @closeDialog="handleCloseDialog"
         />
 
         <DialogLoad :dialogLoad="dialogLoad" />
       </template>
-  <template v-slot:body-cell-nombre="props">
+  <template v-slot:body-cell-monedaCodigo="props">
                 <q-td :props="props">
                     <div>
                         {{
                             PonerPuntosSupensivosACampo(
-                                props.row?.nombre,
+                                props.row?.monedaCodigo,
                                 30
                             )
                         }}
-                        <q-tooltip>{{ props.row?.nombre }}</q-tooltip>
+                        <q-tooltip>{{ props.row?.monedaCodigo }}</q-tooltip>
                     </div>
                 </q-td>
             </template>
@@ -314,16 +188,7 @@
                                 </div>
                             </q-td>
                         </template>
-                         <template v-slot:body-cell-esActivo="props">
-        <q-td :props="props">
-          <q-icon
-            flat
-            :name="props.value == 0 ? 'highlight_off' : 'check_circle'"
-            :class="props.value == 0 ? 'text-grey' : 'text-primary'"
-            size="20px"
-          />
-        </q-td>
-      </template>
+
 
       <template v-slot:body-cell-action="props">
         <q-td :props="props">
@@ -338,7 +203,7 @@
             >
               <q-tooltip>Editar datos</q-tooltip>
             </q-btn>
-          <!--  <q-btn
+            <q-btn
               flat
               dense
               size="sm"
@@ -347,7 +212,7 @@
               icon="delete"
             >
               <q-tooltip>Eliminar</q-tooltip>
-            </q-btn>-->
+            </q-btn>
           </div>
         </q-td>
       </template>
@@ -361,17 +226,14 @@ import { ref, reactive, onMounted } from 'vue'
 import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
 import DialogEliminar from 'components/DialogBoxes/DialogEliminar.vue'
 
-import { dataColumnUsuario } from 'src/assets/js/column_data/columnDataNomencladores'
-import { closeDialog, eliminarElemento, filterOptions, isValorRepetido, loadGet, obtener, saveData, saveDataParaObjetosConFotos } from 'src/assets/js/util/funciones'
+import { dataColumnMensajeria } from 'src/assets/js/column_data/columnDataNomencladores'
+import { closeDialog, eliminarElemento, filterOptions, isValorRepetido, loadGet, obtener, saveData } from 'src/assets/js/util/funciones'
 import { PonerPuntosSupensivosACampo } from 'src/assets/js/util/extras'
-import { apiFotosBaseUrl } from 'src/boot/axios'
 
 // Variables Booleanas
 const dialog = ref(false)
 const dialogLoad = ref(false)
 const isDialogoEliminarAbierto = ref(false)
-const isPwd = ref(true)
-const isPwdConfirm = ref(true)
 
 // Variables Nulas
 const myForm = ref(null)
@@ -382,21 +244,14 @@ const filter = ref('')
 
 // Arreglos
 const items = ref([])
-const itemsRol = ref([])
-const filtradoRol = ref([])
+const itemsMoneda = ref([])
+const filtradoMoneda = ref([])
 
 const objetoInicial = {
   // id: null,
-  nombreCompleto: null,
-  nombre: null,
-  apellidos: null,
-  username: null,
-  correo: null,
-  rolId:null,
-  telefono:null,
-  esActivo:true,
-  contrasenna:null,
-  contrasennaConfirmada:null,
+  descripcion: null,
+  precio:0,
+    monedaId:null
 }
 
 // Crear una copia del objeto inicial
@@ -404,25 +259,20 @@ const objeto = reactive({ ...objetoInicial })
 // Funciones
 // 1- Funcion para pasar parametros en el Adicionar SaveData
 const Guardar = () => {
-  //const url = objeto.id ? 'Usuario/Actualizar' : 'Usuario/Crear'
-  const url = objeto.id ? 'Usuario/Actualizar' : 'Usuario/Crear'
+  const url = objeto.id ? 'Mensajeria/Actualizar' : 'Mensajeria/Crear'
   saveData(url, objeto, load, close, dialogLoad)
 }
 
 // Funcion para Obtener los datos para editar
 const obtenerElementoPorId = async (id) => {
-  await obtener('Usuario/ObtenerPorId', id, objeto, dialogLoad, dialog)
-
- filtradoRol.value = itemsRol.value
-
+  filtradoMoneda.value = itemsMoneda.value
+  await obtener('Mensajeria/ObtenerPorId', id, objeto, dialogLoad, dialog)
 }
-
-
 
 // Funcion para eliminar elemento
 const eliminar = async () => {
   await eliminarElemento(
-    'Usuario/Eliminar',
+    'Mensajeria/Eliminar',
     idElementoSeleccionado.value,
     load,
     dialogLoad
@@ -437,7 +287,7 @@ const abrirDialogoEliminar = (id) => {
 
 // 2- Funcion para pasar por parametro el arreglo de los elmentos de la tabla
 const load = async () => {
-  items.value = await loadGet('Usuario/ObtenerListadoPaginado')??[]
+  items.value = await loadGet('Mensajeria/ObtenerListadoPaginado')??[]
 }
 
 // Funcion para cerrar el dialog
@@ -451,18 +301,11 @@ const close = async () => {
 // Funcion para cargar los datos al cargar la pagina
 onMounted(async () => {
   dialogLoad.value = true
-  items.value = await loadGet('Usuario/ObtenerListadoPaginado')??[]
-  itemsRol.value = await loadGet('Rol/ObtenerListadoPaginado')??[]
-
- filtradoRol.value = itemsRol.value
+  items.value = await loadGet('Mensajeria/ObtenerListadoPaginado')??[]
+  itemsMoneda.value = await loadGet('Moneda/ObtenerListadoPaginado')??[]
+  filtradoMoneda.value = itemsMoneda.value
   dialogLoad.value = false
 })
 
-function getFotoUrl(foto) {
-  if (!foto) return ''
-  if (/^https?:\/\//.test(foto)) return foto
-  const url = apiFotosBaseUrl + (foto.startsWith('/') ? foto : '/' + foto)
-  return url
-}
 
 </script>

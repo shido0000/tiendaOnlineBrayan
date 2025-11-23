@@ -17,6 +17,7 @@
           <q-input v-model="username" label="Usuario" dense outlined class="q-mb-md" />
           <q-input v-model="name" label="Nombre completo" dense outlined class="q-mb-md" readonly/>
           <q-input v-model="email" label="Email" type="email" dense outlined class="q-mb-md" />
+          <q-input v-model="telefono" label="Teléfono" type="text" dense outlined class="q-mb-md" />
           <q-input v-model="password" label="Nueva password (dejar vacío para mantener)" type="password" dense outlined class="q-mb-md" />
           <q-input v-model="confirmPassword" label="Confirmar nueva password" type="password" dense outlined class="q-mb-md" />
           <q-input v-model="role" label="Rol" dense outlined class="q-mb-md" readonly />
@@ -56,6 +57,7 @@ const apellidos = ref('')
 const username = ref('')
 const name = ref('')
 const email = ref('')
+const telefono = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const role = ref('')
@@ -92,6 +94,7 @@ async function loadUserFromBackend() {
     username.value = obj.username || ''
     name.value = obj.nombreCompleto || ''
     email.value = obj.correo || ''
+    telefono.value = obj.telefono || ''
     role.value = obj.rolNombre || obj.role || ''
     dialogLoad.value=false
 
@@ -107,8 +110,8 @@ async function loadUserFromBackend() {
 
 // Guardar cambios en backend
 async function onSave() {
-  if (!name.value || !email.value) {
-    $q.notify({ type: 'negative', message: 'Nombre completo y email son requeridos' })
+  if (!nombre.value||!apellidos.value || !email.value || !telefono.value) {
+    $q.notify({ type: 'negative', message: 'Nombre, apellidos, teléfono  y email son requeridos' })
     return
   }
   if (password.value && password.value !== confirmPassword.value) {
@@ -128,6 +131,7 @@ async function onSave() {
   apellidos: apellidos.value,
   username: username.value,
   correo: email.value,
+  telefono: telefono.value,
   contrasenna: "",
   }
   if (password.value) usuarioDto.contrasenna = password.value

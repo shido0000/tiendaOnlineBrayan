@@ -380,3 +380,68 @@ export const dataColumnUsuario = Object.freeze([
         sortable: true,
     },
 ]);
+
+export const dataColumnGestor = Object.freeze([
+    {
+        name: 'nombre',
+        align: 'center',
+        label: 'Nombre',
+        field: 'nombre',
+        sortable: true
+    },
+    {
+        name: "descripcion",
+        align: "center",
+        label: "Descripción",
+        field: "descripcion",
+        sortable: true,
+    },
+
+    {
+        name: 'esActiva',
+        align: 'center',
+        label: 'Activo',
+        field: 'esActiva',
+        sortable: true
+    },
+    {
+        name: "action",
+        align: "center",
+        label: "Acciones",
+        field: "action",
+        sortable: true,
+    },
+]);
+
+export const dataColumnMensajeria = Object.freeze([
+    {
+        name: "descripcion",
+        align: "center",
+        label: "Descripción",
+        field: "descripcion",
+        sortable: true,
+    },
+    {
+        name: "precio",
+        align: "center",
+        label: "Precio",
+        field: "precio",
+        sortable: true,
+    },
+    {
+        name: "monedaCodigo",
+        align: "center",
+        label: "Moneda",
+        field: "monedaCodigo",
+        sortable: true,
+    },
+
+    {
+        name: "action",
+        align: "center",
+        label: "Acciones",
+        field: "action",
+        sortable: true,
+    },
+]);
+

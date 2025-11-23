@@ -15,6 +15,7 @@ namespace API.Data.Entidades.Seguridad
         public required string Username { get; set; }
         public required string Contrasenna { get; set; }
         public required string Correo { get; set; }
+        public required string Telefono { get; set; }
         public bool DebeCambiarContrasenna { get; set; }
 
         public bool EsActivo { get; set; } = true;

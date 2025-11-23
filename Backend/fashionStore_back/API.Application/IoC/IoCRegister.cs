@@ -237,6 +237,8 @@ namespace API.Application.IoC
             services.AddScoped<IComprobanteVentaService, ComprobanteVentaService>();
             services.AddScoped<IDatosInicioService, DatosInicioService>();
             services.AddScoped<IOtraVarianteService, OtraVarianteService>();
+            services.AddScoped<IGestorService, GestorService>();
+            services.AddScoped<IMensajeriaService, MensajeriaService>();
 
 
             // CONTABILIDAD

@@ -89,6 +89,7 @@ namespace API.Application.Controllers.Seguridad
                     Nombre=usuario.Nombre,
                     Apellidos=usuario.Apellidos,
                     Correo=usuario.Correo,
+                    Telefono = usuario.Telefono,
                     RolNombre = usuario.Rol.Nombre,
                     RolId = usuario.Rol.Id,
                     Permisos = await _usuarioService.ObtenerPermisos(username)

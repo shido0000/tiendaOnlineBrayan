@@ -40,7 +40,7 @@ const props = defineProps({
     required: true
   },
   idElemento: {
-    type: Number,
+    type: String,
     required: true
   }
 })

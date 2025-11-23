@@ -71,6 +71,7 @@ namespace API.Domain.Services.Seguridad
             usuarioExistente.Apellidos = usuarioDto.Apellidos;
             usuarioExistente.Username = usuarioDto.Username;
             usuarioExistente.Correo = usuarioDto.Correo;
+            usuarioExistente.Telefono = usuarioDto.Telefono;
 
             if (!string.IsNullOrEmpty(usuarioDto.Contrasenna))
             {

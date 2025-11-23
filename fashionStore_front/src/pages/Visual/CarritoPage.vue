@@ -72,21 +72,32 @@
           <div class="text-h6 text-weight-bold q-mr-lg">
             Total: ${{ totalPrice.toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
           </div>
-          <q-btn color="primary" unelevated icon="payment" label="Proceder al pago" />
+          <q-btn
+  color="primary"
+  unelevated
+  icon="payment"
+  label="Proceder al pago"
+  @click="confirmarPedido.openDialog()"
+/>
         </div>
       </div>
     </div>
   </div>
+
+  <ConfirmarPedido ref="confirmarPedido" />
 </template>
 
 <script setup>
 import TopBar from './components/TopBar.vue'
 import useCart from 'src/stores/cartStore'
 import { apiFotosBaseUrl } from 'src/boot/axios'
+import ConfirmarPedido from './components/ConfirmarPedido.vue'
+import { ref } from 'vue'
 
 const cart = useCart()
 const items = cart.items
 const totalPrice = cart.totalPrice
+const confirmarPedido = ref(null)
 
 function getFotoUrl(foto) {
   if (!foto) return '/img/sin-foto.jpg'

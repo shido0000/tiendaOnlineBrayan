@@ -12,6 +12,7 @@ public class GestorPedidoConfiguracionDB
 
         modelBuilder.Entity<GestorPedido>().Property(e => e.GestorId).IsRequired();
         modelBuilder.Entity<GestorPedido>().Property(e => e.PedidoId).IsRequired();
+        modelBuilder.Entity<GestorPedido>().Property(e => e.PrecioAdicional).IsRequired();
 
         modelBuilder.Entity<GestorPedido>()
                   .HasOne(ci => ci.Gestor)
