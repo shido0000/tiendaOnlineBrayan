@@ -26,5 +26,6 @@ namespace API.Data.Entidades.Gestion.Nomencladores
 
         public ICollection<PedidoDetalle> Detalles { get; set; } = new List<PedidoDetalle>();
         public Venta? Venta { get; set; }
+        public List<GestorPedido> GestorPedidos { get; set; } = new();
     }
 }

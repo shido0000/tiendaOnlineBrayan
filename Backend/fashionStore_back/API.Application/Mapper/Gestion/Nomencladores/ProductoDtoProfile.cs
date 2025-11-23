@@ -28,6 +28,8 @@ namespace API.Application.Mapper.Gestion.Nomencladores
             // Producto → ListadoPaginadoProductoDto (hereda de ProductoDto)
             CreateMap<Producto, ListadoPaginadoProductoDto>()
                 .ForMember(dto => dto.CategoriaIds, opt => opt.MapFrom(e => e.ProductoCategorias.Select(f => f.CategoriaId).ToList()))
+                .ForMember(dto => dto.MonedaCostoCodigo, opt => opt.MapFrom(e => e.MonedaCosto.Codigo ?? "-"))
+                .ForMember(dto => dto.MonedaVentaCodigo, opt => opt.MapFrom(e => e.MonedaVenta.Codigo ?? "-"))
                 //.ForMember(dto => dto.FotosExistentes,
                 //    opt => opt.MapFrom(v => v.Fotos.Select(f => f.Url).ToList()))
                 .ReverseMap();

@@ -10,16 +10,16 @@ public class ProductoFotoConfiguracionDB
         modelBuilder.Entity<ProductoFoto>().ToTable("ProductosFotos");
         EntidadBaseConfiguracionBD<ProductoFoto>.SetEntityBuilder(modelBuilder);
 
-        modelBuilder.Entity<ProductoFoto>().Property(e => e.ProductoId).HasMaxLength(50).IsRequired();
+        modelBuilder.Entity<ProductoFoto>().Property(e => e.ProductoVarianteId).IsRequired();
         modelBuilder.Entity<ProductoFoto>().Property(e => e.Descripcion).HasMaxLength(200).IsRequired();
         modelBuilder.Entity<ProductoFoto>().Property(e => e.Url).IsRequired();
         modelBuilder.Entity<ProductoFoto>().Property(e => e.EsPrincipal).IsRequired();
         modelBuilder.Entity<ProductoFoto>().Property(e => e.Orden).HasColumnType("decimal(18,2)").IsRequired();
 
         modelBuilder.Entity<ProductoFoto>()
-             .HasOne(ci => ci.Producto)
+             .HasOne(ci => ci.ProductoVariante)
              .WithMany(ci => ci.Fotos)
-             .HasForeignKey(ci => ci.ProductoId)
+             .HasForeignKey(ci => ci.ProductoVarianteId)
              .OnDelete(DeleteBehavior.Cascade);
  
     }

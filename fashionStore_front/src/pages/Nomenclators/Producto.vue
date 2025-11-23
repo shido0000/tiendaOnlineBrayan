@@ -62,24 +62,23 @@
           </q-tooltip>
         </q-btn>
         <q-dialog v-model="dialog" persistent>
-        <!--  <q-card style="width: 700px; max-width: 80vw; height: auto">
-            <header class="q-pa-sm bg-primary">
+       <q-card style="width: 1200px; max-width: 80vw; height: auto">
+        <header class="q-px-sm bg-primary">
               <q-toolbar>
                 <q-toolbar-title class="text-subtitle6 text-white">
                   {{
-                    objeto.id ? "Editar Producto" : "Adicionar Producto"
+                    producto.id ? "Editar Producto" : "Adicionar Producto"
                   }}</q-toolbar-title
                 >
               </q-toolbar>
             </header>
-            <q-form @submit.prevent="Guardar()" @reset="close" ref="myForm">
-              <div class="h row q-ma-md">
-                <q-input
-                  class="col-xs-12 col-md-12 q-pa-sm"
-                  :disable="!!objeto.id"
-                  label="Código *"
-                  v-model="objeto.codigo"
-                  color="primary"
+    <q-form @submit.prevent="guardarProducto" @reset="close" ref="myForm">
+      <!-- Datos generales -->
+
+                 <div class="h row q-ma-md">
+                    <div class="row col-12">
+      <q-input  class="col-xs-12 col-md-4 q-py-md q-px-sm" v-model="producto.codigo" label="Código *"  dense
+        color="primary"
                   counter
                   maxlength="50"
                   lazy-rules
@@ -91,82 +90,126 @@
                         ? !isValorRepetido(val, 'codigo', objeto, items)
                         : true) || 'Ya existe un codigo con ese valor',
                   ]"
-                />
-                   <q-input
-                  class="col-xs-12 col-md-12 q-pa-sm"
-                  :disable="!!objeto.id"
-                  label="sku *"
-                  v-model="objeto.sku"
-                  color="primary"
-                  counter
-                  maxlength="100"
-                  lazy-rules
-                  :rules="[
-                    (val) =>
-                      (val && val.length > 0) || 'Debe insertar un sku',
-                    (val) =>
-                      (items.length > 0
-                        ? !isValorRepetido(val, 'sku', objeto, items)
-                        : true) || 'Ya existe un sku con ese valor',
-                  ]"
-                />
+      />
+       <q-input v-model="producto.sku" label="SKU *"  dense class="col-xs-12 col-md-4 q-py-md q-px-sm" />
+      <q-select
+                        class="col-xs-12 col-sm-12 col-md-4  "
+                        v-model="producto.categoriasIds"
+                        label="Categorías *"
+                        emit-value
+                        map-options
+                        multiple
+                        :use-input="
+                            producto.categoriasIds === null ||
+                            producto.categoriasIds === '' ||  producto.categoriasIds.length === 0
+                        "
+                        option-label="nombre"
+                        option-value="id"
+                        :options="filtradoCategoria"
+                        @filter="
+                            (val, update) => {
+                                filtradoCategoria = filterOptions(
+                                    val,
+                                    update,
+                                    filtradoCategoria,
+                                    'nombre',
+                                    itemsCategoria
+                                );
+                            }
+                        "
+                        lazy-rules
+                        :rules="[
+                            (val) =>
+                                (val !== null && val !== '') ||
+                                'Debe seleccionar un elemento',
+                        ]"
+                    >
+                        <template v-slot:no-option>
+                            <q-item>
+                                <q-item-section class="text-italic text-grey">
+                                    No hay elementos disponibles
+                                </q-item-section>
+                            </q-item>
+                        </template>
 
-                <q-input
-                  class="col-xs-12 q-pa-sm"
-                  label="Descripción *"
-                  v-model="objeto.descripcion"
-                  color="primary"
-                  counter
-                  autogrow
-                  maxlength="100"
-                  lazy-rules
-                  :rules="[
-                    (val) =>
-                      (val && val.length > 0) || 'Debe insertar un Descripción',
-                  ]"
-                />
+                         <template v-slot:selected-item="scope">
+                                        <span v-if="scope.index === 0">
+                                            {{ scope.opt.nombre }}</span
+                                        >
+                                        <span
+                                            v-if="
+                                                scope.index === 1 &&
+                                                producto.categoriasIds
+                                                    .length > 1
+                                            "
+                                            class="grey--text caption"
+                                            style="margin-left: 8px"
+                                        >
+                                            (+{{
+                                                producto.categoriasIds
+                                                    .length - 1
+                                            }}
+                                            más)</span
+                                        >
+                                    </template>
+                    </q-select>
 
-<q-input
-  class="col-xs-12 col-sm-12 col-md-4 q-pa-sm"
-  label="Precio Costo *"
-  v-model.number="objeto.precioCosto"
-  type="text"
-  color="primary"
-  lazy-rules
-  :rules="[
-    val => !!val || 'Precio Costo es obligatoria',
-    val => parseFloat(val) > 0 || 'Debe ser mayor que 0'
-  ]"
-  :input-style="{ textAlign: 'left' }"
-  @blur="formatearPrecioCosto"
-  @focus="quitarFormatoPrecioCosto"
-/>
-
-<q-input
-  class="col-xs-12 col-sm-12 col-md-4 q-pa-sm"
-  label="Precio Venta *"
-  v-model.number="objeto.precioVenta"
-  type="text"
-  color="primary"
-  lazy-rules
-  :rules="[
-    val => !!val || 'Precio Venta es obligatoria',
-    val => parseFloat(val) > 0 || 'Debe ser mayor que 0'
-  ]"
-  :input-style="{ textAlign: 'left' }"
-  @blur="formatearPrecioVenta"
-  @focus="quitarFormatoPrecioVenta"
-/>
-
-<q-select
-                        class="col-xs-12 col-sm-12 col-md-4 q-pa-sm"
-                        v-model="variant.monedaCostoId"
-                        label="Moneda *"
+                        <q-input v-model.number="producto.precioCosto" label="Precio Costo" type="number" outlined dense class="col-xs-12 col-md-3 q-py-md q-px-sm"  />
+        <q-select
+                       class="col-xs-12 col-md-3 q-py-md q-px-sm"
+                        v-model="producto.monedaCostoId"
+                              outlined
+            dense
+                        label="Moneda Costo*"
                         emit-value
                         map-options
                         :use-input="
-                            variant.monedaCostoId === null ||
-                            variant.monedaCostoId === ''
+                            producto.monedaCostoId === null ||
+                            producto.monedaCostoId === ''
+                        "
+                        option-label="codigo"
+                        option-value="id"
+                        :options="filtradoMoneda"
+                        @filter="
+                            (val, update) => {
+                                filtradoMoneda = filterOptions(
+                                    val,
+                                    update,
+                                    filtradoMoneda,
+                                    'codigo',
+                                    itemsMoneda
+                                );
+                            }
+                        "
+                        lazy-rules
+                        :rules="[
+                            (val) =>
+                                (val !== null && val !== '') ||
+                                'Debe seleccionar un elemento',
+                        ]"
+                    >
+                        <template v-slot:no-option>
+                            <q-item>
+                                <q-item-section class="text-italic text-grey">
+                                    No hay elementos disponibles
+                                </q-item-section>
+                            </q-item>
+                        </template>
+                    </q-select>
+          <q-input v-model.number="producto.precioVenta" label="Precio Venta" type="number" outlined dense class="col-xs-12 col-md-3 q-py-md q-px-sm"  />
+
+
+     <q-select
+                    class="col-xs-12 col-md-3 q-py-md q-px-sm"
+                        v-model="producto.monedaVentaId"
+                        label="Moneda Venta*"
+                        emit-value
+                              outlined
+            dense
+                        map-options
+                        :use-input="
+                            producto.monedaVentaId === null ||
+                            producto.monedaVentaId === ''
                         "
                         option-label="codigo"
                         option-value="id"
@@ -198,229 +241,7 @@
                         </template>
                     </q-select>
 
-                    <div class="col-xs-12 col-sm-12 col-md-8 row">
-                    <q-select
-                        class="col-xs-12 col-sm-12 col-md-6 q-pa-sm"
-                        v-model="producto.categoriaIds"
-                        label="Categorías *"
-                        emit-value
-                        map-options
-                        multiple
-                        :use-input="
-                            producto.categoriaIds === null ||
-                            producto.categoriaIds === '' ||  producto.categoriaIds.length === 0
-                        "
-                        option-label="nombre"
-                        option-value="id"
-                        :options="filtradoCategoria"
-                        @filter="
-                            (val, update) => {
-                                filtradoCategoria = filterOptions(
-                                    val,
-                                    update,
-                                    filtradoCategoria,
-                                    'nombre',
-                                    itemsCategoria
-                                );
-                            }
-                        "
-                        lazy-rules
-                        :rules="[
-                            (val) =>
-                                (val !== null && val !== '') ||
-                                'Debe seleccionar un elemento',
-                        ]"
-                    >
-                        <template v-slot:no-option>
-                            <q-item>
-                                <q-item-section class="text-italic text-grey">
-                                    No hay elementos disponibles
-                                </q-item-section>
-                            </q-item>
-                        </template>
-
-                         <template v-slot:selected-item="scope">
-                                        <span v-if="scope.index === 0">
-                                            {{ scope.opt.nombre }}</span
-                                        >
-                                        <span
-                                            v-if="
-                                                scope.index === 1 &&
-                                                producto.categoriaIds
-                                                    .length > 1
-                                            "
-                                            class="grey--text caption"
-                                            style="margin-left: 8px"
-                                        >
-                                            (+{{
-                                                producto.categoriaIds
-                                                    .length - 1
-                                            }}
-                                            más)</span
-                                        >
-                                    </template>
-                    </q-select>
-
-<q-field
-  class="col-xs-12 col-sm-12 col-md-6 q-pa-sm"
-  label="Color"
-  stack-label
->
-  <template v-slot:control>
-    <div class="row items-center no-wrap">
-
-      <div
-        :style="{
-          width: '20px',
-          height: '20px',
-          borderRadius: '4px',
-          border: '1px solid #ccc',
-          backgroundColor: objeto.color || '#ffffff'
-        }"
-      ></div>
-
-      <q-icon
-        name="colorize"
-        class="q-ml-sm cursor-pointer"
-      >
-        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-          <q-color
-            v-model="objeto.color"
-            format-model="hex"
-            default-view="palette"
-          />
-        </q-popup-proxy>
-      </q-icon>
-    </div>
-  </template>
-</q-field>
-</div>
-
-
- <q-checkbox v-show="objeto.id"
-                        aling="right"
-                        class="col-xs-12 col-sm-12 col-md-4 q-mt-sm justify-end q-mr-md"
-                        right-label
-                        v-model="objeto.esActivo"
-                        label="Activo"
-                        color="primary"
-                    />
-
-
-<q-uploader
-  class="col-12 q-pa-sm q-mt-md"
-  label="Seleccionar fotos"
-  accept="image/*"
-  multiple
-  :auto-upload="false"
-  @added="archivosAgregados"
-/>
-
-<div v-if="validFotos.length" class="q-pa-sm col-12">
-  <q-carousel
-    v-model="slide"
-    animated
-    navigation
-    infinite
-    :autoplay="autoplay"
-    arrows
-  height="350px"
-  class="bg-grey-2 full-width"
-  style="width: 100%;"
-    transition-prev="slide-right"
-    transition-next="slide-left"
-    @mouseenter="autoplay = false"
-    @mouseleave="autoplay = true"
-  >
-    <q-carousel-slide
-      v-for="(foto, idx) in getValidFotosVariant(variant)"
-      :key="idx"
-      :name="idx + 1"
-      class="relative-position"
-    >
-      <q-img
-        :src="foto.img"
-        :alt="foto.alt"
-        style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"
-      />
-      <q-btn
-        dense
-        round
-        color="negative"
-        icon="close"
-        size="sm"
-        class="absolute-top-right q-mt-sm q-mr-sm z-max"
-        @click.stop="confirmarEliminarFotoVariant(idx, variant)"
-      />
-    </q-carousel-slide>
-  </q-carousel>
-  <q-dialog v-model="dialogEliminarFoto">
-    <q-card>
-      <q-card-section class="row items-center">
-        <q-icon name="warning" color="warning" size="md" class="q-mr-md" />
-        <span>¿Está seguro que desea eliminar esta foto del producto?</span>
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn flat label="Cancelar" color="primary" @click="cancelarEliminarFoto" />
-        <q-btn flat label="Eliminar" color="negative" @click="eliminarFotoCarruselConfirmada" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</div>
-<div v-else class="q-pa-sm text-grey">No hay imágenes para mostrar.</div>
-
-
-
-
-                <q-card-actions class="col-12 q-mt-lg justify-end">
-                  <q-btn
-                    class="text-white"
-                    color="primary"
-                    aling="right"
-                    type="submit"
-                    label="Guardar"
-                  />
-                  <q-btn
-                    outline
-                    color="primary"
-                    type="reset"
-                    label="Cancelar"
-                  />
-                </q-card-actions>
-              </div>
-            </q-form>
-          </q-card>-->
-
-       <q-card style="width: 1200px; max-width: 80vw; height: auto">
-        <header class="q-px-sm bg-primary">
-              <q-toolbar>
-                <q-toolbar-title class="text-subtitle6 text-white">
-                  {{
-                    producto.id ? "Editar Producto" : "Adicionar Producto"
-                  }}</q-toolbar-title
-                >
-              </q-toolbar>
-            </header>
-    <q-form @submit.prevent="guardarProducto" @reset="close" ref="myForm">
-      <!-- Datos generales -->
-
-                 <div class="h row q-ma-md">
-                    <div class="row col-12">
-      <q-input  class="col-xs-12 col-md-4 q-py-md q-px-sm" v-model="producto.codigo" label="Código *"  dense
-        color="primary"
-                  counter
-                  maxlength="50"
-                  lazy-rules
-                  :rules="[
-                    (val) =>
-                      (val && val.length > 0) || 'Debe insertar un Código',
-                    (val) =>
-                      (items.length > 0
-                        ? !isValorRepetido(val, 'codigo', objeto, items)
-                        : true) || 'Ya existe un codigo con ese valor',
-                  ]"
-      />
-      <q-input  class="col-xs-12 col-md-4 q-py-md q-px-sm" v-model="producto.descripcion" label="Descripción *"  dense
+      <q-input  class="col-xs-12 col-md-12 q-py-md q-px-sm" v-model="producto.descripcion" label="Descripción *"  dense
          color="primary"
                   counter
                   maxlength="100"
@@ -434,67 +255,7 @@
                         : true) || 'Ya existe un Descripción con ese valor',
                   ]"
       />
-      <q-select
-                        class="col-xs-12 col-sm-12 col-md-4  "
-                        v-model="producto.categoriaIds"
-                        label="Categorías *"
-                        emit-value
-                        map-options
-                        multiple
-                        :use-input="
-                            producto.categoriaIds === null ||
-                            producto.categoriaIds === '' ||  producto.categoriaIds.length === 0
-                        "
-                        option-label="nombre"
-                        option-value="id"
-                        :options="filtradoCategoria"
-                        @filter="
-                            (val, update) => {
-                                filtradoCategoria = filterOptions(
-                                    val,
-                                    update,
-                                    filtradoCategoria,
-                                    'nombre',
-                                    itemsCategoria
-                                );
-                            }
-                        "
-                        lazy-rules
-                        :rules="[
-                            (val) =>
-                                (val !== null && val !== '') ||
-                                'Debe seleccionar un elemento',
-                        ]"
-                    >
-                        <template v-slot:no-option>
-                            <q-item>
-                                <q-item-section class="text-italic text-grey">
-                                    No hay elementos disponibles
-                                </q-item-section>
-                            </q-item>
-                        </template>
 
-                         <template v-slot:selected-item="scope">
-                                        <span v-if="scope.index === 0">
-                                            {{ scope.opt.nombre }}</span
-                                        >
-                                        <span
-                                            v-if="
-                                                scope.index === 1 &&
-                                                producto.categoriaIds
-                                                    .length > 1
-                                            "
-                                            class="grey--text caption"
-                                            style="margin-left: 8px"
-                                        >
-                                            (+{{
-                                                producto.categoriaIds
-                                                    .length - 1
-                                            }}
-                                            más)</span
-                                        >
-                                    </template>
-                    </q-select>
 </div>
       <q-checkbox v-model="producto.esActivo" label="Activo" color="primary" />
 
@@ -512,11 +273,12 @@
         class=" q-ml-md col-xs-12 col-sm-12 col-md-3"
         @click="agregarVariante"
       /></div></div>
-      <div v-for="(variant, index) in producto.variants" :key="index" class="q-pa-sm q-mb-md bordered">
-        <div class="row q-col-gutter-md">
-          <q-input v-model="variant.sku" label="SKU *" outlined dense class="col-6" />
+      <div v-for="(variant, index) in producto.variants" :key="index" class="col-xs-12 q-pa-sm q-mb-md bordered">
+        <div class="row col-xs-12 col-sm-12 col-md-12">
+
+
              <q-select
-                        class="col-xs-12 col-sm-12 col-md-2 "
+           class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
                         v-model="variant.talla"
                               outlined
             dense
@@ -557,7 +319,7 @@
                         </template>
                     </q-select>
           <q-field
-  class="col-xs-12 col-sm-12 col-md-2 "
+class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
   label="Color"
   stack-label
   outlined dense
@@ -571,7 +333,7 @@
           height: '20px',
           borderRadius: '4px',
           border: '1px solid #ccc',
-          backgroundColor: objeto.color || '#ffffff'
+          backgroundColor: variant.color || '#ffffff'
         }"
       ></div>
 
@@ -590,127 +352,57 @@
     </div>
   </template>
 </q-field>
-          <q-input v-model.number="variant.stock" label="Stock" type="number" outlined dense class="col-2" :min="1"/>
+  <q-select
+                        class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
+                        v-model="variant.talla"
+                              outlined
+            dense
+                        label="Otras variantes"
+                        emit-value
+                        map-options
+                        :use-input="
+                            variant.talla === null ||
+                            variant.talla === ''
+                        "
+                        option-label="descripcion"
+                        option-value="descripcion"
+                        :options="filtradoTallas"
+                        @filter="
+                            (val, update) => {
+                                filtradoTallas = filterOptions(
+                                    val,
+                                    update,
+                                    filtradoTallas,
+                                    'descripcion',
+                                    itemsTallas
+                                );
+                            }
+                        "
+                        lazy-rules
+                        :rules="[
+                            (val) =>
+                                (val !== null && val !== '') ||
+                                'Debe seleccionar un elemento',
+                        ]"
+                    >
+                        <template v-slot:no-option>
+                            <q-item>
+                                <q-item-section class="text-italic text-grey">
+                                    No hay elementos disponibles
+                                </q-item-section>
+                            </q-item>
+                        </template>
+                    </q-select>
+          <q-input v-model.number="variant.stock" label="Stock" type="number" outlined dense    class="col-xs-12 col-sm-12 col-md-3 q-px-sm" :min="1"/>
 
           <!--<q-input v-model="variant.color" label="Color" outlined dense class="col-6" />-->
-          <q-input v-model.number="variant.precioCosto" label="Precio Costo" type="number" outlined dense class="col-3" />
-        <q-select
-                        class="col-xs-12 col-sm-12 col-md-3 "
-                        v-model="variant.monedaCostoId"
-                              outlined
-            dense
-                        label="Moneda Costo*"
-                        emit-value
-                        map-options
-                        :use-input="
-                            variant.monedaCostoId === null ||
-                            variant.monedaCostoId === ''
-                        "
-                        option-label="codigo"
-                        option-value="id"
-                        :options="filtradoMoneda"
-                        @filter="
-                            (val, update) => {
-                                filtradoMoneda = filterOptions(
-                                    val,
-                                    update,
-                                    filtradoMoneda,
-                                    'codigo',
-                                    itemsMoneda
-                                );
-                            }
-                        "
-                        lazy-rules
-                        :rules="[
-                            (val) =>
-                                (val !== null && val !== '') ||
-                                'Debe seleccionar un elemento',
-                        ]"
-                    >
-                        <template v-slot:no-option>
-                            <q-item>
-                                <q-item-section class="text-italic text-grey">
-                                    No hay elementos disponibles
-                                </q-item-section>
-                            </q-item>
-                        </template>
-                    </q-select>
-          <q-input v-model.number="variant.precioVenta" label="Precio Venta" type="number" outlined dense class="col-3" />
 
-
-     <q-select
-                        class="col-xs-12 col-sm-12 col-md-3"
-                        v-model="variant.monedaVentaId"
-                        label="Moneda Venta*"
-                        emit-value
-                              outlined
-            dense
-                        map-options
-                        :use-input="
-                            variant.monedaVentaId === null ||
-                            variant.monedaVentaId === ''
-                        "
-                        option-label="codigo"
-                        option-value="id"
-                        :options="filtradoMoneda"
-                        @filter="
-                            (val, update) => {
-                                filtradoMoneda = filterOptions(
-                                    val,
-                                    update,
-                                    filtradoMoneda,
-                                    'codigo',
-                                    itemsMoneda
-                                );
-                            }
-                        "
-                        lazy-rules
-                        :rules="[
-                            (val) =>
-                                (val !== null && val !== '') ||
-                                'Debe seleccionar un elemento',
-                        ]"
-                    >
-                        <template v-slot:no-option>
-                            <q-item>
-                                <q-item-section class="text-italic text-grey">
-                                    No hay elementos disponibles
-                                </q-item-section>
-                            </q-item>
-                        </template>
-                    </q-select>
 
         </div>
-      <!-- Botón para eliminar variante -->
-      <div class="row q-mt-sm">
-        <q-btn
-        color="negative"
-        icon="delete"
-        label="Eliminar Variante"
-        outline
-        dense
-        @click="eliminarVariante(index)"
-        class="q-my-md"
-        />
-      </div>
+
 
         <!-- Fotos -->
-       <!-- <div class="q-mt-md">
-          <q-uploader
-            label="Fotos de la variante"
-            accept="image/*"
-            multiple
-            :auto-upload="false"
-            @added="files => variant.fotos = files"
-          />
-          <div v-if="variant.fotos && variant.fotos.length" class="row q-col-gutter-sm q-mt-sm">
-            <q-img
-              v-for="(file, idx) in variant.fotos"
-              :key="idx"
-              :src="getPreviewUrl(file)"
-              style="width: 100px; height: 100px; border-radius: 8px;"
-            />
-          </div>-->
+
           <div class="row col-12 ">
             <div class="col-12 col-md-3 q-mr-xs q-pr-md q-mt-sm">
               <q-uploader
@@ -723,46 +415,45 @@
                 @added="files => variant.fotos = files"
               />
             </div>
-            <div class="col-12 col-md-8 q-mt-sm q-ml-auto">
-              <div v-if="variant.fotos && variant.fotos.length">
-                <q-carousel
-                  v-model="slide"
-                  animated
-                  navigation
-                  infinite
-                  :autoplay="autoplay"
-                  arrows
-                  height="150px"
-                  class="bg-grey-2 full-width"
-                  style="width: 100%;"
-                  transition-prev="slide-right"
-                  transition-next="slide-left"
-                  @mouseenter="autoplay = false"
-                  @mouseleave="autoplay = true"
-                >
-                  <q-carousel-slide
-                    v-for="(foto, idx) in getValidFotosVariant(variant)"
-                    :key="idx"
-                    :name="idx + 1"
-                    class="relative-position"
-                  >
-                    <q-img
-                      :src="foto.img"
-                      :alt="foto.alt"
-                      style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"
-                    />
-                    <q-btn
-                      dense
-                      round
-                      color="negative"
-                      icon="close"
-                      size="sm"
-                      class="absolute-top-right q-mt-sm q-mr-sm z-max"
-                      @click.stop="confirmarEliminarFotoVariant(idx, variant)"
-                    />
-                  </q-carousel-slide>
-                </q-carousel>
-                <q-dialog v-model="dialogEliminarFoto">
+           <div class="col-12 col-md-8 q-mt-sm q-ml-auto">
+  <div v-if="variant.fotos && variant.fotos.length">
+    <q-carousel
+      v-model="variant.slide"
+      animated
+      navigation
+      infinite
+      :autoplay="autoplay"
+      arrows
+      height="150px"
+      class="bg-grey-2 full-width"
+      transition-prev="slide-right"
+      transition-next="slide-left"
+      @mouseenter="autoplay = false"
+      @mouseleave="autoplay = true"
+    >
+      <q-carousel-slide
+        v-for="(foto, idx) in getValidFotosVariant(variant)"
+        :key="idx"
+        :name="idx + 1"
+        class="relative-position"
+      >
+        <q-img
+          :src="foto.img"
+          :alt="foto.alt"
+          style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;"
+        />
+        <q-btn
+          dense
+          round
+          color="negative"
+          icon="close"
+          size="sm"
+          class="absolute-top-right q-mt-sm q-mr-sm z-max"
+          @click.stop="confirmarEliminarFotoVariant(idx, variant)"
+        />
+      </q-carousel-slide>
+    </q-carousel>
+    <q-dialog v-model="dialogEliminarFoto">
                   <q-card>
                     <q-card-section class="row items-center">
                       <q-icon name="warning" color="warning" size="md" class="q-mr-md" />
@@ -774,10 +465,23 @@
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
-              </div>
-              <div v-else class="q-pa-sm text-grey">No hay imágenes para mostrar.</div>
-            </div>
+  </div>
+  <div v-else class="q-pa-sm text-grey">No hay imágenes para mostrar.</div>
+</div>
+
           </div>
+          <!-- Botón para eliminar variante -->
+      <div class="row q-mt-sm">
+        <q-btn
+        color="negative"
+        icon="delete"
+        label="Eliminar Variante"
+        outline
+        dense
+        @click="eliminarVariante(index)"
+        class="q-my-md"
+        />
+      </div>
           </div>
 
 
@@ -1002,6 +706,7 @@ const slide = ref(1)
 const autoplay = ref(true)
 // Computed para filtrar y mapear las fotos válidas
 import { computed } from 'vue'
+import { Error, Success } from 'src/boot/notify'
 const validFotos = computed(() =>
   (objeto.fotos || [])
     .filter(foto => !!getPreviewUrl(foto))
@@ -1032,17 +737,18 @@ const filtradoTallas = ref([])
 const objetoInicial = {
   // id: null,
   codigo: null,
-    sku: null,
   descripcion: null,
+    esActivo:true,
+    sku: null,
   precioCosto:0.00,
     precioVenta:0.00,
      color:"#ffffff",
-       monedaId:null,
-    esActivo:true,
+       monedaCostoId:null,
+              monedaVentaId:null,
     fotosArchivos: [], // aquí guardamos los archivos seleccionados
      fotos: [], // aquí guardamos los archivos seleccionados
       fotosExistentesIds: [], // aquí guardamos los archivos seleccionados
-  categoriaIds: [], // aquí guardamos los archivos seleccionados
+  categoriasIds: [], // aquí guardamos los archivos seleccionados
 }
 // Guardar copia de las fotos originales al cargar el producto para comparar después
 let fotosOriginales = []
@@ -1083,9 +789,9 @@ const Guardar = () => {
   formData.append('Color', objeto.color || "#ffffff")
   formData.append('EsActivo', objeto.esActivo)
   // Agregar categorías seleccionadas
-  if (Array.isArray(producto.value.categoriaIds)) {
-    producto.value.categoriaIds.forEach(id => {
-      formData.append('CategoriaIds', id)
+  if (Array.isArray(producto.value.categoriasIds)) {
+    producto.value.categoriasIds.forEach(id => {
+      formData.append('categoriasIds', id)
     })
   }
 
@@ -1117,7 +823,7 @@ const Guardar = () => {
 }
 
 // Funcion para Obtener los datos para editar
-const obtenerElementoPorId = async (id) => {
+/*const obtenerElementoPorId = async (id) => {
   //await obtener('Producto/ObtenerPorId', id, objeto, dialogLoad, dialog)
 await obtenerHastaData('Producto/ObtenerProductoEspecifico', id, objeto, dialogLoad, dialog)
 
@@ -1129,16 +835,16 @@ await obtenerHastaData('Producto/ObtenerProductoEspecifico', id, objeto, dialogL
     codigo: objeto.codigo,
     descripcion: objeto.descripcion,
     esActivo: objeto.esActivo,
-    categoriaIds: objeto.productoCategorias.map(pc => pc.categoriaId),
+    categoriasIds: objeto.productoCategorias.map(pc => pc.categoriaId),
+     precioCosto: objeto.precioCosto,
+      precioVenta: objeto.precioVenta,
+      monedaCostoId: objeto.monedaCostoId,
+      monedaVentaId: objeto.monedaVentaId,
     variants: objeto.variants.map(v => ({
       id: v.id,
       sku: v.sku,
       talla: v.talla,
       color: v.color,
-      precioCosto: v.precioCosto,
-      precioVenta: v.precioVenta,
-      monedaCostoId: v.monedaCostoId,
-      monedaVentaId: v.monedaVentaId,
       stock: v.stock,
       fotos: (v.fotos || []).map(f => ({
         id: f.id,
@@ -1162,15 +868,62 @@ console.log("objeto: ",producto.value)
   filtradoCategoria.value=itemsCategoria.value
 
 }
+*/
 
-function llenarCategoriasIds() {
-  // Limpio el array antes de llenarlo, para evitar duplicados
-  producto.value.categoriaIds = [];
+const obtenerElementoPorId = async (id) => {
+  // Traemos el objeto desde el backend
+  await obtenerHastaData('Producto/ObtenerProductoEspecifico', id, objeto, dialogLoad, dialog)
 
-  for (let i = 0; i < objeto.productoCategorias.length; i++) {
-    let catId = objeto.productoCategorias[i].categoriaId; // acceso a la propiedad Id
-    producto.value.categoriaIds.push(catId);
+  // Adaptamos el objeto recibido a la estructura que usamos en el front
+  producto.value = {
+    id: objeto.id,
+    codigo: objeto.codigo,
+    descripcion: objeto.descripcion,
+    esActivo: objeto.esActivo,
+    sku: objeto.sku,
+    precioCosto: objeto.precioCosto,
+    precioVenta: objeto.precioVenta,
+    monedaCostoId: objeto.monedaCostoId,
+    monedaVentaId: objeto.monedaVentaId,
+    categoriasIds: objeto.categoriasIds || [],
+
+    // Mapeamos las variantes
+    variants: (objeto.productoVariantes || []).map(v => ({
+      id: v.id,
+      productoId: v.productoId,
+      talla: v.talla,
+      color: v.color,
+      stock: v.stock,
+      principal: v.principal,
+      otrasVariantesIds: v.otrasVariantesIds || [],
+      fotos: (v.fotos || []).map(f => ({
+        id: f.id,
+        url: f.url,
+        descripcion: f.descripcion,
+        esPrincipal: f.esPrincipal,
+        orden: f.orden
+      })),
+       slide: 1 // índice inicial del carrusel de esta variante
+    }))
   }
+
+  console.log("Producto adaptado:", producto.value)
+
+  // Guardar copia de las fotos originales (rutas) y poblar objeto.fotos con todas las fotos de las variantes
+  let fotosOriginales = []
+  try {
+    fotosOriginales = (objeto.productoVariantes || [])
+      .flatMap(v => (v.fotos || []).map(f => f.url || f))
+  } catch (e) {
+    fotosOriginales = []
+  }
+
+  // Poblamos objeto.fotos (usado por el carrusel principal) con las rutas encontradas
+  objeto.fotos = fotosOriginales.slice()
+
+  // Refrescamos filtros
+  filtradoMoneda.value = itemsMoneda.value
+  filtradoCategoria.value = itemsCategoria.value
 }
 
 
@@ -1259,8 +1012,8 @@ const quitarFormatoPrecioVenta = () => {
 
 // Estado para el diálogo de confirmación de eliminación de foto
 const dialogEliminarFoto = ref(false)
-const idxFotoAEliminar = ref(null)
 const variantAFotoEliminar = ref(null)
+const idxFotoAEliminar = ref(null)
 
 function confirmarEliminarFoto(idx) {
   // Confirm deletion for main objeto.fotos
@@ -1270,31 +1023,26 @@ function confirmarEliminarFoto(idx) {
 }
 
 function confirmarEliminarFotoVariant(idx, variant) {
-  // Confirm deletion for a specific variant's fotos
+  // Guardamos qué variante y qué foto se quiere eliminar
   variantAFotoEliminar.value = variant
   idxFotoAEliminar.value = idx
   dialogEliminarFoto.value = true
 }
 
-function eliminarFotoCarruselConfirmada() {
-  try {
-    if (variantAFotoEliminar.value && Array.isArray(variantAFotoEliminar.value.fotos)) {
-      variantAFotoEliminar.value.fotos.splice(idxFotoAEliminar.value, 1)
-    } else if (Array.isArray(objeto.fotos) && idxFotoAEliminar.value !== null) {
-      objeto.fotos.splice(idxFotoAEliminar.value, 1)
-    }
-  } finally {
-    dialogEliminarFoto.value = false
-    idxFotoAEliminar.value = null
-    variantAFotoEliminar.value = null
-  }
-}
-
 function cancelarEliminarFoto() {
   dialogEliminarFoto.value = false
-  idxFotoAEliminar.value = null
   variantAFotoEliminar.value = null
+  idxFotoAEliminar.value = null
 }
+
+function eliminarFotoCarruselConfirmada() {
+  if (variantAFotoEliminar.value && idxFotoAEliminar.value !== null) {
+    // Quitamos la foto del array de esa variante
+    variantAFotoEliminar.value.fotos.splice(idxFotoAEliminar.value, 1)
+  }
+  cancelarEliminarFoto()
+}
+
 
 // Este método lo defines tú
 function archivosAgregados (files) {
@@ -1338,19 +1086,21 @@ const producto = ref({
   codigo: '',
   descripcion: '',
   esActivo: true,
-  categoriaIds: [],
+  sku: '',
+  precioCosto: 1,
+   precioVenta: 1,
+    monedaCostoId: null,
+   monedaVentaId: null,
+   stockTotal: 0,
+  categoriasIds: [],
   variants: []
 })
 
 function agregarVariante() {
   producto.value.variants.push({
-    sku: '',
     talla: '',
     color: null,
-    precioCosto: 1,
-    precioVenta: 1,
-    monedaCostoId: null,
-    monedaVentaId: null,
+    principal: true,
     stock: 1,
     fotos: []
   })
@@ -1366,63 +1116,165 @@ function eliminarVariante(index) {
   }
 }
 
+/*
+async function guardarProducto() {
+  dialogLoad.value = true
+  try {
+    const url = producto.value?.id ? 'Producto/ActualizarConFotos' : 'Producto/CrearConFotos'
 
-function guardarProducto() {
-  const formData = new FormData()
-  const url = producto.value && producto.value.id ? 'Producto/ActualizarConFotos' : 'Producto/CrearConFotos'
+    const formData = new FormData()
 
-  // --- Datos generales del producto ---
-  formData.append('Codigo', producto.value ? producto.value.codigo : '')
-  formData.append('Descripcion', producto.value ? producto.value.descripcion : '')
-  formData.append('EsActivo', producto.value ? producto.value.esActivo : true)
+    // Campos simples
+    formData.append("Codigo", producto.value?.codigo || '')
+    formData.append("Descripcion", producto.value?.descripcion || '')
+    formData.append("EsActivo", producto.value?.esActivo ?? true)
+    formData.append("SKU", producto.value?.sku || '')
+    formData.append("PrecioCosto", producto.value?.precioCosto || 0)
+    formData.append("PrecioVenta", producto.value?.precioVenta || 0)
+    formData.append("MonedaCostoId", producto.value?.monedaCostoId || '')
+    formData.append("MonedaVentaId", producto.value?.monedaVentaId || '')
+    formData.append("StockTotal", 0)
 
-  // Categorías
-  if (producto.value && Array.isArray(producto.value.categoriaIds)) {
-    producto.value.categoriaIds.forEach(id => {
-      formData.append('CategoriaIds', id)
-    })
+    // Categorías
+    if (Array.isArray(producto.value?.categoriasIds)) {
+      producto.value.categoriasIds.forEach(id => {
+        formData.append("CategoriasIds", id)
+      })
+    }
+
+    // Variantes
+    if (Array.isArray(producto.value?.variants)) {
+      producto.value.variants.forEach((variant, index) => {
+        formData.append(`ProductoVariantes[${index}].ProductoId`, variant.id || '')
+        formData.append(`ProductoVariantes[${index}].Talla`, variant.talla || '')
+        formData.append(`ProductoVariantes[${index}].Color`, variant.color || '')
+        formData.append(`ProductoVariantes[${index}].Stock`, variant.stock || 0)
+        formData.append(`ProductoVariantes[${index}].Principal`, variant.principal !== false)
+
+        if (Array.isArray(variant.otrasVariantesIds)) {
+          variant.otrasVariantesIds.forEach(id => {
+            formData.append(`ProductoVariantes[${index}].OtrasVariantesIds`, id)
+          })
+        }
+
+        if (Array.isArray(variant.fotos)) {
+          variant.fotos.forEach(file => {
+            if (file instanceof File) {
+              formData.append(`ProductoVariantes[${index}].Fotos`, file)
+            }
+          })
+        }
+      })
+    }
+
+    const config = {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }
+
+    if (producto.value?.id) {
+      await api.put(`/${url}/${producto.value.id}`, formData, config)
+      Success("El elemento ha sido modificado correctamente")
+    } else {
+      await api.post(`/${url}`, formData, config)
+      Success("El elemento ha sido creado correctamente")
+    }
+
+    await load()
+    await close()
+  } catch (error) {
+    const mensajeError = error?.response?.data?.errorMessage || error?.message || 'Error al guardar'
+    console.error('Error:', error?.response?.data)
+    alert('Error: ' + mensajeError)
+  } finally {
+    dialogLoad.value = false
   }
+}*/
 
-  // --- Variantes ---
-  if (producto.value && Array.isArray(producto.value.variants)) {
-    producto.value.variants.forEach((variant, index) => {
-      formData.append(`Variants[${index}].SKU`, variant.sku || '')
-      formData.append(`Variants[${index}].Talla`, variant.talla || '')
-      formData.append(`Variants[${index}].Color`, variant.color || '')
-      formData.append(`Variants[${index}].PrecioCosto`, variant.precioCosto || 0)
-      formData.append(`Variants[${index}].PrecioVenta`, variant.precioVenta || 0)
-      formData.append(`Variants[${index}].MonedaCostoId`, variant.monedaCostoId || '')
-      formData.append(`Variants[${index}].MonedaVentaId`, variant.monedaVentaId || '')
-      formData.append(`Variants[${index}].Stock`, variant.stock || 0)
-      if (variant.id) formData.append(`Variants[${index}].Id`, variant.id)
+async function guardarProducto() {
+  dialogLoad.value = true
+  try {
+    const url = producto.value?.id ? 'Producto/ActualizarConFotos' : 'Producto/CrearConFotos'
 
-      // Fotos: archivos nuevos (File) vs existentes (id/url)
-      if (variant.fotos && variant.fotos.length > 0) {
-        variant.fotos.forEach((file) => {
-          if (typeof File !== 'undefined' && file instanceof File) {
-            formData.append(`Variants[${index}].Fotos`, file)
-          } else if (file && file.id) {
-            formData.append(`Variants[${index}].FotosExistentes`, file.id)
-          } else if (typeof file === 'string') {
-            formData.append(`Variants[${index}].FotosExistentes`, file)
-          } else if (file && file.url) {
-            formData.append(`Variants[${index}].FotosExistentes`, file.url)
-          }
-        })
-      }
-    })
+    const formData = new FormData()
+
+    // Campos simples
+    formData.append("Codigo", producto.value?.codigo || '')
+    formData.append("Descripcion", producto.value?.descripcion || '')
+    formData.append("EsActivo", producto.value?.esActivo ?? true)
+    formData.append("SKU", producto.value?.sku || '')
+    formData.append("PrecioCosto", producto.value?.precioCosto || 0)
+    formData.append("PrecioVenta", producto.value?.precioVenta || 0)
+    formData.append("MonedaCostoId", producto.value?.monedaCostoId || '')
+    formData.append("MonedaVentaId", producto.value?.monedaVentaId || '')
+    formData.append("StockTotal", 0)
+
+    // Categorías
+    if (Array.isArray(producto.value?.categoriasIds)) {
+      producto.value.categoriasIds.forEach(id => {
+        formData.append("CategoriasIds", id)
+      })
+    }
+
+    // Variantes
+    if (Array.isArray(producto.value?.variants)) {
+      producto.value.variants.forEach((variant, index) => {
+        formData.append(`ProductoVariantes[${index}].ProductoId`, variant.id || '')
+        formData.append(`ProductoVariantes[${index}].Talla`, variant.talla || '')
+        formData.append(`ProductoVariantes[${index}].Color`, variant.color || '')
+        formData.append(`ProductoVariantes[${index}].Stock`, variant.stock || 0)
+        formData.append(`ProductoVariantes[${index}].Principal`, variant.principal !== false)
+
+        if (Array.isArray(variant.otrasVariantesIds)) {
+          variant.otrasVariantesIds.forEach(id => {
+            formData.append(`ProductoVariantes[${index}].OtrasVariantesIds`, id)
+          })
+        }
+
+        // Fotos: separar existentes y nuevas
+        if (Array.isArray(variant.fotos)) {
+          variant.fotos.forEach(f => {
+            if (f instanceof File) {
+              // Foto nueva
+              formData.append(`ProductoVariantes[${index}].FotosNuevas`, f)
+            } else if (f.id) {
+              // Foto existente que se mantiene
+              formData.append(`ProductoVariantes[${index}].FotosExistentesIds`, f.id)
+            }
+          })
+        }
+      })
+    }
+
+    const config = {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }
+
+    if (producto.value?.id) {
+      await api.put(`/${url}/${producto.value.id}`, formData, config)
+      Success("El elemento ha sido modificado correctamente")
+    } else {
+      await api.post(`/${url}`, formData, config)
+      Success("El elemento ha sido creado correctamente")
+    }
+
+    await load()
+    await close()
+  } catch (error) {
+    const mensajeError = error?.response?.data?.errorMessage || error?.message || 'Error al guardar'
+    console.error('Error:', error?.response?.data)
+    alert('Error: ' + mensajeError)
+  } finally {
+    dialogLoad.value = false
   }
-
-  // Enviar todo junto
-  saveDataParaObjetosConFotos(url, formData, load, close, dialogLoad, true, producto.value ? producto.value.id : null)
 }
+
 
 function cancelar() {
   producto.value = {
     codigo: '',
     descripcion: '',
     esActivo: true,
-    categoriaIds: [],
+    categoriasIds: [],
     variants: []
   }
 }
@@ -1432,7 +1284,14 @@ producto.value.id=undefined
  producto.value.codigo=''
 producto.value.descripcion=''
 producto.value.esActivo=true
-producto.value.categoriaIds=[]
+
+ producto.value.sku=''
+producto.value.precioCosto=1
+ producto.value.precioVenta=1
+producto.value.monedaCostoId=null
+producto.value.monedaVentaId=null
+
+producto.value.categoriasIds=[]
 producto.value.variants=[]
 
     dialog.value = true

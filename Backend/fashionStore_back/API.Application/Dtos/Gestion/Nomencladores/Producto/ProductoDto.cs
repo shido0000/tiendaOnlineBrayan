@@ -16,7 +16,7 @@ namespace API.Application.Dtos.Gestion.Nomencladores.Producto
         public Guid MonedaCostoId { get; set; }
         public Guid MonedaVentaId { get; set; }
 
-        public int Stock { get; set; }
+        public int StockTotal { get; set; }
 
         // Categorías asociadas al producto
         public List<Guid> CategoriaIds { get; set; } = new();

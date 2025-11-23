@@ -440,6 +440,84 @@ namespace API.Data.Migrations
                     b.ToTable("Descuentos", (string)null);
                 });
 
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Gestor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActualizadoPor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreadoPor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("FechaActualizado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.ToTable("Gestores", (string)null);
+                });
+
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.GestorPedido", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActualizadoPor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreadoPor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaActualizado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("GestorId")
+                        .IsRequired()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PedidoId")
+                        .IsRequired()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GestorId");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("PedidoId");
+
+                    b.ToTable("GestorPedidos", (string)null);
+                });
+
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Inventario", b =>
                 {
                     b.Property<Guid>("Id")
@@ -620,6 +698,44 @@ namespace API.Data.Migrations
                     b.ToTable("Monedas", (string)null);
                 });
 
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.OtraVariante", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActualizadoPor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreadoPor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaActualizado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("ProductoVarianteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("ProductoVarianteId");
+
+                    b.ToTable("OtrasVariantes", (string)null);
+                });
+
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Pedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -753,9 +869,6 @@ namespace API.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Color")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreadoPor")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -793,11 +906,8 @@ namespace API.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("Stock")
+                    b.Property<int>("StockTotal")
                         .HasColumnType("int");
-
-                    b.Property<string>("Talla")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -924,8 +1034,7 @@ namespace API.Data.Migrations
                     b.Property<decimal>("Orden")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid>("ProductoId")
-                        .HasMaxLength(50)
+                    b.Property<Guid>("ProductoVarianteId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Url")
@@ -937,9 +1046,57 @@ namespace API.Data.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
-                    b.HasIndex("ProductoId");
+                    b.HasIndex("ProductoVarianteId");
 
                     b.ToTable("ProductosFotos", (string)null);
+                });
+
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.ProductoVariante", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActualizadoPor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreadoPor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaActualizado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Principal")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid?>("ProductoId")
+                        .IsRequired()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Stock")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Talla")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("ProductoVariantes", (string)null);
                 });
 
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Review", b =>
@@ -1135,8 +1292,13 @@ namespace API.Data.Migrations
                             ActualizadoPor = "",
                             CreadoPor = "",
                             Descripcion = "Permite ver los usuarios existentes en el sistema y sus datos.",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7732),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7730),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8036),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8033),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Listar usuarios"
                         },
                         new
@@ -1145,8 +1307,13 @@ namespace API.Data.Migrations
                             ActualizadoPor = "",
                             CreadoPor = "",
                             Descripcion = "Permite ver, crear, modificar y eliminar usuarios en el sistema.",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7750),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7748),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8049),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8047),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Gestionar usuarios"
                         },
                         new
@@ -1155,8 +1322,13 @@ namespace API.Data.Migrations
                             ActualizadoPor = "",
                             CreadoPor = "",
                             Descripcion = "Permite ver los roles existentes en el sistema y sus datos.",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7766),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7759),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8057),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8055),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Listar roles"
                         },
                         new
@@ -1165,8 +1337,13 @@ namespace API.Data.Migrations
                             ActualizadoPor = "",
                             CreadoPor = "",
                             Descripcion = "Permite ver, crear, modificar y eliminar roles en el sistema.",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7773),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7772),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8065),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8063),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Gestionar rol"
                         },
                         new
@@ -1175,8 +1352,13 @@ namespace API.Data.Migrations
                             ActualizadoPor = "",
                             CreadoPor = "",
                             Descripcion = "Permite ver los productos existentes en el sistema y sus datos.",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7817),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7776),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8073),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8070),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Listar Productos"
                         },
                         new
@@ -1185,8 +1367,13 @@ namespace API.Data.Migrations
                             ActualizadoPor = "",
                             CreadoPor = "",
                             Descripcion = "Permite ver, crear, modificar y eliminar productos en el sistema.",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7825),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7823),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8082),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8079),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Gestionar Productos"
                         });
                 });
@@ -1229,8 +1416,13 @@ namespace API.Data.Migrations
                             Id = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7590),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7488),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(7855),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(7798),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Administrador"
                         },
                         new
@@ -1238,8 +1430,13 @@ namespace API.Data.Migrations
                             Id = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336523"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7635),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7633),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(7884),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(7882),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Vendedor"
                         },
                         new
@@ -1247,8 +1444,13 @@ namespace API.Data.Migrations
                             Id = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336524"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7641),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(7640),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(7892),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(7890),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "Cliente"
                         });
                 });
@@ -1297,8 +1499,13 @@ namespace API.Data.Migrations
                             Id = new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8121),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8119),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8445),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8441),
+>>>>>>> remotes/origin/jonathan
                             PermisoId = new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"),
                             RolId = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522")
                         },
@@ -1307,8 +1514,13 @@ namespace API.Data.Migrations
                             Id = new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8134),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8132),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8457),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8454),
+>>>>>>> remotes/origin/jonathan
                             PermisoId = new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"),
                             RolId = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522")
                         },
@@ -1317,8 +1529,13 @@ namespace API.Data.Migrations
                             Id = new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8138),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8137),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8463),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8461),
+>>>>>>> remotes/origin/jonathan
                             PermisoId = new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"),
                             RolId = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522")
                         },
@@ -1327,8 +1544,13 @@ namespace API.Data.Migrations
                             Id = new Guid("90abf232-a641-478d-8720-f0ae49e8a306"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8142),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8141),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8470),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8467),
+>>>>>>> remotes/origin/jonathan
                             PermisoId = new Guid("90abf232-a641-478d-8720-f0ae49e8a306"),
                             RolId = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522")
                         },
@@ -1337,8 +1559,13 @@ namespace API.Data.Migrations
                             Id = new Guid("80abf232-a641-478d-8720-f0ae49e8a301"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8146),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8144),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8476),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8474),
+>>>>>>> remotes/origin/jonathan
                             PermisoId = new Guid("80abf232-a641-478d-8720-f0ae49e8a301"),
                             RolId = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522")
                         },
@@ -1347,8 +1574,13 @@ namespace API.Data.Migrations
                             Id = new Guid("80abf232-a641-478d-8720-f0ae49e8a302"),
                             ActualizadoPor = "",
                             CreadoPor = "",
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8154),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 12, DateTimeKind.Local).AddTicks(8149),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8483),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 428, DateTimeKind.Local).AddTicks(8481),
+>>>>>>> remotes/origin/jonathan
                             PermisoId = new Guid("80abf232-a641-478d-8720-f0ae49e8a302"),
                             RolId = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522")
                         });
@@ -1439,8 +1671,13 @@ namespace API.Data.Migrations
                             CreadoPor = "",
                             DebeCambiarContrasenna = false,
                             EsActivo = true,
+<<<<<<< HEAD
                             FechaActualizado = new DateTime(2025, 11, 12, 7, 56, 35, 13, DateTimeKind.Local).AddTicks(6267),
                             FechaCreado = new DateTime(2025, 11, 12, 7, 56, 35, 13, DateTimeKind.Local).AddTicks(6250),
+=======
+                            FechaActualizado = new DateTime(2025, 11, 23, 8, 58, 23, 429, DateTimeKind.Local).AddTicks(8586),
+                            FechaCreado = new DateTime(2025, 11, 23, 8, 58, 23, 429, DateTimeKind.Local).AddTicks(8565),
+>>>>>>> remotes/origin/jonathan
                             Nombre = "1",
                             RolId = new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"),
                             Username = "1"
@@ -1516,6 +1753,25 @@ namespace API.Data.Migrations
                     b.Navigation("Venta");
                 });
 
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.GestorPedido", b =>
+                {
+                    b.HasOne("API.Data.Entidades.Gestion.Nomencladores.Gestor", "Gestor")
+                        .WithMany("GestorPedidos")
+                        .HasForeignKey("GestorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("API.Data.Entidades.Gestion.Nomencladores.Pedido", "Pedido")
+                        .WithMany("GestorPedidos")
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Gestor");
+
+                    b.Navigation("Pedido");
+                });
+
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Inventario", b =>
                 {
                     b.HasOne("API.Data.Entidades.Gestion.Nomencladores.Producto", "Producto")
@@ -1555,6 +1811,16 @@ namespace API.Data.Migrations
                     b.Navigation("ListaDeseos");
 
                     b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.OtraVariante", b =>
+                {
+                    b.HasOne("API.Data.Entidades.Gestion.Nomencladores.ProductoVariante", "ProductoVariante")
+                        .WithMany("OtrasVariantes")
+                        .HasForeignKey("ProductoVarianteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ProductoVariante");
                 });
 
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Pedido", b =>
@@ -1667,8 +1933,19 @@ namespace API.Data.Migrations
 
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.ProductoFoto", b =>
                 {
-                    b.HasOne("API.Data.Entidades.Gestion.Nomencladores.Producto", "Producto")
+                    b.HasOne("API.Data.Entidades.Gestion.Nomencladores.ProductoVariante", "ProductoVariante")
                         .WithMany("Fotos")
+                        .HasForeignKey("ProductoVarianteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductoVariante");
+                });
+
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.ProductoVariante", b =>
+                {
+                    b.HasOne("API.Data.Entidades.Gestion.Nomencladores.Producto", "Producto")
+                        .WithMany("ProductosVariantes")
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1788,6 +2065,11 @@ namespace API.Data.Migrations
                     b.Navigation("ProductoDescuentos");
                 });
 
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Gestor", b =>
+                {
+                    b.Navigation("GestorPedidos");
+                });
+
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.ListaDeseos", b =>
                 {
                     b.Navigation("Detalles");
@@ -1804,16 +2086,25 @@ namespace API.Data.Migrations
                 {
                     b.Navigation("Detalles");
 
+                    b.Navigation("GestorPedidos");
+
                     b.Navigation("Venta");
                 });
 
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Producto", b =>
                 {
-                    b.Navigation("Fotos");
-
                     b.Navigation("ProductoCategorias");
 
                     b.Navigation("ProductoDescuentos");
+
+                    b.Navigation("ProductosVariantes");
+                });
+
+            modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.ProductoVariante", b =>
+                {
+                    b.Navigation("Fotos");
+
+                    b.Navigation("OtrasVariantes");
                 });
 
             modelBuilder.Entity("API.Data.Entidades.Gestion.Nomencladores.Venta", b =>

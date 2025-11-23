@@ -387,6 +387,31 @@ const saveDataSinCerrar = async (endpoint, objeto, load, dialogLoad) => {
     }
 };
 
+const saveDataPerfil = async (endpoint, objeto, dialogLoad) => {
+    let respuesta = {
+        resultado: null,
+        mensajeError: null,
+    };
+    dialogLoad.value = true;
+    if (objeto.id) {
+        return await api
+            .put(`/${endpoint}/${objeto.id}`, objeto)
+            .then(async (response) => {
+                respuesta.resultado = response;
+                return respuesta;
+            })
+            .catch(async (error) => {
+                error?.response?.data?.errorMessage
+                    ? (respuesta.mensajeError =
+                        error?.response?.data?.errorMessage)
+                    : (respuesta.mensajeError = error);
+
+                return respuesta;
+            })
+            .finally((dialogLoad.value = false));
+    }
+};
+
 const saveDataCheckOut = async (endpoint, objeto, dialogLoad) => {
     let respuesta = {
         resultado: null,
@@ -1710,4 +1735,5 @@ export {
     saveDataParaObjetosConFotos,
     loadGetDatosInicio,
     obtenerHastaData,
+    saveDataPerfil,
 };
