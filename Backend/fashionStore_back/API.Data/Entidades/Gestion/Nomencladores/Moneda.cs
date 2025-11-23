@@ -17,5 +17,6 @@ namespace API.Data.Entidades.Gestion.Nomencladores
 
         public ICollection<Producto> ProductosCosto { get; set; } = new List<Producto>();
         public ICollection<Producto> ProductosVentas { get; set; } = new List<Producto>();
+        public ICollection<Mensajeria> Mensajerias { get; set; } = new List<Mensajeria>();
     }
 }
