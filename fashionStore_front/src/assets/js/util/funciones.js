@@ -387,6 +387,31 @@ const saveDataSinCerrar = async (endpoint, objeto, load, dialogLoad) => {
     }
 };
 
+const saveDataPerfil = async (endpoint, objeto, dialogLoad) => {
+    let respuesta = {
+        resultado: null,
+        mensajeError: null,
+    };
+    dialogLoad.value = true;
+    if (objeto.id) {
+        return await api
+            .put(`/${endpoint}/${objeto.id}`, objeto)
+            .then(async (response) => {
+                respuesta.resultado = response;
+                return respuesta;
+            })
+            .catch(async (error) => {
+                error?.response?.data?.errorMessage
+                    ? (respuesta.mensajeError =
+                        error?.response?.data?.errorMessage)
+                    : (respuesta.mensajeError = error);
+
+                return respuesta;
+            })
+            .finally((dialogLoad.value = false));
+    }
+};
+
 const saveDataCheckOut = async (endpoint, objeto, dialogLoad) => {
     let respuesta = {
         resultado: null,
@@ -924,6 +949,23 @@ const obtener = async (endpoint, id, objeto, dialogLoad, dialog) => {
         .get(`${endpoint}/${id}`)
         .then((r) => {
             Object.assign(objeto, r.data.result);
+            title.value = `Editar ${endpoint}`;
+            dialog ? (dialog.value = true) : null;
+        })
+        .catch((error) => {
+            error.response === undefined
+                ? Error(error.message)
+                : Error(error.response.data.mensajeError);
+        });
+    dialogLoad.value = false;
+};
+
+const obtenerHastaData = async (endpoint, id, objeto, dialogLoad, dialog) => {
+    dialogLoad.value = true;
+    await api
+        .get(`${endpoint}/${id}`)
+        .then((r) => {
+            Object.assign(objeto, r.data);
             title.value = `Editar ${endpoint}`;
             dialog ? (dialog.value = true) : null;
         })
@@ -1692,4 +1734,6 @@ export {
     cerrarSesion,
     saveDataParaObjetosConFotos,
     loadGetDatosInicio,
+    obtenerHastaData,
+    saveDataPerfil,
 };

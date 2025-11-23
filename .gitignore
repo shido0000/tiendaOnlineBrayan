@@ -1,0 +1,6 @@
+﻿################################################################################
+# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
+################################################################################
+
+/Backend/fashionStore_back/API.Application/appsettings.json
+/Backend/fashionStore_back/API.Application/appsettings.Development.json

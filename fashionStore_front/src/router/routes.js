@@ -20,6 +20,26 @@ const routes = [
         component: () => import('src/pages/Visual/CategoriaProductosPage.vue')
     },
     {
+        path: '/lista_deseos',
+        name: 'ListaDeseos',
+        component: () => import('src/pages/Visual/ListaDeseosPage.vue')
+    },
+    {
+        path: '/producto/:id',
+        name: 'ProductoDetalle',
+        component: () => import('src/pages/Visual/ProductoDetallePage.vue')
+    },
+    {
+        path: '/productos',
+        name: 'Productos',
+        component: () => import('src/pages/Visual/ProductosPage.vue')
+    },
+    {
+        path: '/carrito',
+        name: 'Carrito',
+        component: () => import('src/pages/Visual/CarritoPage.vue')
+    },
+    {
         path: '/',
         component: () => import('layouts/MainLayout.vue'),
         children: [
@@ -27,6 +47,11 @@ const routes = [
                 path: 'NomenclatorsCard',
                 name: 'NomenclatorsCard',
                 component: () => import('src/pages/Nomenclators/NomenclatorsCard.vue')
+            },
+            {
+                path: 'Dashboard',
+                name: 'Dashboard',
+                component: () => import('src/pages/DashboardPage.vue')
             },
             {
                 path: 'Moneda',
@@ -69,10 +94,16 @@ const routes = [
                 name: 'Usuario',
                 component: () => import('src/pages/Nomenclators/Usuario.vue')
             },
+            {
+                path: 'Perfil',
+                name: 'Perfil',
+                component: () => import('src/pages/ProfilePage.vue')
+            },
 
 
         ]
     },
+
     {
         path: '/:catchAll(.*)*',
         component: () => import('src/ErrorNotFound.vue')

@@ -56,41 +56,41 @@ namespace API.Domain.Services.Gestion.Nomencladores
             return await base.Actualizar(inventario);
         }
 
-        public async Task<List<ProductoPorCategoriaDto>> ObtenerProductosDelInventarioPorCategoria(Guid categoriaId)
-        {
-            var listadoRetorno = new List<ProductoPorCategoriaDto>();
-            var inventarios = await _repositorios.Inventarios
-                                .GetQuery()
-                                .AsNoTracking()
-                                .Include(e => e.Producto)
-                                    .ThenInclude(e => e.ProductoCategorias)
-                                .Include(e => e.Producto)
-                                    .ThenInclude(e => e.Moneda)
-                                .Include(e => e.Producto)
-                                    .ThenInclude(e => e.Fotos)
-                                .Where(e => e.Producto.ProductoCategorias.Any(e => e.CategoriaId == categoriaId))
-                                .ToListAsync();
+        //public async Task<List<ProductoPorCategoriaDto>> ObtenerProductosDelInventarioPorCategoria(Guid categoriaId)
+        //{
+        //    var listadoRetorno = new List<ProductoPorCategoriaDto>();
+        //    var inventarios = await _repositorios.Inventarios
+        //                        .GetQuery()
+        //                        .AsNoTracking()
+        //                        .Include(e => e.Producto)
+        //                            .ThenInclude(e => e.ProductoCategorias)
+        //                        .Include(e => e.Producto)
+        //                            .ThenInclude(e => e.Moneda)
+        //                        .Include(e => e.Producto)
+        //                            .ThenInclude(e => e.Fotos)
+        //                        .Where(e => e.Producto.ProductoCategorias.Any(e => e.CategoriaId == categoriaId))
+        //                        .ToListAsync();
 
-            foreach (var inv in inventarios)
-            {
-                var nuevoElemento = new ProductoPorCategoriaDto()
-                {
-                    ProductoId = inv.ProductoId,
-                    CantidadDisponible = inv.CantidadReservada-inv.CantidadDisponible,
-                    Estado = (inv.CantidadReservada - inv.CantidadDisponible) == 0 ? EstadoProductoInventario.Agotado.ToString() : EstadoProductoInventario.Disponible.ToString(),
-                    Codigo = inv.Producto.Codigo,
-                    Descripcion = inv.Producto.Descripcion,
-                    SKU = inv.Producto.SKU,
-                    Color = inv.Producto.Color,
-                    Moneda = inv.Producto.Moneda.Codigo ?? "",
-                    PrecioVenta = inv.Producto.PrecioVenta,
-                    Fotos = inv.Producto.Fotos.Select(f => f.Url).ToList(), // 👈 aquí el fix
-                    CategoriaIds = inv.Producto.ProductoCategorias.Select(pc => pc.CategoriaId).ToList()
-                };
-                listadoRetorno.Add(nuevoElemento);
-            }
+        //    foreach (var inv in inventarios)
+        //    {
+        //        var nuevoElemento = new ProductoPorCategoriaDto()
+        //        {
+        //            ProductoId = inv.ProductoId,
+        //            CantidadDisponible = inv.CantidadReservada-inv.CantidadDisponible,
+        //            Estado = (inv.CantidadReservada - inv.CantidadDisponible) == 0 ? EstadoProductoInventario.Agotado.ToString() : EstadoProductoInventario.Disponible.ToString(),
+        //            Codigo = inv.Producto.Codigo,
+        //            Descripcion = inv.Producto.Descripcion,
+        //            SKU = inv.Producto.SKU,
+        //            Color = inv.Producto.Color,
+        //            Moneda = inv.Producto.Moneda.Codigo ?? "",
+        //            PrecioVenta = inv.Producto.PrecioVenta,
+        //            Fotos = inv.Producto.Fotos.Select(f => f.Url).ToList(), // 👈 aquí el fix
+        //            CategoriaIds = inv.Producto.ProductoCategorias.Select(pc => pc.CategoriaId).ToList()
+        //        };
+        //        listadoRetorno.Add(nuevoElemento);
+        //    }
 
-            return listadoRetorno;
-        }
+        //    return listadoRetorno;
+        //}
     }
 }

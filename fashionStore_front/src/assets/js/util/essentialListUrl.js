@@ -4,6 +4,18 @@ export const essentialListUrl = [
         link: 'IndexPage'
     },
     {
+        title: 'DASHBOARD',
+        link: 'Dashboard'
+    },
+    {
+        title: 'PERFIL',
+        link: 'Perfil'
+    },
+    {
+        title: 'PEDIDOS',
+        link: 'Pedido'
+    },
+    {
         title: 'NOMENCLADORES',
         link: 'NomenclatorsCard'
     },

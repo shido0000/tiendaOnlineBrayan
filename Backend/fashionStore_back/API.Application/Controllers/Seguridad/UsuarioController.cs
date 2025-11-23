@@ -1,6 +1,7 @@
 ﻿using API.Application.Dtos.Comunes;
 using API.Application.Dtos.Seguridad.Usuario;
 using API.Application.Validadotors.Seguridad;
+using API.Data.Dto.Usuario;
 using API.Data.Entidades.Seguridad;
 using API.Domain.Exceptions;
 using API.Domain.Interfaces.Seguridad;
@@ -16,9 +17,11 @@ namespace API.Application.Controllers.Seguridad
 {
     public class UsuarioController : BasicController<Usuario, UsuarioValidator, DetallesUsuarioDto, CrearUsuarioInputDto, ActualizarUsuarioInputDto, ListadoPaginadoUsuarioDto, FiltrarConfigurarListadoPaginadoUsuarioIntputDto>
     {
+        private readonly IUsuarioService _UsuarioService;
 
-        public UsuarioController(IMapper mapper, IUsuarioService servicioUsuario) : base(mapper, servicioUsuario)
+        public UsuarioController(IMapper mapper, IUsuarioService servicioUsuario, IUsuarioService usuarioService) : base(mapper, servicioUsuario)
         {
+            _UsuarioService = usuarioService;
         }
 
         /// <summary>
@@ -72,7 +75,7 @@ namespace API.Application.Controllers.Seguridad
 
             //IIncludableQueryable<Usuario, object> propiedadesIncluidas(IQueryable<Usuario> query) => query.Include(e => e.ShipmentItems);
 
-            return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento, propiedadesIncluidas:query=>query.Include(e=>e.Rol), filtros.ToArray());
+            return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento, propiedadesIncluidas: query => query.Include(e => e.Rol), filtros.ToArray());
         }
 
         protected override async Task<Usuario?> ObtenerElementoPorId(Guid id)
@@ -80,5 +83,13 @@ namespace API.Application.Controllers.Seguridad
 
         protected override async Task<IEnumerable<DetallesUsuarioDto>> ObtenerTodosElementos(string? secuenciaOrdenamiento = null)
             => _mapper.Map<IEnumerable<DetallesUsuarioDto>>(await _servicioBase.ObtenerTodos(secuenciaOrdenamiento, propiedadesIncluidas: query => query.Include(e => e.Rol)));
+
+
+        [HttpPut("[action]/{id}")]
+        public async Task<IActionResult> ActualizarPerfil(Guid id, [FromBody] UsuarioActualizarDto usuarioDto)
+        {
+            var result = await _UsuarioService.ActualizarPerfil(id, usuarioDto);
+            return Ok(result);
+        }
     }
 }

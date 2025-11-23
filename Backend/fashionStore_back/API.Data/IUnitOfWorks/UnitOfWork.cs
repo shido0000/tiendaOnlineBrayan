@@ -1,6 +1,7 @@
 ﻿using API.Data.DbContexts;
 using API.Data.Entidades;
 using API.Data.Entidades.Contabilidad;
+using API.Data.Entidades.Gestion.Nomencladores;
 using API.Data.IUnitOfWorks.Interfaces;
 using API.Data.IUnitOfWorks.Interfaces.Contabilidad;
 using API.Data.IUnitOfWorks.Interfaces.Gestion.Nomencladores;
@@ -44,6 +45,12 @@ namespace API.Data.IUnitOfWorks
         public IComprobanteVenta ComprobantesVentas { get; }
         public IProductoDescuento ProductosDescuentos { get; }
         public IProductoFoto ProductosFotos { get; }
+        public IReview Reviews { get; }
+        public IOtraVariante OtraVariantes { get; }
+        public IProductoVariante ProductoVariantes { get; }
+        public IGestor Gestores { get; }
+        public IGestorPedido GestorPedidos { get; }
+        public IMensajeria Mensajerias { get; }
 
 
         // CONTABILIDAD 
@@ -85,6 +92,12 @@ namespace API.Data.IUnitOfWorks
             ComprobantesVentas = new ComprobanteVentaRepository(context);
             ProductosDescuentos = new ProductoDescuentoRepository(context);
             ProductosFotos = new ProductoFotoRepository(context);
+            Reviews = new ReviewRepository(context);
+            OtraVariantes = new OtraVarianteRepository(context);
+            ProductoVariantes = new ProductoVarianteRepository(context);
+            Gestores = new GestorRepository(context);
+            GestorPedidos = new GestorPedidoRepository(context);
+            Mensajerias = new MensajeriaRepository(context);
 
             // CONTABILIDAD
             CuentasContables = new CuentaContableRepository(context);

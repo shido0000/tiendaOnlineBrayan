@@ -1,11 +1,11 @@
 ﻿using API.Data.Dto;
 using API.Data.Entidades.Gestion.Nomencladores;
 using API.Data.IUnitOfWorks.Interfaces;
+using API.Domain.Exceptions;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 
 namespace API.Domain.Services.Gestion.Nomencladores
@@ -16,46 +16,51 @@ namespace API.Domain.Services.Gestion.Nomencladores
         {
         }
 
-        public async override Task<EntityEntry<Producto>> Crear(Producto entity)
+        public async Task<Guid> CrearProducto(ProductoACrear producto)
         {
-            // Si el producto trae fotos en memoria (ej. mapeadas desde el DTO)
-            if (entity.Fotos != null && entity.Fotos.Any())
+            var nuevoProducto = new Producto()
             {
-                // Aseguramos que cada foto tenga el ProductoId correcto
-                foreach (var foto in entity.Fotos)
-                {
-                    foto.ProductoId = entity.Id; // si el Id ya está asignado
-                }
-                await _repositorios.ProductosFotos.AddRangeAsync(entity.Fotos);
-            }
-
-            var entry = await base.Crear(entity);
-            return entry;
-        }
-
-        public async Task<Guid> CrearAsync(CrearProductoInputDto dto, List<IFormFile> fotos)
-        {
-            var producto = new Producto
-            {
-                Codigo = dto.Codigo,
-                Descripcion = dto.Descripcion,
-                Color = dto.Color,
-                SKU = dto.SKU,
-                PrecioCosto = dto.PrecioCosto,
-                PrecioVenta = dto.PrecioVenta,
-                MonedaId = dto.MonedaId,
-                EsActivo = dto.EsActivo
+                Id = Guid.NewGuid(),
+                Codigo = producto.Codigo,
+                Descripcion = producto.Descripcion,
+                EsActivo = producto.EsActivo,
+                SKU = producto.SKU,
+                PrecioCosto = producto.PrecioCosto,
+                PrecioVenta = producto.PrecioVenta,
+                MonedaCostoId = producto.MonedaCostoId,
+                MonedaVentaId = producto.MonedaVentaId,
+                StockTotal = 0,
             };
 
-            await _repositorios.Productos.AddAsync(producto);
-            await _repositorios.SaveChangesAsync(); // aquí ya tienes producto.Id
-
-            // Procesar fotos si vienen en el FormData
-            if (fotos != null && fotos.Any())
+            var listaProductosCategorias = new List<ProductoCategoria>();
+            var listaProductosVariantes = new List<ProductoVariante>();
+            foreach (var catId in producto.CategoriasIds)
             {
-                for (int i = 0; i < fotos.Count; i++)
+                var nuevoProductoCategoria = new ProductoCategoria()
                 {
-                    var file = fotos[i];
+                    CategoriaId = catId,
+                    ProductoId = nuevoProducto.Id,
+                };
+                listaProductosCategorias.Add(nuevoProductoCategoria);
+            }
+
+            foreach (var variante in producto.ProductoVariantes)
+            {
+                var nuevoProductoVariante = new ProductoVariante()
+                {
+
+                    Id = Guid.NewGuid(),
+                    ProductoId = nuevoProducto.Id,
+                    Talla = variante.Talla,
+                    Color = variante.Color,
+                    Stock = variante.Stock,
+                    Principal = variante.Principal,
+                    // Fotos = variante.Fotos,
+                };
+
+                for (int i = 0; i < variante.Fotos.Count; i++)
+                {
+                    var file = variante.Fotos[i];
                     var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
                     var path = Path.Combine("wwwroot", "uploads", "productos", fileName);
 
@@ -68,9 +73,9 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
                     var url = $"/uploads/productos/{fileName}";
 
-                    producto.Fotos.Add(new ProductoFoto
+                    nuevoProductoVariante.Fotos.Add(new ProductoFoto
                     {
-                        ProductoId = producto.Id,
+                        ProductoVarianteId = nuevoProductoVariante.Id,
                         Descripcion = file.FileName,   // 👈 nombre original del archivo
                         Orden = i,                     // 👈 orden según posición en la lista
                         EsPrincipal = (i == 0),        // 👈 solo la primera es principal
@@ -78,145 +83,218 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     });
                 }
 
-                await _repositorios.SaveChangesAsync();
+                listaProductosVariantes.Add(nuevoProductoVariante);
             }
 
-            var listaCategorias = new List<ProductoCategoria>();
-            if (dto.CategoriaIds.Any())
-            {
-                foreach (var cateId in dto.CategoriaIds)
-                {
-                    var nuevoElemento = new ProductoCategoria()
-                    {
-                        CategoriaId = cateId,
-                        ProductoId = producto.Id,
-                    };
-                    listaCategorias.Add(nuevoElemento);
-                }
-                await _repositorios.ProductosCategorias.AddRangeAsync(listaCategorias);
-                await _repositorios.SaveChangesAsync();
-            }
+            nuevoProducto.StockTotal = listaProductosVariantes.Sum(e => e.Stock);
 
-            return producto.Id;
+            await _repositorios.Productos.AddAsync(nuevoProducto);
+            await _repositorios.ProductosCategorias.AddRangeAsync(listaProductosCategorias);
+            await _repositorios.ProductoVariantes.AddRangeAsync(listaProductosVariantes);
+            await _repositorios.SaveChangesAsync();
+
+            return nuevoProducto.Id;
         }
 
-
-        public async Task<Guid> ActualizarAsync(Guid id, ActualizarProductoInputDto dto, List<IFormFile> fotos)
+        public async Task<Guid> ActualizarProducto(Guid productoId, ProductoAActualizar producto)
         {
-            var nombresMantener = dto.FotosExistentes
-                .Select(f => Path.GetFileNameWithoutExtension(f))
-                .ToList();
-
-            var producto = await _repositorios.Productos
+            var productoExistente = await _repositorios.Productos
                 .GetQuery()
-                .Include(p => p.Fotos)
                 .Include(p => p.ProductoCategorias)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .Include(p => p.ProductosVariantes)
+                    .ThenInclude(v => v.Fotos)
+                .FirstOrDefaultAsync(e => e.Id == productoId)
+                ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Producto no encontrado." };
 
-            if (producto == null)
-                throw new Exception("Producto no encontrado");
+            // --- Actualizar propiedades simples ---
+            productoExistente.Codigo = producto.Codigo;
+            productoExistente.Descripcion = producto.Descripcion;
+            productoExistente.EsActivo = producto.EsActivo;
+            productoExistente.SKU = producto.SKU;
+            productoExistente.PrecioCosto = producto.PrecioCosto;
+            productoExistente.PrecioVenta = producto.PrecioVenta;
+            productoExistente.MonedaCostoId = producto.MonedaCostoId;
+            productoExistente.MonedaVentaId = producto.MonedaVentaId;
 
-            // Actualizar propiedades simples
-            producto.Codigo = dto.Codigo;
-            producto.Descripcion = dto.Descripcion;
-            producto.Color = dto.Color;
-            producto.SKU = dto.SKU;
-            producto.PrecioCosto = dto.PrecioCosto;
-            producto.PrecioVenta = dto.PrecioVenta;
-            producto.MonedaId = dto.MonedaId;
-            producto.EsActivo = dto.EsActivo;
+            // --- Sincronizar Categorías ---
+            var categoriasExistentesIds = productoExistente.ProductoCategorias.Select(pc => pc.CategoriaId).ToList();
 
-            // --- Sincronización de fotos ---
-            var fotosAEliminar = producto.Fotos
-                .Where(f => !nombresMantener.Contains(
-                    Path.GetFileNameWithoutExtension(f.Url)))
+            var categoriasAEliminar = productoExistente.ProductoCategorias
+                .Where(pc => !producto.CategoriasIds.Contains(pc.CategoriaId))
                 .ToList();
+            _repositorios.ProductosCategorias.RemoveRange(categoriasAEliminar);
 
-            if (fotosAEliminar.Any())
-            {
-                foreach (var foto in fotosAEliminar)
+            var categoriasANuevas = producto.CategoriasIds
+                .Where(catId => !categoriasExistentesIds.Contains(catId))
+                .Select(catId => new ProductoCategoria
                 {
-                    if (!string.IsNullOrEmpty(foto.Url))
-                    {
-                        var filePath = Path.Combine(
-                            Directory.GetCurrentDirectory(),
-                            "wwwroot",
-                            foto.Url.TrimStart('/')
-                        );
+                    ProductoId = productoExistente.Id,
+                    CategoriaId = catId
+                }).ToList();
+            await _repositorios.ProductosCategorias.AddRangeAsync(categoriasANuevas);
 
-                        if (System.IO.File.Exists(filePath))
+            // --- Sincronizar Variantes ---
+            var variantesExistentes = productoExistente.ProductosVariantes.ToList();
+
+            // Eliminar variantes que ya no vienen
+            var variantesAEliminar = variantesExistentes
+                .Where(v => !producto.ProductoVariantes.Any(pv => pv.ProductoId == v.Id))
+                .ToList();
+            _repositorios.ProductoVariantes.RemoveRange(variantesAEliminar);
+
+            var nuevasVariantes = new List<ProductoVariante>();
+
+            foreach (var varianteDto in producto.ProductoVariantes)
+            {
+                var varianteExistente = variantesExistentes.FirstOrDefault(v => v.Id == varianteDto.ProductoId);
+
+                if (varianteExistente != null)
+                {
+                    // Actualizar existente
+                    varianteExistente.Talla = varianteDto.Talla;
+                    varianteExistente.Color = varianteDto.Color;
+                    varianteExistente.Stock = varianteDto.Stock;
+                    varianteExistente.Principal = varianteDto.Principal;
+
+                    // --- Sincronizar fotos ---
+                    // Eliminar fotos que ya no vienen (comparando por Id)
+                    var fotosAEliminar = varianteExistente.Fotos
+                        .Where(f => !varianteDto.FotosExistentesIds.Contains(f.Id))
+                        .ToList();
+                    _repositorios.ProductosFotos.RemoveRange(fotosAEliminar);
+
+                    // Agregar nuevas fotos
+                    foreach (var file in varianteDto.FotosNuevas)
+                    {
+                        if (file != null && file.Length > 0)
                         {
-                            System.IO.File.Delete(filePath);
+                            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                            var filePath = Path.Combine("wwwroot/uploads/productos", fileName);
+
+                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await file.CopyToAsync(stream);
+                            }
+
+                            varianteExistente.Fotos.Add(new ProductoFoto
+                            {
+                                ProductoVarianteId = varianteExistente.Id,
+                                Url = $"/uploads/productos/{fileName}",
+                                Descripcion = file.FileName,
+                                EsPrincipal = false,
+                                Orden = varianteExistente.Fotos.Count
+                            });
                         }
                     }
                 }
-
-                _repositorios.ProductosFotos.RemoveRange(fotosAEliminar);
-            }
-
-            // Procesar fotos nuevas
-            if (fotos != null && fotos.Any())
-            {
-                for (int i = 0; i < fotos.Count; i++)
+                else
                 {
-                    var file = fotos[i];
-                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                    var path = Path.Combine("wwwroot", "uploads", "productos", fileName);
-
-                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-
-                    using (var stream = new FileStream(path, FileMode.Create))
+                    // Crear nueva variante
+                    var nuevaVariante = new ProductoVariante
                     {
-                        await file.CopyToAsync(stream);
+                        ProductoId = productoExistente.Id,
+                        Talla = varianteDto.Talla,
+                        Color = varianteDto.Color,
+                        Stock = varianteDto.Stock,
+                        Principal = varianteDto.Principal,
+                        Fotos = new List<ProductoFoto>()
+                    };
+
+                    // Guardar fotos nuevas
+                    foreach (var file in varianteDto.FotosNuevas)
+                    {
+                        if (file != null && file.Length > 0)
+                        {
+                            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                            var filePath = Path.Combine("wwwroot/uploads/productos", fileName);
+
+                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await file.CopyToAsync(stream);
+                            }
+
+                            nuevaVariante.Fotos.Add(new ProductoFoto
+                            {
+                                Url = $"/uploads/productos/{fileName}",
+                                Descripcion = file.FileName,
+                                EsPrincipal = false,
+                                Orden = nuevaVariante.Fotos.Count
+                            });
+                        }
                     }
 
-                    var url = $"/uploads/productos/{fileName}";
-
-                    producto.Fotos.Add(new ProductoFoto
-                    {
-                        ProductoId = producto.Id,
-                        Descripcion = file.FileName,
-                        Orden = i,
-                        EsPrincipal = (i == 0),
-                        Url = url
-                    });
+                    nuevasVariantes.Add(nuevaVariante);
                 }
             }
 
-            // --- Sincronización de categorías ---
-            var categoriasActuales = producto.ProductoCategorias.Select(c => c.CategoriaId).ToList();
-            var categoriasNuevas = dto.CategoriaIds ?? new List<Guid>();
-
-            // 1. Eliminar las que ya no están
-            var categoriasAEliminar = producto.ProductoCategorias
-                .Where(c => !categoriasNuevas.Contains(c.CategoriaId))
-                .ToList();
-
-            if (categoriasAEliminar.Any())
+            if (nuevasVariantes.Any())
             {
-                _repositorios.ProductosCategorias.RemoveRange(categoriasAEliminar);
+                await _repositorios.ProductoVariantes.AddRangeAsync(nuevasVariantes);
             }
 
-            // 2. Insertar las nuevas que no existían
-            var categoriasAInsertar = categoriasNuevas
-                .Where(cateId => !categoriasActuales.Contains(cateId))
-                .Select(cateId => new ProductoCategoria
-                {
-                    CategoriaId = cateId,
-                    ProductoId = producto.Id
-                })
-                .ToList();
+            // --- Recalcular stock total ---
+            productoExistente.StockTotal = producto.ProductoVariantes.Sum(v => v.Stock);
 
-            if (categoriasAInsertar.Any())
-            {
-                await _repositorios.ProductosCategorias.AddRangeAsync(categoriasAInsertar);
-            }
-
-            // Solo Update del producto, EF ya trackea las fotos nuevas
-            _repositorios.Productos.Update(producto);
-
+            _repositorios.Productos.Update(productoExistente);
             await _repositorios.SaveChangesAsync();
-            return producto.Id;
+
+            return productoExistente.Id;
+        }
+
+
+
+        public async Task<ProductoEspecificoDto> ObtenerProductoEspecifico(Guid id)
+        {
+            var producto = await _repositorios.Productos
+                            .GetQuery()
+                            .AsNoTracking()
+                            .Include(e => e.ProductosVariantes)
+                                .ThenInclude(e => e.Fotos)
+                            .Include(e => e.ProductoCategorias)
+                                .ThenInclude(e => e.Categoria)
+                            .FirstOrDefaultAsync(e => e.Id == id)
+                            ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Producto no encontrado." };
+
+            var productoDevolver = new ProductoEspecificoDto()
+            {
+                Id=producto.Id,
+                Codigo = producto.Codigo,
+                Descripcion = producto.Descripcion,
+                EsActivo = producto.EsActivo,
+                SKU = producto.SKU,
+                PrecioCosto = producto.PrecioCosto,
+                PrecioVenta = producto.PrecioVenta,
+
+                MonedaCostoId = producto.MonedaCostoId,
+                MonedaVentaId = producto.MonedaVentaId,
+                StockTotal = producto.StockTotal,
+                CategoriasIds = producto.ProductoCategorias.Select(e => e.CategoriaId).ToList(),
+                ProductoVariantes = new(),
+            };
+
+            foreach (var variant in producto.ProductosVariantes) {
+                productoDevolver.ProductoVariantes.Add(new ProductoEspecificoVarianteDto
+                {
+                    Id = variant.Id,
+                    ProductoId = variant.ProductoId,
+                    Talla = variant.Talla,
+                    Color = variant.Color,
+                    Stock = variant.Stock,
+                    Principal = variant.Principal,
+                    OtrasVariantesIds = variant.OtrasVariantes.Select(e=>e.Id).ToList(),
+                    Fotos = variant.Fotos.Select(f => new ProductoFotoDto
+                    {
+                        Id = f.Id,
+                        ProductVariantId = f.ProductoVarianteId,
+                        Url = f.Url,
+                        Descripcion = f.Descripcion,
+                        EsPrincipal = f.EsPrincipal,
+                        Orden = f.Orden,
+                    }).ToList()
+                });
+            }
+
+            return productoDevolver;
         }
 
         public async Task<List<Producto>> ObtenerProductosNovedades()
@@ -224,18 +302,96 @@ namespace API.Domain.Services.Gestion.Nomencladores
             var lista = await _repositorios.Productos
                             .GetQuery()
                             .AsNoTracking()
-                            .Include(e => e.Fotos)
+                            .Include(e => e.ProductosVariantes)
+                                .ThenInclude(e => e.Fotos)
                             .Include(e => e.ProductoCategorias)
                                 .ThenInclude(e => e.Categoria)
                             .ToListAsync();
 
             var hoy = DateTime.Today; // solo la fecha, sin hora
-            var desde = hoy.AddDays(-5);
+            var desde = hoy.AddDays(-10);
 
             lista = lista.Where(e => e.FechaCreado.Date >= desde && e.FechaCreado.Date <= hoy).ToList();
 
             return lista;
         }
+
+        //public async Task<List<ProductosAgrupados>> ObtenerProductosAgrupados()
+        //{
+        //    var productos = await _repositorios.Productos
+        //        .GetQuery()
+        //        .AsNoTracking()
+        //        .Include(p => p.ProductoCategorias)
+        //        .Include(p => p.Fotos)
+        //        .ToListAsync();
+
+        //    var agrupados = productos
+        //        .Where(p => !string.IsNullOrEmpty(p.SKU) && p.SKU.Length >= 2)
+        //        .GroupBy(p => p.SKU.Substring(0, 2)) // 👈 agrupar por los 2 primeros caracteres
+        //        .Select(g => new ProductosAgrupados
+        //        {
+        //            SKU = g.Key, // el prefijo de 2 caracteres
+        //            Codigo = g.First().Codigo,
+        //            Descripcion = g.First().Descripcion,
+        //            EsActivo = g.First().EsActivo,
+        //            PrecioVenta = g.First().PrecioVenta,
+        //            MonedaVenta = g.First().MonedaVenta?.Descripcion, // si MonedaVenta tiene campo Descripcion
+        //            Stock = g.Sum(p => p.Stock), // sumar stock de todos los productos del grupo
+        //            Talla = g.Select(p => p.Talla).Where(t => !string.IsNullOrEmpty(t)).Distinct().ToList(),
+        //            Color = g.Select(p => p.Color).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList(),
+        //            CategoriaIds = g.SelectMany(p => p.ProductoCategorias.Select(pc => pc.CategoriaId)).Distinct().ToList(),
+        //            // si quieres traer fotos, aquí deberías mapearlas a IFormFile o a otra estructura
+        //            Fotos = new List<IFormFile>() // placeholder, depende de cómo quieras mapear ProductoFoto
+        //        })
+        //        .ToList();
+
+        //    return agrupados;
+        //}
+
+        //public async Task<ProductosAgrupados?> ObtenerProductoAgrupadoPorSku(string sku)
+        //{
+        //    if (string.IsNullOrEmpty(sku) || sku.Length < 2)
+        //        return null;
+
+        //    var prefijo = sku.Substring(0, 2);
+
+        //    var productos = await _repositorios.Productos
+        //        .GetQuery()
+        //        .AsNoTracking()
+        //        .Include(p => p.ProductoCategorias)
+        //        .Include(p => p.Fotos)
+        //        .Where(p => p.SKU != null && p.SKU.StartsWith(prefijo)) // 👈 filtrar por prefijo
+        //        .ToListAsync();
+
+        //    if (!productos.Any())
+        //        return null;
+
+        //    var agrupado = new ProductosAgrupados
+        //    {
+        //        SKU = prefijo,
+        //        Codigo = productos.First().Codigo,
+        //        Descripcion = productos.First().Descripcion,
+        //        EsActivo = productos.First().EsActivo,
+        //        PrecioVenta = productos.First().PrecioVenta,
+        //        MonedaVenta = productos.First().MonedaVenta?.Descripcion,
+        //        Stock = productos.Sum(p => p.Stock),
+        //        Talla = productos.Select(p => p.Talla)
+        //                         .Where(t => !string.IsNullOrEmpty(t))
+        //                         .Distinct()
+        //                         .ToList(),
+        //        Color = productos.Select(p => p.Color)
+        //                         .Where(c => !string.IsNullOrEmpty(c))
+        //                         .Distinct()
+        //                         .ToList(),
+        //        CategoriaIds = productos.SelectMany(p => p.ProductoCategorias
+        //                                                  .Select(pc => pc.CategoriaId))
+        //                                .Distinct()
+        //                                .ToList(),
+        //        Fotos = new List<IFormFile>() // aquí deberías mapear tus ProductoFoto si lo necesitas
+        //    };
+
+        //    return agrupado;
+        //}
 
     }
 }

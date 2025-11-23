@@ -41,10 +41,10 @@ namespace API.Application.Mapper.Gestion.Nomencladores
             CreateMap<CrearDescuentoInputDto, Descuento>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductoDescuentos, opt => opt.MapFrom(src =>
-                    src.ProductosIds.Select(productoId => new ProductoDescuento
+                    src.ProductosIds.Select(ProductoId => new ProductoDescuento
                     {
                         DescuentoId=src.Id,
-                        ProductoId = productoId
+                        ProductoId = ProductoId
                     })
                 ));
 

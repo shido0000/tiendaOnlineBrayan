@@ -15,11 +15,13 @@ namespace API.Data.Entidades.Gestion.Nomencladores
         public Pedido Pedido { get; set; } = null!;
         public Guid ProductoId { get; set; }
         public Producto Producto { get; set; } = null!;
+ 
         public Guid? DescuentoId { get; set; }
         public Descuento? Descuento { get; set; }
         public int Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
         public decimal DescuentoAplicado { get; set; } // valor aplicado
+        public decimal LineTotal { get; set; }
         public EstadoLinea EstadoLinea { get; set; } = EstadoLinea.Pendiente;
     }
 }

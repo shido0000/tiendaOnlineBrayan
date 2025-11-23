@@ -184,7 +184,7 @@
   lazy-rules
   :rules="[
     val => (val && val.length > 0) || 'Debe insertar un Correo',
-    val => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val) || 'Formato de correo no válido',
+   // val => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val) || 'Formato de correo no válido',
     val => (items.length > 0
       ? !isValorRepetido(val, 'correo', objeto, items)
       : true) || 'Ya existe un correo con ese valor'
@@ -372,7 +372,6 @@ const objetoInicial = {
   apellidos: null,
   username: null,
   correo: null,
-  correo: null,
   rolId:null,
   esActivo:true,
   contrasenna:null,
@@ -386,8 +385,6 @@ const objeto = reactive({ ...objetoInicial })
 const Guardar = () => {
   //const url = objeto.id ? 'Usuario/Actualizar' : 'Usuario/Crear'
   const url = objeto.id ? 'Usuario/Actualizar' : 'Usuario/Crear'
-  console.log("objeto: ",objeto)
-   console.log("url: ",url)
   saveData(url, objeto, load, close, dialogLoad)
 }
 

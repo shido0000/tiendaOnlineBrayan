@@ -3,7 +3,7 @@ using API.Data.Entidades.Gestion.Nomencladores;
 
 namespace API.Application.Mapper.Gestion.Nomencladores
 {
-    public class ProductoDtoProfile : BaseProfile<Producto, ProductoDto, CrearProductoInputDto, ActualizarProductoInputDto, ListadoPaginadoProductoDto>
+    public class ProductoDtoProfile : BaseProfile<Producto, DetallesProductoDto, CrearProductoInputDto, ActualizarProductoInputDto, ListadoPaginadoProductoDto>
 
     {
         public ProductoDtoProfile()
@@ -15,18 +15,26 @@ namespace API.Application.Mapper.Gestion.Nomencladores
         public void MapProductoDto()
         {
             CreateMap<Producto, DetallesProductoDto>()
-                .ForMember(dto => dto.MonedaCodigo, opt => opt.MapFrom(e => e.Moneda.Codigo))
-                .ForMember(dto => dto.Fotos, opt => opt.MapFrom(e => e.Fotos.Select(f => f.Url).ToList()))
-                .ForMember(dto => dto.CategoriaIds, opt => opt.MapFrom(e => e.ProductoCategorias.Select(f => f.CategoriaId).ToList()))
+                .ForMember(dto => dto.CategoriaIds,
+                    opt => opt.MapFrom(e => e.ProductoCategorias.Select(pc => pc.CategoriaId).ToList()))
+                //.ForMember(dto => dto.FotosExistentes,
+                //    opt => opt.MapFrom(v => v.Fotos.Select(f => f.Url).ToList()))
+                .ReverseMap()
                 .ReverseMap();
         }
 
         public void MapProductoListadoDto()
         {
+            // Producto → ListadoPaginadoProductoDto (hereda de ProductoDto)
             CreateMap<Producto, ListadoPaginadoProductoDto>()
-                .ForMember(dto => dto.MonedaCodigo, opt => opt.MapFrom(e => e.Moneda.Codigo))
-                .ForMember(dto => dto.Fotos, opt => opt.MapFrom(e => e.Fotos.Select(f => f.Url).ToList()))
+                .ForMember(dto => dto.CategoriaIds, opt => opt.MapFrom(e => e.ProductoCategorias.Select(f => f.CategoriaId).ToList()))
+                .ForMember(dto => dto.MonedaCostoCodigo, opt => opt.MapFrom(e => e.MonedaCosto.Codigo ?? "-"))
+                .ForMember(dto => dto.MonedaVentaCodigo, opt => opt.MapFrom(e => e.MonedaVenta.Codigo ?? "-"))
+                //.ForMember(dto => dto.FotosExistentes,
+                //    opt => opt.MapFrom(v => v.Fotos.Select(f => f.Url).ToList()))
                 .ReverseMap();
         }
+
+
     }
 }

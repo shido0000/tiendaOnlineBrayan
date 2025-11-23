@@ -12,7 +12,7 @@ export const dataColumnCategoriaProducto = Object.freeze([
     {
         name: 'nombre',
         align: 'center',
-        label: 'Código',
+        label: 'Nombre',
         field: 'nombre',
         sortable: true
     },
@@ -83,15 +83,8 @@ export const dataColumnProducto = Object.freeze([
     {
         name: 'codigo',
         align: 'center',
-        label: 'Código',
+        label: 'Nombre',
         field: 'codigo',
-        sortable: true
-    },
-    {
-        name: 'sku',
-        align: 'center',
-        label: 'SKU',
-        field: 'sku',
         sortable: true
     },
     {
@@ -102,10 +95,31 @@ export const dataColumnProducto = Object.freeze([
         sortable: true,
     },
     {
+        name: 'sku',
+        align: 'center',
+        label: 'SKU',
+        field: 'sku',
+        sortable: true
+    },
+    {
+        name: 'stockTotal',
+        align: 'center',
+        label: 'Stock Total',
+        field: 'stockTotal',
+        sortable: true
+    },
+    {
         name: "precioCosto",
         align: "center",
         label: "Precio de Costo",
         field: "precioCosto",
+        sortable: true,
+    },
+    {
+        name: "monedaCostoCodigo",
+        align: "center",
+        label: "Moneda Costo",
+        field: "monedaCostoCodigo",
         sortable: true,
     },
     {
@@ -116,17 +130,10 @@ export const dataColumnProducto = Object.freeze([
         sortable: true,
     },
     {
-        name: "monedaCodigo",
+        name: "monedaVentaCodigo",
         align: "center",
-        label: "Moneda",
-        field: "monedaCodigo",
-        sortable: true,
-    },
-    {
-        name: "color",
-        align: "center",
-        label: "Color",
-        field: "color",
+        label: "Moneda Venta",
+        field: "monedaVentaCodigo",
         sortable: true,
     },
     {
@@ -324,58 +331,6 @@ export const dataColumnCupon = Object.freeze([
         field: 'esActivo',
         sortable: true
     },
-    {
-        name: "action",
-        align: "center",
-        label: "Acciones",
-        field: "action",
-        sortable: true,
-    },
-]);
-
-export const dataColumnInventario = Object.freeze([
-    {
-        name: 'productoCodigo',
-        align: 'center',
-        label: 'Producto Código',
-        field: 'productoCodigo',
-        sortable: true
-    },
-    {
-        name: "productoDescripcion",
-        align: "center",
-        label: "Producto Descripción",
-        field: "productoDescripcion",
-        sortable: true,
-    },
-    {
-        name: 'productoSku',
-        align: 'center',
-        label: 'SKU',
-        field: 'productoSku',
-        sortable: true
-    },
-    {
-        name: "cantidadDisponible",
-        align: "center",
-        label: "Cantidad Disponible",
-        field: "cantidadDisponible",
-        sortable: true,
-    },
-    {
-        name: "cantidadReservada",
-        align: "center",
-        label: "Cantidad Reservada",
-        field: "cantidadReservada",
-        sortable: true,
-    },
-    /*{
-        name: 'activo',
-        align: 'center',
-        label: 'Activo',
-        field: 'activo',
-        sortable: true
-    },*/
     {
         name: "action",
         align: "center",

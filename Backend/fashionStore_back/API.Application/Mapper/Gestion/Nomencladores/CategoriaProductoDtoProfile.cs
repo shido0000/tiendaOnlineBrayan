@@ -5,7 +5,7 @@ using API.Data.Entidades.Seguridad;
 
 namespace API.Application.Mapper.Gestion.Nomencladores
 {
-    public class CategoriaProductoDtoProfile : BaseProfile<CategoriaProducto, CategoriaProductoDto, CrearCategoriaProductoInputDto, ActualizarCategoriaProductoInputDto, ListadoPaginadoCategoriaProductoDto>
+    public class CategoriaProductoDtoProfile : BaseProfile<CategoriaProducto, DetallesCategoriaProductoDto, CrearCategoriaProductoInputDto, ActualizarCategoriaProductoInputDto, ListadoPaginadoCategoriaProductoDto>
 
     {
         public CategoriaProductoDtoProfile()
@@ -18,6 +18,8 @@ namespace API.Application.Mapper.Gestion.Nomencladores
         public void MapDetallesCategoriaProductoDto()
         {
             CreateMap<CategoriaProducto, DetallesCategoriaProductoDto>()
+                .ForMember(dto => dto.ListadoDeProductos, opt => opt.MapFrom(e => e.ProductoCategorias.Select(f => f.Producto).ToList()))
+
               .ReverseMap()
             ;
         }

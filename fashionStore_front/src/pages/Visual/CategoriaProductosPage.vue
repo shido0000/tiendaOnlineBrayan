@@ -1,5 +1,7 @@
 <template>
-  <div class="q-pa-lg bg-grey-1">
+  <div>
+  <TopBar :categories="categories" />
+    <div class="q-pa-lg bg-grey-1">
     <div class="text-h6 text-weight-bold q-mb-md">
       Productos en {{ categoria?.nombre }}
     </div>
@@ -30,14 +32,14 @@
     height="180px"
     class="rounded-borders"
   >
-    <q-carousel-slide
+      <q-carousel-slide
       v-for="(foto, idx) in producto.fotos"
       :key="idx"
       :name="idx"
       class="flex flex-center bg-grey-2"
     >
       <q-img
-        :src="getFotoUrl(foto.url || foto)"
+        :src="getFotoUrlFromFoto(foto)"
         style="height: 100%; width: 100%; object-fit: cover;"
       >
         <template v-slot:error>
@@ -83,51 +85,109 @@
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat round icon="shopping_cart" color="purple-4" />
+            <q-btn dense round flat :icon="wishlist.isFavorito(producto.id) ? 'favorite' : 'favorite_border'" @click.stop="() => wishlist.toggle(producto)" />
+            <q-btn flat round icon="shopping_cart" color="purple-4" @click.stop="() => cart.addItem(producto,1)" />
           </q-card-actions>
         </q-card>
       </div>
     </div>
 
     <DialogLoad :dialogLoad="dialogLoad" />
+    </div>
   </div>
 </template>
-
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { loadGet, loadGetDatosInicio, loadGetHastaData } from 'src/assets/js/util/funciones'
 import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
+import TopBar from 'src/pages/Visual/components/TopBar.vue'
 import { apiFotosBaseUrl } from 'src/boot/axios'
+import { useWishlist } from 'src/stores/wishlistStore'
+import useCart from 'src/stores/cartStore'
 
 const route = useRoute()
 const productos = ref([])
 const categoria = ref(null)
+const categories = ref([])
+const debugImg = true
 const dialogLoad = ref(false)
+const wishlist = useWishlist()
+const cart = useCart()
 
-onMounted(async () => {
+async function cargarDatosCategoria(id) {
   dialogLoad.value = true
-  // Obtener datos de la categoría
-  categoria.value = await loadGet(`CategoriaProducto/ObtenerPorId/${route.params.id}`)
-  // Obtener productos de la categoría
-await loadGetHastaData(
-  `Inventario/ObtenerProductosDelInventarioPorCategoria/${route.params.id}`
-).then(respuesta => {
-  console.log("respuesta: ", respuesta)
-  productos.value = (respuesta ?? []).map(p => ({
-    ...p,
-    slide: 0 // 👈 estado inicial del carrusel de ese producto
-  }))
+  try {
+    // Obtener datos de la categoría
+    categoria.value = await loadGet(`CategoriaProducto/ObtenerPorId/${id}`)
+
+    // Obtener productos de la categoría
+    const respuesta = await loadGetHastaData(`Inventario/ObtenerProductosDelInventarioPorCategoria/${id}`)
+    if (debugImg) console.log('[CategoriaProductos] raw respuesta:', respuesta)
+
+    let lista = []
+    if (Array.isArray(respuesta)) lista = respuesta
+    else if (respuesta == null) lista = []
+    else if (Array.isArray(respuesta.result?.elementos)) lista = respuesta.result.elementos
+    else if (Array.isArray(respuesta.data?.result?.elementos)) lista = respuesta.data.result.elementos
+    else if (Array.isArray(respuesta.elementos)) lista = respuesta.elementos
+    else if (Array.isArray(respuesta.productos)) lista = respuesta.productos
+    else if (Array.isArray(respuesta.data)) lista = respuesta.data
+    else if (Array.isArray(respuesta.result)) lista = respuesta.result
+    else if (typeof respuesta === 'object' && respuesta !== null) {
+      const firstArray = Object.values(respuesta).find(v => Array.isArray(v))
+      if (firstArray) lista = firstArray
+    }
+
+    productos.value = (lista ?? []).map(p => ({ ...p, slide: 0 }))
+    if (debugImg) console.log('[CategoriaProductos] mapped productos count:', productos.value.length)
+
+    // cargar categorías para el TopBar
+    try {
+      const inicio = await loadGetDatosInicio('ObtenerDatosInicio')
+      categories.value = inicio?.categoriasProductos ?? inicio?.categorias ?? inicio?.data?.categorias ?? inicio?.result?.categoriasProductos ?? []
+    } catch (e2) {
+      if (debugImg) console.warn('[CategoriaProductos] could not load categorias from inicio', e2)
+      categories.value = []
+    }
+  } catch (e) {
+    console.warn('[CategoriaProductos] error loading category products', e)
+    productos.value = []
+  } finally {
+    dialogLoad.value = false
+  }
+}
+
+onMounted(() => {
+  cargarDatosCategoria(route.params.id)
 })
 
-console.log("productos.value : ", productos.value)
-
-  dialogLoad.value = false
-})
+// 👇 Aquí está la clave: observar cambios en el parámetro id
+watch(
+  () => route.params.id,
+  (nuevoId) => {
+    cargarDatosCategoria(nuevoId)
+  }
+)
 
 function getFotoUrl(foto) {
   if (!foto) return '/img/sin-foto.jpg'
-  if (/^https?:\/\//.test(foto)) return foto
-  return apiFotosBaseUrl + (foto.startsWith('/') ? foto : '/' + foto)
+  let candidate = foto
+  if (typeof foto === 'object') {
+    candidate = foto?.url || foto?.img || foto?.path || foto?.imagen || foto?.foto || null
+  }
+  if (!candidate) return '/img/sin-foto.jpg'
+  if (typeof candidate !== 'string') candidate = String(candidate)
+  if (/^https?:\/\//.test(candidate)) return candidate
+  return apiFotosBaseUrl + (candidate.startsWith('/') ? candidate : '/' + candidate)
+}
+
+function getFotoUrlFromFoto(foto) {
+  if (!foto) return '/img/sin-foto.jpg'
+  if (typeof foto === 'object') {
+    const candidate = foto?.url || foto?.img || foto?.path || foto?.imagen || null
+    return getFotoUrl(candidate)
+  }
+  return getFotoUrl(foto)
 }
 </script>
