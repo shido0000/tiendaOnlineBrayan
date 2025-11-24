@@ -1,4 +1,5 @@
-﻿using API.Data.Entidades.Gestion.Nomencladores;
+﻿using API.Data.Dto.Pedido;
+using API.Data.Entidades.Gestion.Nomencladores;
 using API.Data.Enum;
 using API.Data.IUnitOfWorks.Interfaces;
 using API.Domain.Exceptions;
@@ -12,9 +13,11 @@ namespace API.Domain.Services.Gestion.Nomencladores
 {
     public class PedidoService : BasicService<Pedido, PedidoValidator>, IPedidoService
     {
+        readonly IDescuentoService _DescuentoService;
 
-        public PedidoService(IUnitOfWork<Pedido> repositorios, IHttpContextAccessor httpContext) : base(repositorios, httpContext)
+        public PedidoService(IUnitOfWork<Pedido> repositorios, IHttpContextAccessor httpContext, IDescuentoService descuentoService) : base(repositorios, httpContext)
         {
+            _DescuentoService = descuentoService;
         }
 
         public async Task ConfirmarPedidoAsync(Guid pedidoId, Guid vendedorId, IEnumerable<Guid> detalleIdsConfirmados)
@@ -169,6 +172,132 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
             await _repositorios.SaveChangesAsync();
             await tx.CommitAsync();
+        }
+
+
+        public async Task<Guid> GenerarPedido(GenerarPedidoDto generarPedidoDto)
+        {
+            var MonedaVentaId = await _repositorios.Productos
+                                    .GetQuery()
+                                    .AsNoTracking()
+                                    .Where(e => e.Id == generarPedidoDto.Productos.FirstOrDefault()!.ProductoId)
+                                    .Select(e => e.MonedaVentaId)
+                                    .FirstOrDefaultAsync();
+
+            var costoEnvio = await _repositorios.Mensajerias
+                                    .GetQuery()
+                                    .AsNoTracking()
+                                    .Where(e => e.Id == generarPedidoDto.MensajeriaId)
+                                    .Select(e => e.Precio)
+                                    .FirstOrDefaultAsync();
+
+            var descuentoCupon = await _repositorios.Cupones
+                                   .GetQuery()
+                                   .AsNoTracking()
+                                   .Where(e => e.Id == generarPedidoDto.CuponId)
+                                   .Select(e => new { e.MontoFijo, e.Porcentaje })
+                                   .FirstOrDefaultAsync();
+
+            var decuentoPorCupon = 0m;
+            var esPorciento = false;
+
+            var nuevoPedido = new Pedido()
+            {
+                Id = Guid.NewGuid(),
+                UsuarioId = generarPedidoDto.UsuarioId,
+                CuponId = generarPedidoDto.CuponId,
+                Estado = EstadoPedido.Pendiente,
+                Subtotal = 0m,
+                Shipping = (decimal)costoEnvio, // conversión segura de int a decimal
+                Discount = 0m,
+                Total = 0m,
+                Direccion = generarPedidoDto.Direccion,
+                MonedaId = MonedaVentaId,
+                Detalles = new List<PedidoDetalle>(),
+                GestorPedidos = new(),
+            };
+
+            var listadoDetalles = new List<PedidoDetalle>();
+
+            foreach (var producto in generarPedidoDto.Productos)
+            {
+                var descuento = await _DescuentoService.ObtenerDescuentoActivoDelProducto(producto.ProductoId);
+                var productoExistente = await _repositorios.Productos
+                                        .GetQuery()
+                                        .FirstOrDefaultAsync(e => e.Id == producto.ProductoId);
+
+                var descuentoAplicado = 0m;
+
+                if (descuento != null)
+                {
+                    descuentoAplicado = descuento.EsMontoFijo ? descuento.Valor : productoExistente.PrecioVenta * (descuento.Valor / 100);
+                }
+                listadoDetalles.Add(new PedidoDetalle()
+                {
+                    PedidoId = nuevoPedido.Id,
+                    ProductoId = producto.ProductoId,
+                    DescuentoId = descuento != null ? descuento.DescuentoId : null,
+                    Cantidad = producto.Cantidad,
+                    PrecioUnitario = productoExistente.PrecioVenta,
+                    DescuentoAplicado = descuentoAplicado,
+                    LineTotal = (producto.Cantidad * productoExistente.PrecioVenta) - (producto.Cantidad * descuentoAplicado),
+                    EstadoLinea = EstadoLinea.Pendiente,
+                });
+            }
+
+            if (descuentoCupon != null)
+            {
+                decuentoPorCupon = descuentoCupon.MontoFijo.HasValue && descuentoCupon.MontoFijo != 0
+                                                ? descuentoCupon.MontoFijo.Value
+                                                : descuentoCupon.Porcentaje.HasValue && descuentoCupon.Porcentaje != 0
+                                                ? descuentoCupon.Porcentaje.Value
+                                                : 0m;
+
+                esPorciento = descuentoCupon.MontoFijo.HasValue && descuentoCupon.MontoFijo != 0
+                                                ? false
+                                                : descuentoCupon.Porcentaje.HasValue && descuentoCupon.Porcentaje != 0
+                                                ? true
+                                                : false;
+            }
+
+            // Calcular descuentos por detalle
+            var descuentoDetalles = listadoDetalles.Sum(e => e.Cantidad * e.DescuentoAplicado);
+
+            // Calcular subtotal de los productos
+            var subtotalProductos = listadoDetalles.Sum(e => e.Cantidad * e.PrecioUnitario);
+
+            // Calcular descuento por cupón
+            var descuentoPorCupon = !esPorciento
+                ? decuentoPorCupon
+                : subtotalProductos * decuentoPorCupon / 100m;
+
+            // Asignar al pedido
+            nuevoPedido.Discount = descuentoDetalles + descuentoPorCupon;
+            nuevoPedido.Subtotal = descuentoDetalles;
+            nuevoPedido.Total = nuevoPedido.Subtotal + nuevoPedido.Shipping - descuentoPorCupon;
+
+            if (generarPedidoDto.GestorId.HasValue)
+            {
+                var nuevoGestorPedido = new GestorPedido()
+                {
+                    Id = Guid.NewGuid(),
+                    PedidoId = nuevoPedido.Id,
+                    GestorId = generarPedidoDto.GestorId,
+                    PrecioAdicional = generarPedidoDto.ImpuestoGestor,
+                };
+                await _repositorios.GestorPedidos.AddAsync(nuevoGestorPedido);
+
+                nuevoPedido.Total = nuevoPedido.Subtotal
+                    + nuevoPedido.Shipping
+                    - descuentoPorCupon
+                    + (decimal)nuevoGestorPedido.PrecioAdicional.Value;
+            }
+
+            await _repositorios.Pedidos.AddAsync(nuevoPedido);
+            await _repositorios.PedidosDetalles.AddRangeAsync(listadoDetalles);
+            await _repositorios.SaveChangesAsync();
+
+            return nuevoPedido.Id;
         }
     }
 }

@@ -1,9 +1,10 @@
 ﻿using API.Application.Dtos.Gestion.Nomencladores.Pedido;
-using API.Application.Dtos.Gestion.Nomencladores.Pedido;
+using API.Data.Dto.Pedido;
 using API.Data.Entidades.Gestion.Nomencladores;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
 using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -40,6 +41,13 @@ namespace API.Application.Controllers.Gestion.Nomencladores
         */
         protected override async Task<IEnumerable<DetallesPedidoDto>> ObtenerTodosElementos(string? secuenciaOrdenamiento = null)
       => _mapper.Map<IEnumerable<DetallesPedidoDto>>(await _servicioBase.ObtenerTodos(secuenciaOrdenamiento));
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> GenerarPedido([FromBody] GenerarPedidoDto generarPedidoDto)
+        {
+            var result = await _PedidoService.GenerarPedido(generarPedidoDto);
+            return Ok(result);
+        }
 
     }
 }

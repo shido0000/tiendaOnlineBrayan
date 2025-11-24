@@ -60,6 +60,7 @@ namespace API.Domain.Services.Seguridad
 
             var usuario = await _usuarioService.ObtenerPorUsername(username);
 
+            claims.Add(new Claim("Id", usuario.Id.ToString()));
             claims.Add(new Claim("NombreCompleto", usuario.NombreCompleto));
             claims.Add(new Claim("Telefono", usuario.Telefono));
             claims.Add(new Claim("Correo", usuario.Correo));

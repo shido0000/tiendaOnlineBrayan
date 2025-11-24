@@ -1,4 +1,5 @@
 ﻿using API.Data.Dto;
+using API.Data.Dto.Pedido;
 using API.Data.Entidades.Gestion.Nomencladores;
 using API.Data.IUnitOfWorks.Interfaces;
 using API.Domain.Exceptions;
@@ -16,6 +17,40 @@ namespace API.Domain.Services.Gestion.Nomencladores
         public DescuentoService(IUnitOfWork<Descuento> repositorios, IHttpContextAccessor httpContext) : base(repositorios, httpContext)
         {
         }
+
+        public async Task<DatosDescuento?> ObtenerDescuentoActivoDelProducto(Guid productoId)
+        {
+            var fechaHoy = DateTime.Now.Date;
+
+            // Traer solo los IDs de descuentos asociados al producto
+            var productosDescuentosIds = await _repositorios.ProductosDescuentos
+                .GetQuery()
+                .AsNoTracking()
+                .Where(e => e.ProductoId == productoId)
+                .Select(e => e.DescuentoId)
+                .ToListAsync();
+
+            // Buscar el primer descuento vigente
+            var descuentoActivo = await _repositorios.Descuentos
+                .GetQuery()
+                .AsNoTracking()
+                .Where(e =>
+                    productosDescuentosIds.Contains(e.Id) &&
+                    e.FechaInicio.Date <= fechaHoy &&
+                    fechaHoy <= e.FechaFin.Date && e.EsActivo)
+                .Select(e => new DatosDescuento
+                {
+                    DescuentoId = e.Id,
+                    Valor = (e.Porcentaje.HasValue && e.Porcentaje.Value != 0) ? e.Porcentaje.Value : e.MontoFijo.Value,
+                    EsMontoFijo = (e.Porcentaje.HasValue && e.Porcentaje.Value != 0) ? false : true,
+                })
+                .FirstOrDefaultAsync();
+
+            // Si no hay descuento, devolver null
+            return descuentoActivo;
+        }
+
+
 
         //public async Task<decimal> CalcularDescuentoAsync(Guid productoId, int cantidad, bool acumulativo, bool aplicarMayor)
         //{

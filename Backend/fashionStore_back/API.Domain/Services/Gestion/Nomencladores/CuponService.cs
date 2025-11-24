@@ -1,4 +1,5 @@
-﻿using API.Data.Entidades.Gestion.Nomencladores;
+﻿using API.Data.Dto.Pedido;
+using API.Data.Entidades.Gestion.Nomencladores;
 using API.Data.IUnitOfWorks.Interfaces;
 using API.Domain.Exceptions;
 using API.Domain.Interfaces.Gestion.Nomencladores;
@@ -58,6 +59,48 @@ namespace API.Domain.Services.Gestion.Nomencladores
             await _repositorios.SaveChangesAsync();
 
             return descuento;
+        }
+
+        public async Task<CuponEspecificoDto> ObtenerCuponPorCodigo(string codigo, decimal importePedido)
+        {
+            var cupon = await _repositorios.Cupones
+                            .GetQuery()
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(e => e.Codigo.ToLower() == codigo.ToLower())
+                            ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Cupón no encontrado." };
+            var fechaHoy = DateTime.Today;
+
+            if (cupon.EsActivo)
+            {
+                if (cupon.FechaInicio.Date <= fechaHoy.Date && fechaHoy <= cupon.FechaFin.Date)
+                {
+                    if (importePedido > cupon.MontoMinimoPedido)
+                    {
+                        if (cupon.Porcentaje.HasValue && cupon.Porcentaje.Value > 0)
+                        {
+                            return new CuponEspecificoDto()
+                            {
+                                Id = cupon.Id,
+                                EsMontoFijo = false,
+                                Valor = cupon.Porcentaje.Value,
+                            };
+                        }
+                        else if (cupon.MontoFijo.HasValue && cupon.MontoFijo.Value > 0)
+                        {
+                            return new CuponEspecificoDto()
+                            {
+                                Id=cupon.Id,
+                                EsMontoFijo = true,
+                                Valor = cupon.MontoFijo.Value,
+                            };
+                        }
+                        else throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Cupón no disponible." };
+                    }
+                    else throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = $"El pedido no supera el monto mínimo para usar: {cupon.MontoMinimoPedido}." };
+                }
+                else throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Cupón no disponible." };
+            }
+            else throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Cupón no disponible." };
         }
     }
 }
