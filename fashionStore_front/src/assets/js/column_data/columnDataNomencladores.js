@@ -445,3 +445,21 @@ export const dataColumnMensajeria = Object.freeze([
     },
 ]);
 
+export const dataColumnOtraVariante = Object.freeze([
+    {
+        name: 'nombre',
+        align: 'center',
+        label: 'Nombre',
+        field: 'nombre',
+        sortable: true
+    },
+
+    {
+        name: "action",
+        align: "center",
+        label: "Acciones",
+        field: "action",
+        sortable: true,
+    },
+]);
+

@@ -1,6 +1,7 @@
 ﻿using API.Application.Dtos.Gestion.Nomencladores.Pedido;
 using API.Data.Dto.Pedido;
 using API.Data.Entidades.Gestion.Nomencladores;
+using API.Data.Enum;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
 using AutoMapper;
@@ -29,11 +30,31 @@ namespace API.Application.Controllers.Gestion.Nomencladores
 
             //    );
 
+            if (inputDto.Estado.HasValue)
+            {
+                if (inputDto.Estado == 2)
+                {
+                    filtros.Add(Pedido => Pedido.Estado == EstadoPedido.Confirmado);
+                }
+                else if (inputDto.Estado == 3)
+                {
+                    filtros.Add(Pedido => Pedido.Estado == EstadoPedido.Rechazado);
+                }
+                else if (inputDto.Estado == 4)
+                {
+                    filtros.Add(Pedido => Pedido.Estado == EstadoPedido.Pendiente);
+                }
+            }
+
             return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento, propiedadesIncluidas: query => query.Include(e => e.Usuario).Include(e => e.Moneda).Include(e => e.Cupon)!, filtros.ToArray());
         }
 
         protected override async Task<Pedido?> ObtenerElementoPorId(Guid id)
-           => await _servicioBase.ObtenerPorId(id, propiedadesIncluidas: query => query.Include(e => e.Usuario).Include(e => e.Moneda).Include(e => e.Cupon)!);
+           => await _servicioBase.ObtenerPorId(id, propiedadesIncluidas: query =>
+                query.Include(e => e.Usuario)
+                     .Include(e => e.Moneda)
+                     .Include(e => e.Cupon)
+           !);
 
 
         /* protected override async Task<Pedido?> ObtenerElementoPorId(Guid id)
@@ -49,5 +70,25 @@ namespace API.Application.Controllers.Gestion.Nomencladores
             return Ok(result);
         }
 
+        [HttpGet("[action]/{id}")]
+        public async Task<IActionResult> ObtenerPedidoPorId(Guid id)
+        {
+            var result = await _PedidoService.ObtenerPedidoPorId(id);
+            return Ok(result);
+        }
+
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> ActualizarPedidoConLineas([FromBody] PedidoConfirmarDto dto)
+        {
+            await _PedidoService.ActualizarPedidoConLineas(dto);
+            return Ok();
+        }
+        [HttpPost("[action]/{id}")]
+        public async Task<IActionResult> CancelarPedido(Guid id)
+        {
+            await _PedidoService.CancelarPedido(id);
+            return Ok();
+        }
     }
 }

@@ -4,5 +4,6 @@ namespace API.Application.Dtos.Gestion.Nomencladores.Pedido
 {
     public class FiltrarConfigurarListadoPaginadoPedidoIntputDto : ConfiguracionListadoPaginadoDto
     {
+        public int? Estado { get; set; }
     }
 }

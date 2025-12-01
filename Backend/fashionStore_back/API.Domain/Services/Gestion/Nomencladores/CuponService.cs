@@ -22,7 +22,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
             var pedido = await _repositorios.Pedidos
                         .GetQuery()
                         .Include(p => p.Detalles)
-                            .ThenInclude(d => d.Producto)
+                            .ThenInclude(d => d.ProductoVariante)
                         .FirstOrDefaultAsync(p => p.Id == pedidoId)
                          ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Pedido no encontrado." };
 

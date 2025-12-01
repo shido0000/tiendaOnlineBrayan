@@ -23,7 +23,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
             var venta = await _repositorios.Ventas
                     .GetQuery()
                     .Include(v => v.Pedido).ThenInclude(p => p.Usuario)
-                    .Include(v => v.Detalles).ThenInclude(d => d.Producto)
+                    .Include(v => v.Detalles).ThenInclude(d => d.ProductoVariante).ThenInclude(e=>e.Producto)
                     .FirstOrDefaultAsync(v => v.Id == ventaId);
 
             if (venta == null) throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Venta no encontrada." };
@@ -35,7 +35,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 Cliente = venta.Pedido.Usuario.Nombre,
                 Lineas = venta.Detalles.Select(d => new LineaDto
                 {
-                    Producto = d.Producto.Descripcion,
+                    Producto = d.ProductoVariante.Producto.Descripcion,
                     Cantidad = d.Cantidad,
                     PrecioUnitario = d.PrecioUnitario,
                     Subtotal = d.Cantidad * d.PrecioUnitario - d.DescuentoAplicado

@@ -21,9 +21,9 @@ public class VentaDetalleConfiguracionDB
                 .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<VentaDetalle>()
-        .HasOne(ci => ci.Producto)
+        .HasOne(ci => ci.ProductoVariante)
         .WithMany()
-        .HasForeignKey(ci => ci.ProductoId)
+        .HasForeignKey(ci => ci.ProductoVarianteId)
         .OnDelete(DeleteBehavior.Restrict);
     }
 }

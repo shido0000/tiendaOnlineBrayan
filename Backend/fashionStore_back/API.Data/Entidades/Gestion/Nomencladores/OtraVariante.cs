@@ -11,7 +11,6 @@ namespace API.Data.Entidades.Gestion.Nomencladores
     public class OtraVariante : EntidadBase
     {
         public string Nombre { get; set; } = string.Empty;
-        public Guid? ProductoVarianteId { get; set; } 
-        public ProductoVariante? ProductoVariante { get; set; } 
+        public List<OtraVarianteProductoVariante> OtraVarianteProductoVariantes { get; set; } = new();
     }
 }

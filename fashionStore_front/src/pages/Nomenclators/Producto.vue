@@ -354,27 +354,28 @@ class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
 </q-field>
   <q-select
                         class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
-                        v-model="variant.talla"
+                        v-model="variant.otrasVariantesIds"
+                        multiple
                               outlined
             dense
                         label="Otras variantes"
                         emit-value
                         map-options
                         :use-input="
-                            variant.talla === null ||
-                            variant.talla === ''
+                            variant.otrasVariantesIds === null ||
+                            variant.otrasVariantesIds === ''
                         "
-                        option-label="descripcion"
-                        option-value="descripcion"
-                        :options="filtradoTallas"
+                        option-label="nombre"
+                        option-value="id"
+                        :options="filtradoOtrasVariantes"
                         @filter="
                             (val, update) => {
-                                filtradoTallas = filterOptions(
+                                filtradoOtrasVariantes = filterOptions(
                                     val,
                                     update,
-                                    filtradoTallas,
-                                    'descripcion',
-                                    itemsTallas
+                                    filtradoOtrasVariantes,
+                                    'nombre',
+                                    itemsOtrasVariantes
                                 );
                             }
                         "
@@ -731,6 +732,9 @@ const filtradoMoneda = ref([])
 const itemsCategoria = ref([])
 const filtradoCategoria = ref([])
 
+const itemsOtrasVariantes = ref([])
+const filtradoOtrasVariantes = ref([])
+
 const itemsTallas = ref([])
 const filtradoTallas = ref([])
 
@@ -811,6 +815,8 @@ const obtenerElementoPorId = async (id) => {
   // Refrescamos filtros
   filtradoMoneda.value = itemsMoneda.value
   filtradoCategoria.value = itemsCategoria.value
+  filtradoOtrasVariantes.value = itemsOtrasVariantes.value
+
 }
 
 
@@ -849,10 +855,14 @@ onMounted(async () => {
   items.value = await loadGet('Producto/ObtenerListadoPaginado')??[]
   itemsMoneda.value = await loadGet('Moneda/ObtenerListadoPaginado')??[]
   itemsCategoria.value = await loadGet('CategoriaProducto/ObtenerListadoPaginado')??[]
+  itemsOtrasVariantes.value = await loadGet('OtraVariante/ObtenerListadoPaginado')??[]
+
 itemsTallas.value = await loadGetHastaData('Talla')??[]
   filtradoMoneda.value=itemsMoneda.value
   filtradoCategoria.value=itemsCategoria.value
   filtradoTallas.value=itemsTallas.value
+  filtradoOtrasVariantes.value=itemsOtrasVariantes.value
+
 
 
   dialogLoad.value = false

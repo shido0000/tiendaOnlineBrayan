@@ -30,9 +30,9 @@ namespace API.Data.ClasesAuxiliares
             // Detalles de productos
             foreach (var d in venta.Detalles)
             {
-                var nombre = d.Producto.Descripcion.Length > 15
-                    ? d.Producto.Descripcion.Substring(0, 15)
-                    : d.Producto.Descripcion;
+                var nombre = d.ProductoVariante.Producto.Descripcion.Length > 15
+                    ? d.ProductoVariante.Producto.Descripcion.Substring(0, 15)
+                    : d.ProductoVariante.Producto.Descripcion;
 
                 var subtotal = (d.Cantidad * d.PrecioUnitario) - d.DescuentoAplicado;
                 string linea = $"{nombre.PadRight(15)} {d.Cantidad,2} x {d.PrecioUnitario,6:C} = {subtotal,6:C}\n";

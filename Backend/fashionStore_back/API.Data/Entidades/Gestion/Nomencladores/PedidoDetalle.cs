@@ -13,8 +13,8 @@ namespace API.Data.Entidades.Gestion.Nomencladores
     {
         public Guid PedidoId { get; set; }
         public Pedido Pedido { get; set; } = null!;
-        public Guid ProductoId { get; set; }
-        public Producto Producto { get; set; } = null!;
+        public Guid ProductoVarianteId { get; set; }
+        public ProductoVariante ProductoVariante { get; set; } = null!;
  
         public Guid? DescuentoId { get; set; }
         public Descuento? Descuento { get; set; }

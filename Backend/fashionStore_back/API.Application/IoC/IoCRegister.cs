@@ -6,11 +6,13 @@ using API.Data.IUnitOfWorks.Interfaces;
 using API.Data.IUnitOfWorks.Repositorios;
 using API.Domain.Interfaces;
 using API.Domain.Interfaces.Contabilidad;
+using API.Domain.Interfaces.Dashboard;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Interfaces.Inicio;
 using API.Domain.Interfaces.Seguridad;
 using API.Domain.Services;
 using API.Domain.Services.Contabilidad;
+using API.Domain.Services.Dashboard;
 using API.Domain.Services.Gestion.Nomencladores;
 using API.Domain.Services.Inicio;
 using API.Domain.Services.Seguridad;
@@ -239,6 +241,11 @@ namespace API.Application.IoC
             services.AddScoped<IOtraVarianteService, OtraVarianteService>();
             services.AddScoped<IGestorService, GestorService>();
             services.AddScoped<IMensajeriaService, MensajeriaService>();
+
+
+
+            // DASHBOARD
+            services.AddScoped<IDatosDashboardService, DatosDashboardService>();
 
 
             // CONTABILIDAD

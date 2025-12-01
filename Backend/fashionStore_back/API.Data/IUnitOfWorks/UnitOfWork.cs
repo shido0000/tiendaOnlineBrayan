@@ -51,6 +51,7 @@ namespace API.Data.IUnitOfWorks
         public IGestor Gestores { get; }
         public IGestorPedido GestorPedidos { get; }
         public IMensajeria Mensajerias { get; }
+        public IOtraVarianteProductoVariante OtraVarianteProductoVariantes { get; }
 
 
         // CONTABILIDAD 
@@ -98,6 +99,7 @@ namespace API.Data.IUnitOfWorks
             Gestores = new GestorRepository(context);
             GestorPedidos = new GestorPedidoRepository(context);
             Mensajerias = new MensajeriaRepository(context);
+            OtraVarianteProductoVariantes = new OtraVarianteProductoVarianteRepository(context);
 
             // CONTABILIDAD
             CuentasContables = new CuentaContableRepository(context);

@@ -29,33 +29,39 @@ function findIndexById(id) {
 
 function addItem(product, qty = 1) {
     if (!product) return
-    const id = product.id ?? product.productoId ?? product.productId
+
+    // 🔑 Preferimos el id de la variante seleccionada
+    const variantId = product.selectedVariant?.id
+    const id = variantId ?? product.id ?? product.productoId ?? product.productId
     if (!id) return
+
     const idx = findIndexById(id)
     if (idx !== -1) {
         state.items[idx].cantidad = (state.items[idx].cantidad || 1) + qty
     } else {
         const toAdd = {
-            id: id,
+            id, // ahora es el id de la variante
             nombre: product.nombre || product.descripcion || '',
-            precioVenta: product.precioVenta ?? product.precio ?? 0,
+            precioVenta: product.selectedVariant?.precioVenta ?? product.precioVenta ?? product.precio ?? 0,
             cantidad: qty,
-            foto: (product.fotos && product.fotos[0]) || product.imagen || product.fotoUrl || null,
+            foto: (product.selectedVariant?.fotos?.[0]?.url) || (product.fotos && product.fotos[0]) || product.imagen || product.fotoUrl || null,
+            talla: product.selectedVariant?.talla || null,
+            color: product.selectedVariant?.color || null,
             raw: product
         }
         state.items.push(toAdd)
-
     }
+
     state.lastAddedAt = Date.now()
     Success("Producto agregado al Carrito")
-    this.$q.notify({ type: 'positive', message: 'Producto agregado al Carrito' });
+    this.$q.notify({ type: 'positive', message: 'Producto agregado al Carrito' })
 }
 
 function removeItem(id) {
     const idx = findIndexById(id)
     if (idx !== -1) state.items.splice(idx, 1)
-        Success("Producto eliminado del Carrito")
-    this.$q.notify({ type: 'positive', message: 'Producto eliminado del Carrito' });
+    Success("Producto eliminado del Carrito")
+    this.$q.notify({ type: 'positive', message: 'Producto eliminado del Carrito' })
 }
 
 function updateQuantity(id, cantidad) {

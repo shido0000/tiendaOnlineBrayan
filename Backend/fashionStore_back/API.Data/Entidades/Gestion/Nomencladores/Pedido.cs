@@ -12,6 +12,7 @@ namespace API.Data.Entidades.Gestion.Nomencladores
 {
     public class Pedido : EntidadBase
     {
+        public int Codigo { get; set; }
         public Guid UsuarioId { get; set; }
         public Usuario Usuario { get; set; } = null!;
         public EstadoPedido Estado { get; set; } = EstadoPedido.Pendiente;

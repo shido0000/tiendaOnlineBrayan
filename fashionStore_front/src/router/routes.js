@@ -107,7 +107,11 @@ const routes = [
                 name: 'Perfil',
                 component: () => import('src/pages/ProfilePage.vue')
             },
-
+            {
+                path: 'OtraVariante',
+                name: 'OtraVariante',
+                component: () => import('src/pages/Nomenclators/OtraVariante.vue')
+            },
 
         ]
     },
