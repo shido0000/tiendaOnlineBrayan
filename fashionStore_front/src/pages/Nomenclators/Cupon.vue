@@ -76,7 +76,6 @@
               <div class="h row q-ma-md">
                 <q-input
                   class="col-xs-12 col-md-12 q-pa-sm"
-                  :disable="!!objeto.id"
                   label="Codigo *"
                   v-model="objeto.codigo"
                   color="primary"
@@ -123,7 +122,6 @@
                                     transition-hide="scale"
                                 >
                                     <q-date
-                                        :disable="!!objeto.id"
                                         v-model="objeto.fechaInicio"
 
                                         @update:model-value="
@@ -162,7 +160,6 @@
                                     transition-hide="scale"
                                 >
                                     <q-date
-                                        :disable="!!objeto.id"
                                         v-model="objeto.fechaFin"
                                         :options="
                                             (date) => objeto.fechaInicio <= date

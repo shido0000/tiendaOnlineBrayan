@@ -1,7 +1,6 @@
 ﻿using API.Application.Dtos.Gestion.Nomencladores.CategoriaProducto;
-using API.Application.Dtos.Seguridad.Rol;
+using API.Application.Dtos.Gestion.Nomencladores.Producto;
 using API.Data.Entidades.Gestion.Nomencladores;
-using API.Data.Entidades.Seguridad;
 
 namespace API.Application.Mapper.Gestion.Nomencladores
 {
@@ -14,16 +13,15 @@ namespace API.Application.Mapper.Gestion.Nomencladores
             MapDetallesCategoriaProductoDto();
         }
 
-
         public void MapDetallesCategoriaProductoDto()
         {
+            // Mapeo explícito para la lista de productos usando el mapeo Producto -> ProductoDto
             CreateMap<CategoriaProducto, DetallesCategoriaProductoDto>()
-                .ForMember(dto => dto.ListadoDeProductos, opt => opt.MapFrom(e => e.ProductoCategorias.Select(f => f.Producto).ToList()))
+                .ForMember(dto => dto.ListadoDeProductos, opt => opt.MapFrom(e => e.ProductoCategorias.Select(f => f.Producto)))
+                .ReverseMap();
 
-              .ReverseMap()
-            ;
+            // Asegurar mapeo entre CategoriaProductoDto (usado en formularios) y la entidad
+            CreateMap<CategoriaProducto, CategoriaProductoDto>().ReverseMap();
         }
-
-         
     }
 }

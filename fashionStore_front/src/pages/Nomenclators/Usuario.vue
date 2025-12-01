@@ -125,6 +125,26 @@
 
                   ]"
                 />
+                <q-input
+                :disable="!!objeto.id"
+                  class="col-xs-12 q-pa-sm"
+                  label="Teléfono *"
+                  v-model="objeto.telefono"
+                  color="primary"
+                  counter
+                  autogrow
+                  maxlength="50"
+                  lazy-rules
+                  :rules="[
+                    (val) =>
+                      (val && val.length > 0) || 'Debe insertar un teléfono',
+                      (val) =>
+                      (items.length > 0
+                        ? !isValorRepetido(val, 'telefono', objeto, items)
+                        : true) || 'Ya existe un teléfono con ese valor',
+
+                  ]"
+                />
               <q-input
   v-if="!objeto.id"
   class="col-xs-12 q-pa-sm"
@@ -373,6 +393,7 @@ const objetoInicial = {
   username: null,
   correo: null,
   rolId:null,
+  telefono:null,
   esActivo:true,
   contrasenna:null,
   contrasennaConfirmada:null,

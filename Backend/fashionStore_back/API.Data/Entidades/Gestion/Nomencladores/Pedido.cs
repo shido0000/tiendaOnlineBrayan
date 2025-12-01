@@ -12,6 +12,7 @@ namespace API.Data.Entidades.Gestion.Nomencladores
 {
     public class Pedido : EntidadBase
     {
+        public int Codigo { get; set; }
         public Guid UsuarioId { get; set; }
         public Usuario Usuario { get; set; } = null!;
         public EstadoPedido Estado { get; set; } = EstadoPedido.Pendiente;
@@ -23,6 +24,7 @@ namespace API.Data.Entidades.Gestion.Nomencladores
         public Moneda Moneda { get; set; } = null!;
         public Guid? CuponId { get; set; }   // 🔑 relación opcional
         public Cupon? Cupon { get; set; }
+        public string? Direccion { get; set; }
 
         public ICollection<PedidoDetalle> Detalles { get; set; } = new List<PedidoDetalle>();
         public Venta? Venta { get; set; }

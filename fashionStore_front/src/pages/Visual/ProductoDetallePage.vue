@@ -9,11 +9,11 @@
       <div>Producto no encontrado.</div>
     </div>
 
-    <div v-else class="row q-col-gutter-md main-row">
+    <div v-else class="row q-col-gutter-md">
       <!-- Imagen principal -->
-      <div class="col-12 col-md-6 left-col">
+        <div class="col-12 col-md-6">
         <q-carousel
-          v-if="producto.fotos && producto.fotos.length"
+          v-if="getFotosForCarousel().length"
           v-model="slide"
           animated
           arrows
@@ -22,7 +22,7 @@
           height="520px"
         >
           <q-carousel-slide
-            v-for="(foto, idx) in producto.fotos"
+            v-for="(foto, idx) in getFotosForCarousel()"
             :key="idx"
             :name="idx"
             class="flex flex-center bg-grey-2"
@@ -34,13 +34,15 @@
         <q-img v-else src="/img/sin-foto.jpg" style="height:520px; object-fit:cover;" />
       </div>
 
+      <!-- Debug block removed from here to keep image and details side-by-side -->
+
       <!-- Información del producto -->
-      <div class="col-12 col-md-5 right-col q-mt-md">
+      <div class="col-12 col-md-6 q-mt-md ">
         <div class="product-header row items-center q-gutter-sm">
           <div class="col">
             <div class="text-h5 text-weight-bold">{{ producto.nombre || producto.descripcion || 'Sin título' }}</div>
-            <div class="text-caption text-grey-7">Código: {{ producto.codigo || '-' }}</div>
-            <div class="text-caption text-grey-7">SKU: {{ producto.sku || '-' }}</div>
+            <div class="text-caption text-grey-7">Código: {{ displayedCodigo() }}</div>
+            <div class="text-caption text-grey-7">SKU: {{ displayedSKU() }}</div>
           </div>
           <div class="col-auto">
             <q-btn
@@ -54,12 +56,32 @@
           </div>
         </div>
 
-        <div class="product-price q-mt-md">
-          <div class="text-subtitle1 text-weight-bold">
-            $ {{ producto.precioVenta != null ? Number(producto.precioVenta).toLocaleString('es-ES', { minimumFractionDigits:2 }) : '0.00' }}
+        <!-- Variant selector -->
+        <!-- Size selector: show one button per talla (size) -->
+        <div v-if="producto.variants && producto.variants.length" class="q-mt-md row items-center q-gutter-sm">
+          <div class="col-12 text-caption text-grey-7 q-mb-xs">Variantes:</div>
+          <div class="col-12 row q-gutter-sm">
+            <q-btn
+              v-for="(v, idx) in producto.variants"
+              :key="v.id || idx"
+              dense
+              outline
+              :color="selectedVariantIndex.value === idx ? 'primary' : 'grey-6'"
+              @click="selectVariant(idx)"
+              class="q-mr-sm q-mb-sm"
+            >
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:12px;height:12px;border-radius:50%;border:1px solid #ccc" :style="{ backgroundColor: v.color || '#ccc' }"></div>
+                <span>{{ v.talla || '—' }}</span>
+              </div>
+            </q-btn>
           </div>
-          <div v-if="producto.precioOriginal" class="text-caption text-grey-6">
-            <s>$ {{ Number(producto.precioOriginal).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}</s>
+        </div>        <div class="product-price q-mt-md">
+          <div class="text-subtitle1 text-weight-bold">
+            $ {{ displayedPrice() != null ? Number(displayedPrice()).toLocaleString('es-ES', { minimumFractionDigits:2 }) : '0.00' }}
+          </div>
+          <div v-if="displayedOriginalPrice()" class="text-caption text-grey-6">
+            <s>$ {{ Number(displayedOriginalPrice()).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}</s>
           </div>
         </div>
 
@@ -75,12 +97,23 @@
 
         <!-- Detalles con color visual -->
         <div class="q-mt-md row items-center q-gutter-sm">
-          <q-chip dense outline>Stock: {{ producto.stock ?? 'N/A' }}</q-chip>
+          <q-chip dense outline>Stock: {{ displayedStock() }}</q-chip>
           <q-chip dense outline>Categoria: {{ producto.categoriaNombre || '-' }}</q-chip>
+          <q-chip dense outline>Talla: {{ displayedTalla() }}</q-chip>
           <div class="row items-center q-gutter-xs">
             <span>Color:</span>
-            <div class="color-circle" :style="{ backgroundColor: producto.color || '#ccc' }"></div>
+            <div class="color-circle" :style="{ backgroundColor: displayedColor() || '#ccc' }"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Debug: resolved image URLs (temporary) -->
+    <div class="q-pa-sm">
+      <div class="text-caption text-grey-6">Debug: URLs resueltas para las fotos (haz click para abrir)</div>
+      <div class="q-mt-xs">
+        <div v-for="(u, i) in getResolvedImageUrls()" :key="i" class="q-mb-xs">
+          <a :href="u" target="_blank" rel="noreferrer">{{ u }}</a>
         </div>
       </div>
     </div>
@@ -154,24 +187,128 @@ const relatedProducts = ref([])
 const exploreProducts = ref([])
 const wishlist = useWishlist()
 const cart = useCart()
+const selectedVariantIndex = ref(null)
+
+// helper to obtain fotos for carousel preferring product.fotos then first variant fotos
+function getFotosForCarousel() {
+  try {
+    // if a variant is selected prefer its fotos
+    const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
+    if (sel != null && producto.value?.variants && producto.value.variants[sel]) {
+      const v = producto.value.variants[sel]
+      if (Array.isArray(v.fotos) && v.fotos.length) return v.fotos.map(f => (typeof f === 'object' ? (f.url || f.img || f.path) : f))
+      const cand = v.fotos && v.fotos.length ? v.fotos[0] : (v.foto || v.fotoUrl || v.url)
+      if (cand) return [cand]
+    }
+
+    if (producto.value?.fotos && producto.value.fotos.length) return producto.value.fotos
+
+    // fallback: try first variant (if any)
+    const vars = producto.value?.variants || producto.value?.variantes
+    if (Array.isArray(vars) && vars.length) {
+      const f0 = vars[0]
+      if (f0) {
+        if (Array.isArray(f0.fotos) && f0.fotos.length) return f0.fotos
+        const candidate = f0.foto || f0.fotoUrl || f0.imagen || f0.imagenUrl || f0.url || f0.image || f0.picture
+        if (candidate) return [candidate]
+      }
+    }
+
+    // check Spanish API naming: productosVariantes
+    const pvs = producto.value?.productosVariantes
+    if (Array.isArray(pvs) && pvs.length) {
+      const pv0 = pvs[0]
+      if (pv0) {
+        if (Array.isArray(pv0.fotos) && pv0.fotos.length) return pv0.fotos.map(f => (typeof f === 'object' ? (f.url || f.img || f.path) : f))
+        const candidate = pv0.foto || pv0.fotoUrl || pv0.imagen || pv0.imagenUrl || pv0.url || pv0.image || pv0.picture
+        if (candidate) return [candidate]
+      }
+    }
+    return []
+  } catch (e) {
+    console.warn('getFotosForCarousel error', e)
+    return []
+  }
+}
+
+function getResolvedImageUrls() {
+  try {
+    const fotos = getFotosForCarousel()
+    return fotos.map(f => {
+      try { return getFotoUrlFromFoto(f) } catch (e) { return String(f) }
+    })
+  } catch (e) { return [] }
+}
 
 async function cargarProducto(id) {
   loading.value = true
   dialogLoad.value = true
   try {
-    producto.value = await loadGet(`Producto/ObtenerPorId/${id}`)
-    if (producto.value) {
-      producto.value.fotos = (producto.value.fotos || []).map(f => f ?? null)
-    }
-    // cargar relacionados
-    const catId = producto.value?.categoriaId || producto.value?.categoria?.id
-    if (catId) {
-      const lista = await loadGetHastaData(`Inventario/ObtenerProductosDelInventarioPorCategoria/${catId}`)
-      relatedProducts.value = (lista ?? []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
-    }
-    // cargar explorar
-    const all = await loadGet('Producto/ObtenerListadoPaginado')
-    exploreProducts.value = (all ?? []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
+  // Obtener el objeto específico desde la API (usa la ruta que indicaste)
+  const objeto = await loadGetHastaData(`Producto/ObtenerProductoEspecifico/${id}`)
+  console.debug('[ProductoDetalle] raw objeto ->', objeto)
+
+  // Adaptamos el objeto recibido a la estructura que usamos en el front
+  producto.value = {
+    id: objeto?.id,
+    codigo: objeto?.codigo,
+    descripcion: objeto?.descripcion,
+    esActivo: objeto?.esActivo,
+    sku: objeto?.sku,
+    precioCosto: objeto?.precioCosto,
+    precioVenta: objeto?.precioVenta,
+    monedaCostoId: objeto?.monedaCostoId,
+    monedaVentaId: objeto?.monedaVentaId,
+    categoriasIds: objeto?.categoriasIds || [],
+
+    // Mapeamos las variantes
+    variants: (objeto?.productoVariantes || []).map(v => ({
+      id: v.id,
+      productoId: v.productoId,
+      talla: v.talla,
+      color: v.color,
+      stock: v.stock,
+      principal: v.principal,
+      otrasVariantesIds: v.otrasVariantesIds || [],
+      fotos: (v.fotos || []).map(f => ({
+        id: f.id,
+        url: f.url,
+        descripcion: f.descripcion,
+        esPrincipal: f.esPrincipal,
+        orden: f.orden
+      })),
+      slide: 1 // índice inicial del carrusel de esta variante
+    }))
+  }
+
+  console.debug('Producto adaptado:', producto.value)
+
+  // elegir variante inicial: la marcada como principal o la primera
+  const principalIndex = producto.value.variants.findIndex(v => v && (v.principal === true || v.principal === 'true'))
+  selectedVariantIndex.value = principalIndex >= 0 ? principalIndex : (producto.value.variants.length ? 0 : null)
+
+  // Guardar copia de las fotos originales (rutas) y poblar producto.value.fotos con todas las fotos de las variantes
+  let fotosOriginales = []
+  try {
+    fotosOriginales = (objeto?.productoVariantes || [])
+      .flatMap(v => (v.fotos || []).map(f => f.url || f))
+  } catch (e) {
+    fotosOriginales = []
+  }
+
+  // Poblamos producto.value.fotos (usado por el carrusel principal si no hay variante seleccionada) con las rutas encontradas
+  producto.value.fotos = fotosOriginales.slice()
+
+  // cargar relacionados (usando la categoría si está disponible)
+  const catId = objeto?.categoriaId || objeto?.categoria?.id || producto.value?.categoriasIds?.[0]
+  if (catId) {
+    const lista = await loadGetHastaData(`Inventario/ObtenerProductosDelInventarioPorCategoria/${catId}`)
+    relatedProducts.value = (lista ?? []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
+  }
+
+  // cargar explorar
+  const all = await loadGet('Producto/ObtenerListadoPaginado')
+  exploreProducts.value = (all ?? []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
   } catch (e) {
     console.warn('Error cargando producto', e)
   } finally {
@@ -194,14 +331,19 @@ function getFotoUrl(foto) {
     : foto
   if (!candidate) return '/img/sin-foto.jpg'
   if (!/^https?:\/\//.test(candidate)) {
-    candidate = apiFotosBaseUrl + (candidate.startsWith('/') ? candidate : '/' + candidate)
+    const final = apiFotosBaseUrl + (candidate.startsWith('/') ? candidate : '/' + candidate)
+    console.debug('[ProductoDetalle] getFotoUrl ->', { apiFotosBaseUrl, candidate, final })
+    return final
   }
+  console.debug('[ProductoDetalle] getFotoUrl -> absolute', candidate)
   return candidate
 }
 
 function getFotoUrlFromFoto(foto) {
   if (!foto) return '/img/sin-foto.jpg'
-  return getFotoUrl(typeof foto === 'object' ? (foto.url || foto.img || foto.path || foto.imagen) : foto)
+  const candidate = typeof foto === 'object' ? (foto.url || foto.img || foto.path || foto.imagen || foto.foto) : foto
+  console.debug('[ProductoDetalle] getFotoUrlFromFoto candidate ->', candidate)
+  return getFotoUrl(candidate)
 }
 
 function getProductoImage(prod) {
@@ -219,13 +361,92 @@ function getProductoImage(prod) {
     const first = prod.fotos[0]
     candidate = typeof first === 'string' ? first : (first.url || first.img || first.path)
   }
+
+  // prefer image from first variant if available (variants or variantes)
+  if ((!candidate || candidate === '') && (Array.isArray(prod.variants) || Array.isArray(prod.variantes))) {
+    const vars = Array.isArray(prod.variants) ? prod.variants : prod.variantes
+    if (vars && vars.length) {
+      const firstVar = vars[0]
+      if (firstVar) {
+        candidate = candidate || firstVar.fotoUrl || firstVar.foto || firstVar.imagen || firstVar.imagenUrl || firstVar.url || firstVar.image || firstVar.picture || null
+        if ((!candidate || candidate === '') && Array.isArray(firstVar.fotos) && firstVar.fotos.length) {
+          const f = firstVar.fotos[0]
+          if (typeof f === 'string' && f.trim() !== '') candidate = f
+          else if (typeof f === 'object' && f !== null) candidate = f.url || f.img || f.path || candidate
+        }
+      }
+    }
+  }
   return candidate || null
+}
+
+// helpers to prefer variant fields for display
+function displayedPrice() {
+  try {
+    const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
+    const v = sel != null && producto.value?.variants ? producto.value?.variants[sel] : (producto.value?.variants?.[0] || producto.value?.variantes?.[0] || producto.value?.productosVariantes?.[0])
+    return v?.precioVenta ?? producto.value?.precioVenta ?? producto.value?.precio ?? null
+  } catch (e) { return producto.value?.precioVenta ?? producto.value?.precio ?? null }
+}
+function displayedOriginalPrice() {
+  try {
+    const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
+    const v = sel != null && producto.value?.variants ? producto.value?.variants[sel] : (producto.value?.variants?.[0] || producto.value?.variantes?.[0] || producto.value?.productosVariantes?.[0])
+    return v?.precioOriginal ?? producto.value?.precioOriginal ?? null
+  } catch (e) { return producto.value?.precioOriginal ?? null }
+}
+function displayedStock() {
+  try {
+    const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
+    const v = sel != null && producto.value?.variants ? producto.value?.variants[sel] : (producto.value?.variants?.[0] || producto.value?.variantes?.[0] || producto.value?.productosVariantes?.[0])
+    return v?.stock ?? producto.value?.stock ?? producto.value?.cantidadDisponible ?? 'N/A'
+  } catch (e) { return 'N/A' }
+}
+function displayedCodigo() {
+  try {
+    const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
+    const v = sel != null && producto.value?.variants ? producto.value?.variants[sel] : (producto.value?.variants?.[0] || producto.value?.variantes?.[0] || producto.value?.productosVariantes?.[0])
+    return v?.codigo ?? producto.value?.codigo ?? '-'
+  } catch (e) { return '-' }
+}
+function displayedSKU() {
+  try {
+    const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
+    const v = sel != null && producto.value?.variants ? producto.value?.variants[sel] : (producto.value?.variants?.[0] || producto.value?.variantes?.[0] || producto.value?.productosVariantes?.[0])
+    return v?.sku ?? producto.value?.sku ?? '-'
+  } catch (e) { return '-' }
+}
+function displayedColor() {
+  try {
+    const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
+    const v = sel != null && producto.value?.variants ? producto.value?.variants[sel] : (producto.value?.variants?.[0] || producto.value?.variantes?.[0] || producto.value?.productosVariantes?.[0])
+    return v?.color ?? producto.value?.color ?? '#ccc'
+  } catch (e) { return '#ccc' }
+}
+
+function displayedTalla() {
+  try {
+    const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
+    const v = sel != null && producto.value?.variants ? producto.value?.variants[sel] : (producto.value?.variants?.[0] || producto.value?.variantes?.[0])
+    if (!v) return '-'
+    return v.talla ?? '-'
+  } catch (e) { return '-' }
+}
+
+function selectVariant(idx) {
+  selectedVariantIndex.value = idx
+  slide.value = 0
 }
 
 function onAddToCart() {
   if (!producto.value) return
   if (cantidad.value < 1) cantidad.value = 1
-  cart.addItem(producto.value, cantidad.value)
+  // include selected variant information when adding to cart
+  let payload = { ...producto.value }
+  if (selectedVariantIndex.value != null && producto.value?.variants && producto.value.variants[selectedVariantIndex.value]) {
+    payload = { ...payload, selectedVariant: producto.value.variants[selectedVariantIndex.value] }
+  }
+  cart.addItem(payload, cantidad.value)
 }
 
 function goToRelated(p) {
@@ -256,6 +477,15 @@ function goToRelated(p) {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  justify-content: center;
+}
+
+/* Ensure image left / details right layout and vertical centering on desktop */
+@media (min-width: 992px) {
+  .main-row { align-items: stretch; }
+  .left-col, .right-col { min-height: 520px; }
+  .right-col { justify-content: center; }
+  .left-col .q-carousel, .left-col .q-img { height: 100% !important; }
 }
 
 .product-header {

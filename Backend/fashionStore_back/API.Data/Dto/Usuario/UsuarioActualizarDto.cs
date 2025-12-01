@@ -14,5 +14,6 @@ namespace API.Data.Dto.Usuario
         public required string Username { get; set; }
         public required string Contrasenna { get; set; }
         public required string Correo { get; set; }
+        public required string Telefono { get; set; }
     }
 }

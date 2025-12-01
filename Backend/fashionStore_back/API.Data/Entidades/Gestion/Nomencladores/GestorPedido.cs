@@ -14,6 +14,7 @@ namespace API.Data.Entidades.Gestion.Nomencladores
         public Gestor? Gestor { get; set; } 
         public Guid? PedidoId { get; set; } 
         public Pedido? Pedido { get; set; } 
+        public decimal? PrecioAdicional { get; set; } 
 
     }
 }

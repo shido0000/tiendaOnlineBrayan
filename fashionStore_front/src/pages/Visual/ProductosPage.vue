@@ -62,9 +62,9 @@
           <div v-else class="row q-col-gutter-md">
             <div v-for="p in productos" :key="p.id || p._id || p.productoId" class="col-12 col-sm-6 col-md-4 col-lg-3">
               <q-card class="q-pa-md shadow-2 clickable-card" @click="goToProduct(p)">
-                <q-img
+              <q-img
                   class="product-img"
-                  :src="(p && p.__imgError) ? '/img/sin-foto.jpg' : getFotoUrl(getProductoImage(p))"
+                  :src="getFotoUrl(getProductoImagePreferVariant(p) || getProductoImage(p))"
                   ratio="4/3"
                   spinner-color="primary"
                   @error="() => onImgError(p)"
@@ -422,6 +422,34 @@ async function loadProducts(reset = false) {
     const start = (page.value - 1) * pageSize.value
     const pageItems = filtered.slice(start, start + pageSize.value)
     if (reset) productos.value = []
+    
+    // Pre-load images for each product in parallel
+    await Promise.all(pageItems.map(async (p) => {
+      if (!getProductoImage(p)) {
+        const prodId = p.id || p.productoId || p.productId || p._id
+        if (prodId) {
+          try {
+            if (debugImg) console.log('[ProductosPage] preloading image for product', prodId)
+            const detailed = await loadGetHastaData(`Producto/ObtenerProductoEspecifico/${prodId}`)
+            if (debugImg) console.log('[ProductosPage] got detailed product for', prodId, ':', detailed)
+            if (detailed && detailed.productoVariantes && detailed.productoVariantes.length) {
+              const pv = detailed.productoVariantes[0]
+              if (pv && Array.isArray(pv.fotos) && pv.fotos.length) {
+                const f0 = pv.fotos[0]
+                const fotoUrl = (typeof f0 === 'object') ? (f0.url || f0.img || f0.path) : f0
+                if (fotoUrl) {
+                  p.__preloadedFoto = fotoUrl
+                  if (debugImg) console.log('[ProductosPage] preloaded foto for', prodId, ':', fotoUrl)
+                }
+              }
+            }
+          } catch (e) {
+            if (debugImg) console.warn('[ProductosPage] could not preload image for', prodId, e)
+          }
+        }
+      }
+    }))
+    
     productos.value = productos.value.concat(pageItems.map(p => ({ ...p })))
     if (debugImg) console.log('[ProductosPage] loaded items count:', productos.value.length, productos.value[0])
   } catch (e) {
@@ -475,24 +503,15 @@ function formatPrice(v) {
 
 // photo helpers borrowed from existing pages
 function getFotoUrl(foto) {
-  try {
-    if (!foto) return '/img/sin-foto.jpg'
-    let candidate = foto
-    if (typeof foto === 'object') {
-      candidate = foto?.url || foto?.img || foto?.path || foto?.imagen || foto?.foto || null
-    }
-    if (!candidate) return '/img/sin-foto.jpg'
-    if (typeof candidate !== 'string') candidate = String(candidate)
-    if (/^https?:\/\//.test(candidate)) return candidate
-    const base = apiFotosBaseUrl || ''
-    if (!base) return (candidate.startsWith('/') ? candidate : '/' + candidate)
-    const sep = base.endsWith('/') ? '' : '/'
-    const path = candidate.startsWith('/') ? candidate.replace(/^\//, '') : candidate
-    return base + sep + path
-  } catch (err) {
-    if (debugImg) console.warn('[ProductosPage] getFotoUrl error', err, foto)
-    return '/img/sin-foto.jpg'
-  }
+  if (!foto) return '/img/sin-foto.jpg'
+  if (typeof foto !== 'string') foto = String(foto)
+  if (/^https?:\/\//.test(foto)) return foto
+  // Normalize slashes to avoid double-slash issues
+  const base = apiFotosBaseUrl || ''
+  if (!base) return (foto.startsWith('/') ? foto : '/' + foto)
+  const sep = base.endsWith('/') ? '' : '/'
+  const path = foto.startsWith('/') ? foto.replace(/^\//, '') : foto
+  return base + sep + path
 }
 function getFotoUrlFromFoto(foto) {
   if (!foto) return '/img/sin-foto.jpg'
@@ -505,6 +524,18 @@ function getFotoUrlFromFoto(foto) {
 
 function getProductoImage(prod) {
   if (!prod) return null
+
+  // Show product structure for first few items (debug)
+  if (!window.__productosPageDebugged) {
+    window.__productosPageDebugged = true
+    console.group('[ProductosPage DEBUG] Sample producto structure:')
+    console.log('First producto:', prod)
+    console.log('Available keys:', Object.keys(prod))
+    if (prod.productosVariantes) console.log('productosVariantes[0]:', prod.productosVariantes[0])
+    if (prod.variants) console.log('variants[0]:', prod.variants[0])
+    console.groupEnd()
+  }
+
   // robust resolution: try many common fields and nested structures
   const tryFields = (obj, keys) => {
     if (!obj) return null
@@ -531,6 +562,46 @@ function getProductoImage(prod) {
       if (typeof first === 'string' && first.trim() !== '') { candidate = first; break }
       const nested = tryFields(first, Object.keys(first))
       if (nested) { candidate = nested; break }
+    }
+  }
+
+  // prefer image from first variant if available (variants or variantes)
+  if ((!candidate || candidate === '') && (Array.isArray(prod.variants) || Array.isArray(prod.variantes))) {
+    const vars = Array.isArray(prod.variants) ? prod.variants : prod.variantes
+    if (vars && vars.length) {
+      const firstVar = vars[0]
+      if (firstVar) {
+        // try common fields on variant
+        const vCandidate = tryFields(firstVar, ['fotoUrl', 'foto', 'imagen', 'imagenUrl', 'url', 'image', 'picture'])
+        if (vCandidate) candidate = vCandidate
+        // variant may have array of fotos
+        if ((!candidate || candidate === '') && Array.isArray(firstVar.fotos) && firstVar.fotos.length) {
+          const f = firstVar.fotos[0]
+          if (typeof f === 'string' && f.trim() !== '') candidate = f
+          else if (typeof f === 'object' && f !== null) {
+            const nested = tryFields(f, Object.keys(f))
+            if (nested) candidate = nested
+          }
+        }
+      }
+    }
+  }
+
+  // prefer image from productosVariantes (API uses Spanish naming)
+  if ((!candidate || candidate === '') && Array.isArray(prod.productosVariantes) && prod.productosVariantes.length) {
+    const pv = prod.productosVariantes[0]
+    if (pv) {
+      // pv may have fotos array with objects that contain 'url'
+      if (Array.isArray(pv.fotos) && pv.fotos.length) {
+        const f0 = pv.fotos[0]
+        if (typeof f0 === 'string' && f0.trim() !== '') candidate = f0
+        else if (f0 && typeof f0 === 'object') candidate = f0.url || f0.img || f0.path || candidate
+      }
+      // also check common fields on the variante object
+      if ((!candidate || candidate === '') && typeof pv === 'object') {
+        const vCandidate = tryFields(pv, ['fotoUrl', 'foto', 'imagen', 'imagenUrl', 'url', 'image', 'picture'])
+        if (vCandidate) candidate = vCandidate
+      }
     }
   }
 
@@ -561,6 +632,50 @@ function getProductoImage(prod) {
   if (debugImg) console.log('[ProductosPage] resolved image candidate for product', prod.id ?? prod.productoId ?? prod._id ?? null, '->', candidate)
   return candidate || null
 }
+
+function getProductoImagePreferVariant(prod) {
+  if (!prod) return null
+  
+  // Return pre-loaded foto if available
+  if (prod.__preloadedFoto) {
+    if (debugImg) console.log('[ProductosPage] using preloaded foto:', prod.__preloadedFoto)
+    return prod.__preloadedFoto
+  }
+  
+  // Try existing resolution first
+  let c = getProductoImage(prod)
+  if (c) return c
+  
+  // check English variants
+  const vars = prod.variants || prod.variantes
+  if (Array.isArray(vars) && vars.length) {
+    const v0 = vars[0]
+    if (v0) {
+      if (Array.isArray(v0.fotos) && v0.fotos.length) {
+        const f0 = v0.fotos[0]
+        return (typeof f0 === 'object') ? (f0.url || f0.img || f0.path) : f0
+      }
+      return v0.fotoUrl || v0.foto || v0.imagen || v0.imagenUrl || v0.url || v0.image || v0.picture || null
+    }
+  }
+  
+  // check Spanish naming productosVariantes
+  const pvs = prod.productosVariantes
+  if (Array.isArray(pvs) && pvs.length) {
+    const pv0 = pvs[0]
+    if (pv0) {
+      if (Array.isArray(pv0.fotos) && pv0.fotos.length) {
+        const f0 = pv0.fotos[0]
+        return (typeof f0 === 'object') ? (f0.url || f0.img || f0.path) : f0
+      }
+      return pv0.fotoUrl || pv0.foto || pv0.imagen || pv0.url || null
+    }
+  }
+  
+  if (debugImg) console.log('[ProductosPage] getProductoImagePreferVariant returning null for product', prod.id)
+  return null
+}
+
   // expose image error handler in script-setup scope
   function onImgError(p) {
     try { if (p) p.__imgError = true } catch (e) { /* ignore */ }

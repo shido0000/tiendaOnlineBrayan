@@ -24,6 +24,9 @@ namespace API.Domain.Validators.Gestion.Nomencladores
                                      .NotNull().WithMessage("Es un campo obligatorio.")
                                      .MaximumLength(100).WithMessage("Debe tener {MaxLength} caracteres máximo.");
 
+            RuleFor(m => m.EsActiva).NotNull().WithMessage("Es un campo obligatorio.");
+
+            
             RuleFor(m => m).MustAsync(async (Gestors, cancelacion) => !(await _repositorios.BasicRepository.AnyAsync(e => e.Descripcion == Gestors.Descripcion && e.Id != Gestors.Id)))
             .WithMessage("Ya existe una Descripción con el mismo texto.");
         }

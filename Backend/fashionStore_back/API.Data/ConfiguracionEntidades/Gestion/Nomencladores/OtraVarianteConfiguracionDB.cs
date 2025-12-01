@@ -12,10 +12,6 @@ public class OtraVarianteConfiguracionDB
 
         modelBuilder.Entity<OtraVariante>().Property(e => e.Nombre).IsRequired().HasMaxLength(50);
 
-        modelBuilder.Entity<OtraVariante>()
-          .HasOne(ci => ci.ProductoVariante)
-          .WithMany(ci => ci.OtrasVariantes)
-          .HasForeignKey(ci => ci.ProductoVarianteId)
-          .OnDelete(DeleteBehavior.Restrict);
+       
     }
 }

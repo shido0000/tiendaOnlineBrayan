@@ -19,6 +19,9 @@ namespace API.Domain.Validators.Seguridad
             RuleFor(m => m.Nombre).NotEmpty().WithMessage("No puede ser un texto vacio.")
                                   .MaximumLength(50).WithMessage("Debe tener {MaxLength} caracteres máximo.")
                                   .NotNull().WithMessage("Es un campo obligatorio.");
+            RuleFor(m => m.Telefono).NotEmpty().WithMessage("No puede ser un texto vacio.")
+                                  .MaximumLength(50).WithMessage("Debe tener {MaxLength} caracteres máximo.")
+                                  .NotNull().WithMessage("Es un campo obligatorio.");
             RuleFor(m => m.Apellidos).NotEmpty().WithMessage("No puede ser un texto vacio.")
                                      .MaximumLength(50).WithMessage("Debe tener {MaxLength} caracteres máximo.")
                                      .NotNull().WithMessage("Es un campo obligatorio.");
@@ -41,6 +44,9 @@ namespace API.Domain.Validators.Seguridad
             RuleFor(m => m).MustAsync(async (usuario, cancelacion) => !await _repositorios.Usuarios.AnyAsync(e => e.Id != usuario.Id && e.Username == usuario.Username))
                            .OverridePropertyName(nameof(Usuario.Username))
                            .WithMessage("Ya existe un usuario con este mismo username.");
+            RuleFor(m => m).MustAsync(async (usuario, cancelacion) => !await _repositorios.Usuarios.AnyAsync(e => e.Id != usuario.Id && e.Telefono == usuario.Telefono))
+                           .OverridePropertyName(nameof(Usuario.Telefono))
+                           .WithMessage("Ya existe un usuario con este mismo Telefono.");
         }
 
     }

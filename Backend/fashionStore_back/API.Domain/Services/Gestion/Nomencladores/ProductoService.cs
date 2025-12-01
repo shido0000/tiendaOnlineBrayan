@@ -32,6 +32,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 StockTotal = 0,
             };
 
+            var listaProductosOtrasVariantes = new List<OtraVarianteProductoVariante>();
             var listaProductosCategorias = new List<ProductoCategoria>();
             var listaProductosVariantes = new List<ProductoVariante>();
             foreach (var catId in producto.CategoriasIds)
@@ -82,6 +83,15 @@ namespace API.Domain.Services.Gestion.Nomencladores
                         Url = url
                     });
                 }
+                foreach (var variantId in variante.OtrasVariantesIds) {
+                    var nuevaOtraVariante = new OtraVarianteProductoVariante()
+                    {
+                        Id = Guid.NewGuid(),
+                        OtraVarianteId = variantId,
+                        ProductoVarianteId = variante.ProductoId,
+                    };
+                    listaProductosOtrasVariantes.Add(nuevaOtraVariante);
+                }
 
                 listaProductosVariantes.Add(nuevoProductoVariante);
             }
@@ -91,6 +101,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
             await _repositorios.Productos.AddAsync(nuevoProducto);
             await _repositorios.ProductosCategorias.AddRangeAsync(listaProductosCategorias);
             await _repositorios.ProductoVariantes.AddRangeAsync(listaProductosVariantes);
+            await _repositorios.OtraVarianteProductoVariantes.AddRangeAsync(listaProductosOtrasVariantes);
             await _repositorios.SaveChangesAsync();
 
             return nuevoProducto.Id;
@@ -103,6 +114,8 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 .Include(p => p.ProductoCategorias)
                 .Include(p => p.ProductosVariantes)
                     .ThenInclude(v => v.Fotos)
+                .Include(p => p.ProductosVariantes)
+                    .ThenInclude(v => v.OtraVarianteProductoVariantes)
                 .FirstOrDefaultAsync(e => e.Id == productoId)
                 ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Producto no encontrado." };
 
@@ -118,7 +131,8 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
             // --- Sincronizar Categorías ---
             var categoriasExistentesIds = productoExistente.ProductoCategorias.Select(pc => pc.CategoriaId).ToList();
-
+            //var otrasVariantesProductosVariantesExistentesIds = productoExistente.ProductosVariantes.Select(pc => pc.OtraVarianteProductoVariantes.Select(e=>e.OtraVarianteId)).ToList();
+              
             var categoriasAEliminar = productoExistente.ProductoCategorias
                 .Where(pc => !producto.CategoriasIds.Contains(pc.CategoriaId))
                 .ToList();
@@ -143,6 +157,8 @@ namespace API.Domain.Services.Gestion.Nomencladores
             _repositorios.ProductoVariantes.RemoveRange(variantesAEliminar);
 
             var nuevasVariantes = new List<ProductoVariante>();
+            var listaProductosOtrasVariantes = new List<OtraVarianteProductoVariante>();
+
 
             foreach (var varianteDto in producto.ProductoVariantes)
             {
@@ -186,6 +202,31 @@ namespace API.Domain.Services.Gestion.Nomencladores
                             });
                         }
                     }
+
+                    // --- Sincronizar otras variantes ---
+                    var existentesOtrasIds = varianteExistente.OtraVarianteProductoVariantes
+                        .Select(ov => ov.OtraVarianteId)
+                        .Where(id => id.HasValue)
+                        .Select(id => id.Value)
+                        .ToList();
+
+                    var nuevasOtrasIds = varianteDto.OtrasVariantesIds;
+
+                    // Eliminar relaciones que ya no vienen
+                    var otrasAEliminar = varianteExistente.OtraVarianteProductoVariantes
+                        .Where(ov => ov.OtraVarianteId.HasValue && !nuevasOtrasIds.Contains(ov.OtraVarianteId.Value))
+                        .ToList();
+                    _repositorios.OtraVarianteProductoVariantes.RemoveRange(otrasAEliminar);
+
+                    // Agregar nuevas relaciones
+                    var otrasANuevas = nuevasOtrasIds
+                        .Where(id => !existentesOtrasIds.Contains(id))
+                        .Select(id => new OtraVarianteProductoVariante
+                        {
+                            ProductoVarianteId = varianteExistente.Id,
+                            OtraVarianteId = id
+                        }).ToList();
+                    await _repositorios.OtraVarianteProductoVariantes.AddRangeAsync(otrasANuevas);
                 }
                 else
                 {
@@ -223,8 +264,17 @@ namespace API.Domain.Services.Gestion.Nomencladores
                         }
                     }
 
+                    // Agregar relaciones de otras variantes nuevas
+                    nuevaVariante.OtraVarianteProductoVariantes = varianteDto.OtrasVariantesIds
+                        .Select(id => new OtraVarianteProductoVariante
+                        {
+                            OtraVarianteId = id
+                        }).ToList();
+
                     nuevasVariantes.Add(nuevaVariante);
                 }
+
+                
             }
 
             if (nuevasVariantes.Any())
@@ -252,6 +302,11 @@ namespace API.Domain.Services.Gestion.Nomencladores
                                 .ThenInclude(e => e.Fotos)
                             .Include(e => e.ProductoCategorias)
                                 .ThenInclude(e => e.Categoria)
+                            .Include(e => e.ProductosVariantes)
+                                .ThenInclude(e => e.OtraVarianteProductoVariantes)
+                            .Include(e => e.ProductosVariantes)
+                                .ThenInclude(e => e.OtraVarianteProductoVariantes)
+                                     .ThenInclude(e => e.OtraVariante)
                             .FirstOrDefaultAsync(e => e.Id == id)
                             ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Producto no encontrado." };
 
@@ -281,7 +336,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     Color = variant.Color,
                     Stock = variant.Stock,
                     Principal = variant.Principal,
-                    OtrasVariantesIds = variant.OtrasVariantes.Select(e=>e.Id).ToList(),
+                    OtrasVariantesIds = variant.OtraVarianteProductoVariantes.Select(e => e.OtraVarianteId.Value).ToList(),
                     Fotos = variant.Fotos.Select(f => new ProductoFotoDto
                     {
                         Id = f.Id,

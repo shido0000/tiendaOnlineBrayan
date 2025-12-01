@@ -12,5 +12,6 @@ public class GestorConfiguracionDB
 
         modelBuilder.Entity<Gestor>().Property(e => e.Nombre).IsRequired().HasMaxLength(50);
         modelBuilder.Entity<Gestor>().Property(e => e.Descripcion).IsRequired().HasMaxLength(100);
+        modelBuilder.Entity<Gestor>().Property(e => e.EsActiva).IsRequired();
     }
 }

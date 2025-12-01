@@ -58,7 +58,15 @@ const routes = [
                 name: 'Moneda',
                 component: () => import('src/pages/Nomenclators/Moneda.vue')
             },
-
+            {
+                path: 'Gestor',
+                name: 'Gestor',
+                component: () => import('src/pages/Nomenclators/Gestor.vue')
+            }, {
+                path: 'Mensajeria',
+                name: 'Mensajeria',
+                component: () => import('src/pages/Nomenclators/Mensajeria.vue')
+            },
             {
                 path: 'Categoria',
                 name: 'Categoria',
@@ -99,7 +107,11 @@ const routes = [
                 name: 'Perfil',
                 component: () => import('src/pages/ProfilePage.vue')
             },
-
+            {
+                path: 'OtraVariante',
+                name: 'OtraVariante',
+                component: () => import('src/pages/Nomenclators/OtraVariante.vue')
+            },
 
         ]
     },

@@ -58,6 +58,14 @@ namespace API.Domain.Services.Seguridad
             foreach (var tarea in tareas)
                 claims.Add(new Claim(tarea.Nombre.ToLower(), tarea.Nombre.ToLower()));
 
+            var usuario = await _usuarioService.ObtenerPorUsername(username);
+
+            claims.Add(new Claim("Id", usuario.Id.ToString()));
+            claims.Add(new Claim("NombreCompleto", usuario.NombreCompleto));
+            claims.Add(new Claim("Telefono", usuario.Telefono));
+            claims.Add(new Claim("Correo", usuario.Correo));
+
+
             //construyendo token
             var llaveSecreta = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecretKey"] ?? "APSKP3KP4234KP2423K4P234K2P34K23P4K234K23423K42P3"));
             var credenciales = new SigningCredentials(llaveSecreta, SecurityAlgorithms.HmacSha256);

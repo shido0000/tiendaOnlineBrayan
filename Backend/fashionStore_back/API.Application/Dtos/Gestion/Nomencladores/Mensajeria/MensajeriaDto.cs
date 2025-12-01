@@ -5,8 +5,8 @@ namespace API.Application.Dtos.Gestion.Nomencladores.Mensajeria
 {
     public class MensajeriaDto : EntidadBaseDto
     {
-        public Guid CarritoId { get; set; }
-        public Guid ProductoId { get; set; }
-        public int Cantidad { get; set; }
+        public required string Descripcion { get; set; } = string.Empty;
+        public required int Precio { get; set; }
+        public required Guid MonedaId { get; set; }
     }
 }

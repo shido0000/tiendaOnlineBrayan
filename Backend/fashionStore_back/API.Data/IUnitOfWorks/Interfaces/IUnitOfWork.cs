@@ -43,6 +43,7 @@ namespace API.Data.IUnitOfWorks.Interfaces
         IGestor Gestores { get; }
         IGestorPedido GestorPedidos { get; }
         IMensajeria Mensajerias { get; }
+        IOtraVarianteProductoVariante OtraVarianteProductoVariantes { get; }
 
         // CONTABILIDAD 
         IAsientoContable AsientosContables { get; }

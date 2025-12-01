@@ -354,27 +354,28 @@ class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
 </q-field>
   <q-select
                         class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
-                        v-model="variant.talla"
+                        v-model="variant.otrasVariantesIds"
+                        multiple
                               outlined
             dense
                         label="Otras variantes"
                         emit-value
                         map-options
                         :use-input="
-                            variant.talla === null ||
-                            variant.talla === ''
+                            variant.otrasVariantesIds === null ||
+                            variant.otrasVariantesIds === ''
                         "
-                        option-label="descripcion"
-                        option-value="descripcion"
-                        :options="filtradoTallas"
+                        option-label="nombre"
+                        option-value="id"
+                        :options="filtradoOtrasVariantes"
                         @filter="
                             (val, update) => {
-                                filtradoTallas = filterOptions(
+                                filtradoOtrasVariantes = filterOptions(
                                     val,
                                     update,
-                                    filtradoTallas,
-                                    'descripcion',
-                                    itemsTallas
+                                    filtradoOtrasVariantes,
+                                    'nombre',
+                                    itemsOtrasVariantes
                                 );
                             }
                         "
@@ -731,6 +732,9 @@ const filtradoMoneda = ref([])
 const itemsCategoria = ref([])
 const filtradoCategoria = ref([])
 
+const itemsOtrasVariantes = ref([])
+const filtradoOtrasVariantes = ref([])
+
 const itemsTallas = ref([])
 const filtradoTallas = ref([])
 
@@ -756,119 +760,6 @@ let fotosOriginales = []
 const objeto = reactive({ ...objetoInicial })
 // Funciones
 // 1- Funcion para pasar parametros en el Adicionar SaveData
-
-const Guardar = () => {
-  const url = objeto.id ? 'Producto/ActualizarConFotos' : 'Producto/CrearConFotos'
-
-  objeto.precioCosto = objeto.precioCosto
-    ? parseFloat(
-        objeto.precioCosto
-          .toString()
-          .replace(/\./g, '')
-          .replace(',', '.')
-      )
-    : 0
-
-  objeto.precioVenta = objeto.precioVenta
-    ? parseFloat(
-        objeto.precioVenta
-          .toString()
-          .replace(/\./g, '')
-          .replace(',', '.')
-      )
-    : 0
-
-
-  const formData = new FormData()
-  formData.append('Codigo', objeto.codigo)
-  formData.append('Sku', objeto.sku)
-  formData.append('Descripcion', objeto.descripcion)
-  formData.append('PrecioCosto', objeto.precioCosto)
-  formData.append('PrecioVenta', objeto.precioVenta)
-  formData.append('MonedaId', variant.monedaCostoId)
-  formData.append('Color', objeto.color || "#ffffff")
-  formData.append('EsActivo', objeto.esActivo)
-  // Agregar categorías seleccionadas
-  if (Array.isArray(producto.value.categoriasIds)) {
-    producto.value.categoriasIds.forEach(id => {
-      formData.append('categoriasIds', id)
-    })
-  }
-
-  if (objeto.id) {
-    // --- ACTUALIZAR ---
-    // Enviar rutas de fotos existentes en 'FotosExistentes' y archivos nuevos en 'Fotos'
-    if (Array.isArray(objeto.fotos)) {
-      objeto.fotos.forEach(ruta => {
-        formData.append('FotosExistentes', ruta)
-      })
-    }
-    if (objeto.fotosArchivos && objeto.fotosArchivos.length > 0) {
-      objeto.fotosArchivos.forEach(file => {
-        formData.append('Fotos', file)
-      })
-    }
-    saveDataParaObjetosConFotos(url, formData, load, close, dialogLoad, true, objeto.id)
-  } else {
-    // CREAR
-    if (objeto.fotosArchivos && objeto.fotosArchivos.length > 0) {
-      objeto.fotosArchivos.forEach(file => {
-        formData.append('Fotos', file)
-      })
-      saveDataParaObjetosConFotos(url, formData, load, close, dialogLoad, true, objeto.id)
-    } else {
-      saveDataParaObjetosConFotos(url, objeto, load, close, dialogLoad, false, objeto.id)
-    }
-  }
-}
-
-// Funcion para Obtener los datos para editar
-/*const obtenerElementoPorId = async (id) => {
-  //await obtener('Producto/ObtenerPorId', id, objeto, dialogLoad, dialog)
-await obtenerHastaData('Producto/ObtenerProductoEspecifico', id, objeto, dialogLoad, dialog)
-
-//Object.assign(producto.value,objeto)
-//llenarCategoriasIds()
-
- producto.value = {
-    id: objeto.id,
-    codigo: objeto.codigo,
-    descripcion: objeto.descripcion,
-    esActivo: objeto.esActivo,
-    categoriasIds: objeto.productoCategorias.map(pc => pc.categoriaId),
-     precioCosto: objeto.precioCosto,
-      precioVenta: objeto.precioVenta,
-      monedaCostoId: objeto.monedaCostoId,
-      monedaVentaId: objeto.monedaVentaId,
-    variants: objeto.variants.map(v => ({
-      id: v.id,
-      sku: v.sku,
-      talla: v.talla,
-      color: v.color,
-      stock: v.stock,
-      fotos: (v.fotos || []).map(f => ({
-        id: f.id,
-        url: f.url,
-        descripcion: f.descripcion
-      }))
-    }))
-  };
-
-console.log("objeto: ",producto.value)
-  // Guardar copia de las fotos originales (rutas) y poblar objeto.fotos con todas las fotos de las variantes
-  fotosOriginales = []
-  try {
-    fotosOriginales = (objeto.variants || []).flatMap(v => (v.fotos || []).map(f => f.url || f))
-  } catch (e) {
-    fotosOriginales = []
-  }
-  // Poblamos objeto.fotos (usado por el carrusel principal) con las rutas encontradas
-  objeto.fotos = fotosOriginales.slice()
-  filtradoMoneda.value = itemsMoneda.value
-  filtradoCategoria.value=itemsCategoria.value
-
-}
-*/
 
 const obtenerElementoPorId = async (id) => {
   // Traemos el objeto desde el backend
@@ -924,6 +815,8 @@ const obtenerElementoPorId = async (id) => {
   // Refrescamos filtros
   filtradoMoneda.value = itemsMoneda.value
   filtradoCategoria.value = itemsCategoria.value
+  filtradoOtrasVariantes.value = itemsOtrasVariantes.value
+
 }
 
 
@@ -962,10 +855,14 @@ onMounted(async () => {
   items.value = await loadGet('Producto/ObtenerListadoPaginado')??[]
   itemsMoneda.value = await loadGet('Moneda/ObtenerListadoPaginado')??[]
   itemsCategoria.value = await loadGet('CategoriaProducto/ObtenerListadoPaginado')??[]
+  itemsOtrasVariantes.value = await loadGet('OtraVariante/ObtenerListadoPaginado')??[]
+
 itemsTallas.value = await loadGetHastaData('Talla')??[]
   filtradoMoneda.value=itemsMoneda.value
   filtradoCategoria.value=itemsCategoria.value
   filtradoTallas.value=itemsTallas.value
+  filtradoOtrasVariantes.value=itemsOtrasVariantes.value
+
 
 
   dialogLoad.value = false
@@ -1235,7 +1132,13 @@ async function guardarProducto() {
           variant.fotos.forEach(f => {
             if (f instanceof File) {
               // Foto nueva
-              formData.append(`ProductoVariantes[${index}].FotosNuevas`, f)
+          if (!producto.value.id) {
+        // CREAR → usa Fotos
+        formData.append(`ProductoVariantes[${index}].Fotos`, f)
+      } else {
+        // ACTUALIZAR → usa FotosNuevas
+        formData.append(`ProductoVariantes[${index}].FotosNuevas`, f)
+      }
             } else if (f.id) {
               // Foto existente que se mantiene
               formData.append(`ProductoVariantes[${index}].FotosExistentesIds`, f.id)

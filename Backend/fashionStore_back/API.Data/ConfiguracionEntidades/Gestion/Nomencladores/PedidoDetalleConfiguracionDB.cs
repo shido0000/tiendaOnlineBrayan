@@ -22,9 +22,9 @@ public class PedidoDetalleConfiguracionDB
                    .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<PedidoDetalle>()
-               .HasOne(ci => ci.Producto)
+               .HasOne(ci => ci.ProductoVariante)
                .WithMany()
-               .HasForeignKey(ci => ci.ProductoId)
+               .HasForeignKey(ci => ci.ProductoVarianteId)
                .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<PedidoDetalle>()

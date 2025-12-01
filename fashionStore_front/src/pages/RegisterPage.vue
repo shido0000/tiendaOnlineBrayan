@@ -46,6 +46,15 @@
           prepend-inner-icon="mail"
         />
         <q-input
+          v-model="objeto.telefono"
+          label="Teléfono"
+          type="text"
+          dense
+          outlined
+          class="q-mb-md"
+          prepend-inner-icon="phone"
+        />
+        <q-input
           v-model="objeto.contrasenna"
           label="Password"
           type="password"
@@ -104,6 +113,7 @@ const objetoInicial = {
   apellidos: null,
   username: null,
   correo: null,
+  telefono:null,
   rolId:null,
   esActivo:true,
   contrasenna:null,
@@ -130,7 +140,7 @@ const goToLogin = () => {
 const Guardar = async() => {
   //const url = objeto.id ? 'Usuario/Actualizar' : 'Usuario/Crear'
   const url =  'Usuario/Crear'
- if (!objeto.nombre || !objeto.apellidos || !objeto.username || !objeto.correo || !objeto.contrasenna || !objeto.contrasennaConfirmada) {
+ if (!objeto.nombre || !objeto.apellidos || !objeto.username || !objeto.correo  || !objeto.telefono|| !objeto.contrasenna || !objeto.contrasennaConfirmada) {
     $q.notify({ type: 'negative', message: 'Completa todos los campos' })
     return
   }

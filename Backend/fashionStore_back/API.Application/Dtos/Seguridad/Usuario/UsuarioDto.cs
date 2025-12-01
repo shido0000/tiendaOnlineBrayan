@@ -9,6 +9,7 @@ namespace API.Application.Dtos.Seguridad.Usuario
         public string NombreCompleto { get => $"{Nombre} {Apellidos}"; }
         public required string Username { get; set; }
         public required string Correo { get; set; }
+        public required string Telefono { get; set; }
         public bool EsActivo { get; set; }
 
         public required Guid RolId { get; set; }

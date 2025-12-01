@@ -884,6 +884,39 @@ const eliminarElemento = async (endpoint, id, load, dialogLoad) => {
         });
 };
 
+const CancelarPedido = async (endpoint, id, load, dialogLoad) => {
+    const respuesta = reactive({
+        resultado: null,
+        mensajeError: null,
+    });
+    dialogLoad.value = true;
+    return await api
+        .post(`/${endpoint}/${id}`)
+        .then(async () => {
+            setTimeout(async () => {
+                await load();
+                dialogLoad.value = false;
+                Success.call(
+                    this,
+                    "El pedido ha sido cancelado correctamente"
+                );
+            });
+            return respuesta;
+        })
+        .catch((error) => {
+            if (
+                error?.response?.data?.errorMessage ===
+                ("Este elemento no puede ser eliminado debido a que otro depende de el" ||
+                    "Ocurrió un error al eliminar porque está asociado a otros registros.")
+            )
+                Error(Error_Notify_DeletingElementIsRelated);
+            else Error("Ocurrio un error al eliminar el elemento");
+            respuesta.mensajeError = error ?? null;
+            dialogLoad.value = false;
+            return respuesta;
+        });
+};
+
 const eliminarElementoGenerico = async (endpoint, id, load, dialogLoad) => {
     let respuesta = {
         resultado: null,
@@ -1736,4 +1769,5 @@ export {
     loadGetDatosInicio,
     obtenerHastaData,
     saveDataPerfil,
+    CancelarPedido,
 };
