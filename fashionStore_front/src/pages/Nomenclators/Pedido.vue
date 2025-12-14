@@ -890,7 +890,7 @@ const eliminar = async () => {
     load,
     dialogLoad
   )
-  
+
   // Recargar los datos y luego recargar la página para que se refresquen los productos
   await load()
   setTimeout(() => {

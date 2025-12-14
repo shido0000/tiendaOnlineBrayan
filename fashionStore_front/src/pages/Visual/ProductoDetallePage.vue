@@ -111,7 +111,7 @@
         <!-- Detalles con color visual -->
         <div class="q-mt-md row items-center q-gutter-sm">
           <q-chip dense outline>Stock: {{ displayedStock() }}</q-chip>
-          <q-chip dense outline>Categoria: {{ producto.categoriasDescripcion || '-' }}</q-chip>
+          <q-chip dense outline>Categoria: {{ producto.categoriaNombre || '-' }}</q-chip>
           <q-chip dense outline>Talla: {{ displayedTalla() }}</q-chip>
           <div class="row items-center q-gutter-xs">
             <span>Color:</span>
@@ -143,7 +143,7 @@
 
       <div class="related-row">
   <div
-    v-for="item in relatedProducts"
+    v-for="item in (relatedProducts.length ? relatedProducts : exploreProducts)"
     :key="item.id"
     class="rel-card"
     @click="goToRelated(item)"
@@ -151,7 +151,7 @@
     <q-card flat class="shadow-1 rel-card-inner">
       <!-- Imagen principal -->
       <q-img
-        :src="getFotoUrl(getProductoImageRelacionados(item))"
+        :src="getFotoUrl(getProductoImage(item))"
         ratio="1"
         class="rel-card-img"
       >
@@ -182,7 +182,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { loadGet, loadGetHastaData, saveDataPronosticoEnviarObjeto } from 'src/assets/js/util/funciones'
+import { loadGet, loadGetHastaData } from 'src/assets/js/util/funciones'
 import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
 import { apiFotosBaseUrl } from 'src/boot/axios'
 import useCart from 'src/stores/cartStore'
@@ -283,7 +283,6 @@ async function cargarProducto(id) {
     monedaCostoId: objeto?.monedaCostoId,
     monedaVentaId: objeto?.monedaVentaId,
     categoriasIds: objeto?.categoriasIds || [],
-    categoriasDescripcion: objeto?.categoriasDescripcion || "-",
 
     // Mapeamos las variantes
     variants: (objeto?.productoVariantes || []).map(v => ({
@@ -305,6 +304,8 @@ async function cargarProducto(id) {
     }))
   }
 
+  console.debug('Producto adaptado:', producto.value)
+
   // elegir variante inicial: la marcada como principal o la primera
   const principalIndex = producto.value.variants.findIndex(v => v && (v.principal === true || v.principal === 'true'))
   selectedVariantIndex.value = principalIndex >= 0 ? principalIndex : (producto.value.variants.length ? 0 : null)
@@ -322,14 +323,17 @@ async function cargarProducto(id) {
   producto.value.fotos = fotosOriginales.slice()
 
   // cargar relacionados (usando la categoría si está disponible)
-  //const catId = objeto?.categoriaId || objeto?.categoria?.id || producto.value?.categoriasIds?.[0]
-    const productoRelacionadoDto={
-        productoActualId:objeto.id,
-        categoriasIds:producto.value?.categoriasIds,
-    }
-    relatedProducts.value = (await saveDataPronosticoEnviarObjeto(`Producto/ObtenerProductosRelacionados`,productoRelacionadoDto,dialogLoad)).resultado
-    console.log(" relatedProducts.value : ", relatedProducts.value )
+  const catId = objeto?.categoriaId || objeto?.categoria?.id || producto.value?.categoriasIds?.[0]
+  if (catId) {
+    const respuesta = await loadGetHastaData(`Inventario/ObtenerProductosDelInventarioPorCategoria/${catId}`)
+    const lista = respuesta?.result || respuesta?.data || respuesta || []
+    relatedProducts.value = (Array.isArray(lista) ? lista : []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
+  }
 
+  // cargar explorar
+  const allResponse = await loadGet('Producto/ObtenerListadoPaginado')
+  const allLista = allResponse?.result || allResponse?.data || allResponse || []
+  exploreProducts.value = (Array.isArray(allLista) ? allLista : []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
   } catch (e) {
     console.warn('Error cargando producto', e)
   } finally {
@@ -346,23 +350,18 @@ watch(() => route.params.id, (nuevoId) => {
   if (nuevoId) cargarProducto(nuevoId)
 })
 function getFotoUrl(foto) {
-  if (!foto) {
-    return '/img/sin-foto.jpg'
-  }
-  // accept either a string URL/path or an object with common fields
-  let candidate = foto
-  if (typeof foto === 'object') {
-    candidate = foto?.url || foto?.img || foto?.path || foto?.imagen || foto?.foto || null
-  }
+  if (!foto) return '/img/sin-foto.jpg'
+  let candidate = typeof foto === 'object'
+    ? foto?.url || foto?.img || foto?.path || foto?.imagen || foto?.foto
+    : foto
   if (!candidate) return '/img/sin-foto.jpg'
-  if (typeof candidate !== 'string') candidate = String(candidate)
-  if (/^https?:\/\//.test(candidate)) return candidate
-  // Normalize slashes to avoid double-slash issues
-  const base = apiFotosBaseUrl || ''
-  if (!base) return (candidate.startsWith('/') ? candidate : '/' + candidate)
-  const sep = base.endsWith('/') ? '' : '/'
-  const path = candidate.startsWith('/') ? candidate.replace(/^\//, '') : candidate
-  return base + sep + path
+  if (!/^https?:\/\//.test(candidate)) {
+    const final = apiFotosBaseUrl + (candidate.startsWith('/') ? candidate : '/' + candidate)
+    console.debug('[ProductoDetalle] getFotoUrl ->', { apiFotosBaseUrl, candidate, final })
+    return final
+  }
+  console.debug('[ProductoDetalle] getFotoUrl -> absolute', candidate)
+  return candidate
 }
 
 function getFotoUrlFromFoto(foto) {
@@ -371,42 +370,38 @@ function getFotoUrlFromFoto(foto) {
   console.debug('[ProductoDetalle] getFotoUrlFromFoto candidate ->', candidate)
   return getFotoUrl(candidate)
 }
+
 function getProductoImage(prod) {
   if (!prod) return null
+  let candidate =
+    prod.fotoUrl ||
+    prod.imagen ||
+    prod.imagenUrl ||
+    prod.imagenPrincipal ||
+    prod.url ||
+    prod.image ||
+    prod.picture
 
-  // Log entire producto structure for debugging
-
-  // First try direct fields
-  let candidate = prod.fotoUrl || prod.imagen || prod.imagenUrl || prod.imagenPrincipal || prod.url || prod.image || prod.picture || null
-
-  // If the product has an array of fotos, prefer the first valid entry
   if ((!candidate || candidate === '') && Array.isArray(prod.fotos) && prod.fotos.length > 0) {
     const first = prod.fotos[0]
-    if (!first) candidate = null
-    else if (typeof first === 'string') candidate = first
-    else if (first.url) candidate = first.url
-    else if (first.img) candidate = first.img
-    else if (first.path) candidate = first.path
+    candidate = typeof first === 'string' ? first : (first.url || first.img || first.path)
   }
 
-  // prefer image from first variant if available (variants, variantes, or productoVariantes)
-  let vars = null
-  if (Array.isArray(prod.variants)) vars = prod.variants
-  else if (Array.isArray(prod.variantes)) vars = prod.variantes
-  else if (Array.isArray(prod.productoVariantes)) vars = prod.productoVariantes
-
-  if ((!candidate || candidate === '') && vars && vars.length > 0) {
-    const firstVar = vars[0]
-    if (firstVar) {
-      candidate = candidate || firstVar.fotoUrl || firstVar.foto || firstVar.imagen || firstVar.imagenUrl || firstVar.url || firstVar.image || firstVar.picture || null
-      if ((!candidate || candidate === '') && Array.isArray(firstVar.fotos) && firstVar.fotos.length) {
-        const f = firstVar.fotos[0]
-        if (typeof f === 'string' && f.trim() !== '') candidate = f
-        else if (typeof f === 'object' && f !== null) candidate = f.url || f.img || f.path || candidate
+  // prefer image from first variant if available (variants or variantes)
+  if ((!candidate || candidate === '') && (Array.isArray(prod.variants) || Array.isArray(prod.variantes))) {
+    const vars = Array.isArray(prod.variants) ? prod.variants : prod.variantes
+    if (vars && vars.length) {
+      const firstVar = vars[0]
+      if (firstVar) {
+        candidate = candidate || firstVar.fotoUrl || firstVar.foto || firstVar.imagen || firstVar.imagenUrl || firstVar.url || firstVar.image || firstVar.picture || null
+        if ((!candidate || candidate === '') && Array.isArray(firstVar.fotos) && firstVar.fotos.length) {
+          const f = firstVar.fotos[0]
+          if (typeof f === 'string' && f.trim() !== '') candidate = f
+          else if (typeof f === 'object' && f !== null) candidate = f.url || f.img || f.path || candidate
+        }
       }
     }
   }
-
   return candidate || null
 }
 
@@ -557,47 +552,6 @@ function goToRelated(p) {
   const id = p?.id || p?.productoId || p?.productId
   if (!id) return
   router.push({ name: 'ProductoDetalle', params: { id } })
-}
-
-
-function getProductoImageRelacionados(prod) {
-  if (!prod) return null
-
-  // Log entire producto structure for debugging
-
-  // First try direct fields
-  console.log("prod: ",prod)
-  let candidate = prod.productosVariantes[0].fotos
-
-  // If the product has an array of fotos, prefer the first valid entry
-  if (candidate.length > 0) {
-    const first = candidate[0]
-    if (!first) candidate = null
-    else if (typeof first === 'string') candidate = first
-    else if (first.url) candidate = first.url
-    else if (first.img) candidate = first.img
-    else if (first.path) candidate = first.path
-  }
-
-  // prefer image from first variant if available (variants, variantes, or productoVariantes)
-  let vars = null
-  if (Array.isArray(prod.variants)) vars = prod.variants
-  else if (Array.isArray(prod.variantes)) vars = prod.variantes
-  else if (Array.isArray(prod.productoVariantes)) vars = prod.productoVariantes
-
-  if ((!candidate || candidate === '') && vars && vars.length > 0) {
-    const firstVar = vars[0]
-    if (firstVar) {
-      candidate = candidate || firstVar.fotoUrl || firstVar.foto || firstVar.imagen || firstVar.imagenUrl || firstVar.url || firstVar.image || firstVar.picture || null
-      if ((!candidate || candidate === '') && Array.isArray(firstVar.fotos) && firstVar.fotos.length) {
-        const f = firstVar.fotos[0]
-        if (typeof f === 'string' && f.trim() !== '') candidate = f
-        else if (typeof f === 'object' && f !== null) candidate = f.url || f.img || f.path || candidate
-      }
-    }
-  }
-
-  return candidate || null
 }
 </script>
 

@@ -147,7 +147,7 @@ async function cargarDatosCategoria(id) {
       }
       return stock > 0
     })
-    
+
     productos.value = productosConStock.map(p => ({ ...p, slide: 0 }))
     if (debugImg) console.log('[CategoriaProductos] mapped productos count:', productos.value.length)
 

@@ -438,7 +438,7 @@ onMounted(async () => {
       try {
         const { api } = await import('src/boot/axios')
         const novedadesEnriquecidas = []
-        
+
         for (const prod of objeto.productosNovedades) {
           try {
             const response = await api.get(`Producto/ObtenerProductoEspecifico/${prod.id}`)
@@ -457,7 +457,7 @@ onMounted(async () => {
             novedadesEnriquecidas.push(prod)
           }
         }
-        
+
         objeto.productosNovedades = novedadesEnriquecidas
         if (debugImg) {
           console.log('[IndexPage] novedades enriquecidas:', objeto.productosNovedades.length)

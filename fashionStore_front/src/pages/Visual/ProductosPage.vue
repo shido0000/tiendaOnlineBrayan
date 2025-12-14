@@ -364,10 +364,10 @@ async function loadProducts(reset = false) {
 
     function applyClientFilters(list) {
       let out = (list || []).slice()
-      
+
       // Filtrar productos inactivos
       out = out.filter(p => p.esActivo !== false)
-      
+
       // search q
       if (filters.q) {
         const ql = String(filters.q).toLowerCase()
@@ -426,7 +426,7 @@ async function loadProducts(reset = false) {
     const start = (page.value - 1) * pageSize.value
     const pageItems = filtered.slice(start, start + pageSize.value)
     if (reset) productos.value = []
-    
+
     // Pre-load images for each product in parallel
     await Promise.all(pageItems.map(async (p) => {
       if (!getProductoImage(p)) {
@@ -453,7 +453,7 @@ async function loadProducts(reset = false) {
         }
       }
     }))
-    
+
     productos.value = productos.value.concat(pageItems.map(p => ({ ...p })))
     if (debugImg) console.log('[ProductosPage] loaded items count:', productos.value.length, productos.value[0])
   } catch (e) {
@@ -639,17 +639,17 @@ function getProductoImage(prod) {
 
 function getProductoImagePreferVariant(prod) {
   if (!prod) return null
-  
+
   // Return pre-loaded foto if available
   if (prod.__preloadedFoto) {
     if (debugImg) console.log('[ProductosPage] using preloaded foto:', prod.__preloadedFoto)
     return prod.__preloadedFoto
   }
-  
+
   // Try existing resolution first
   let c = getProductoImage(prod)
   if (c) return c
-  
+
   // check English variants
   const vars = prod.variants || prod.variantes
   if (Array.isArray(vars) && vars.length) {
@@ -662,7 +662,7 @@ function getProductoImagePreferVariant(prod) {
       return v0.fotoUrl || v0.foto || v0.imagen || v0.imagenUrl || v0.url || v0.image || v0.picture || null
     }
   }
-  
+
   // check Spanish naming productosVariantes
   const pvs = prod.productosVariantes
   if (Array.isArray(pvs) && pvs.length) {
@@ -675,7 +675,7 @@ function getProductoImagePreferVariant(prod) {
       return pv0.fotoUrl || pv0.foto || pv0.imagen || pv0.url || null
     }
   }
-  
+
   if (debugImg) console.log('[ProductosPage] getProductoImagePreferVariant returning null for product', prod.id)
   return null
 }
