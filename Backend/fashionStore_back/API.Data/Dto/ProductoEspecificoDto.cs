@@ -16,6 +16,7 @@ namespace API.Data.Dto
         public Guid MonedaVentaId { get; set; }
         public int StockTotal { get; set; }
         public List<Guid> CategoriasIds { get; set; } = new();
+        public string CategoriasDescripcion { get; set; } = "-";
         public List<ProductoEspecificoVarianteDto> ProductoVariantes { get; set; } = new();
     }
 }

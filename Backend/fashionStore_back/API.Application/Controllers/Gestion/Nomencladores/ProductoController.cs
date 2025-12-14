@@ -2,7 +2,6 @@
 using API.Data.Dto;
 using API.Data.Entidades.Gestion.Nomencladores;
 using API.Domain.Interfaces.Gestion.Nomencladores;
-using API.Domain.Services.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -54,7 +53,7 @@ namespace API.Application.Controllers.Gestion.Nomencladores
         protected override async Task<Producto?> ObtenerElementoPorId(Guid id)
           => await _servicioBase.ObtenerPorId(id, propiedadesIncluidas: query => query.Include(e => e.ProductosVariantes).ThenInclude(e => e.Fotos).Include(e => e.ProductoCategorias).ThenInclude(e => e.Categoria));
 
- 
+
         [HttpPost("CrearConFotos")]
         public async Task<IActionResult> CrearConFotos([FromForm] ProductoACrear payload)
         {
@@ -72,7 +71,7 @@ namespace API.Application.Controllers.Gestion.Nomencladores
             return Ok(result);
         }
 
-        
+
 
         [HttpPut("ActualizarConFotos/{id}")]
         public async Task<IActionResult> ActualizarConFotos(
@@ -81,6 +80,13 @@ namespace API.Application.Controllers.Gestion.Nomencladores
         {
             var idActualizado = await _ProductoService.ActualizarProducto(id, objeto);
             return Ok(new { Id = idActualizado });
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> ObtenerProductosRelacionados(ProductoRelacionadoDto productoRelacionadoDto)
+        {
+            var result = await _ProductoService.ObtenerProductosRelacionados(productoRelacionadoDto.CategoriasIds, productoRelacionadoDto.ProductoActualId);
+            return Ok(result);
         }
 
     }

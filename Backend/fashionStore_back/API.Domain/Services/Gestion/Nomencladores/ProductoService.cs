@@ -330,6 +330,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 StockTotal = producto.StockTotal,
                 CategoriasIds = producto.ProductoCategorias.Select(e => e.CategoriaId).ToList(),
                 ProductoVariantes = new(),
+                CategoriasDescripcion = string.Join(", ", producto.ProductoCategorias.Select(e => e.Categoria.Nombre)),
             };
 
             foreach (var variant in producto.ProductosVariantes)
@@ -378,82 +379,18 @@ namespace API.Domain.Services.Gestion.Nomencladores
             return lista;
         }
 
-        //public async Task<List<ProductosAgrupados>> ObtenerProductosAgrupados()
-        //{
-        //    var productos = await _repositorios.Productos
-        //        .GetQuery()
-        //        .AsNoTracking()
-        //        .Include(p => p.ProductoCategorias)
-        //        .Include(p => p.Fotos)
-        //        .ToListAsync();
-
-        //    var agrupados = productos
-        //        .Where(p => !string.IsNullOrEmpty(p.SKU) && p.SKU.Length >= 2)
-        //        .GroupBy(p => p.SKU.Substring(0, 2)) // 👈 agrupar por los 2 primeros caracteres
-        //        .Select(g => new ProductosAgrupados
-        //        {
-        //            SKU = g.Key, // el prefijo de 2 caracteres
-        //            Codigo = g.First().Codigo,
-        //            Descripcion = g.First().Descripcion,
-        //            EsActivo = g.First().EsActivo,
-        //            PrecioVenta = g.First().PrecioVenta,
-        //            MonedaVenta = g.First().MonedaVenta?.Descripcion, // si MonedaVenta tiene campo Descripcion
-        //            Stock = g.Sum(p => p.Stock), // sumar stock de todos los productos del grupo
-        //            Talla = g.Select(p => p.Talla).Where(t => !string.IsNullOrEmpty(t)).Distinct().ToList(),
-        //            Color = g.Select(p => p.Color).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList(),
-        //            CategoriaIds = g.SelectMany(p => p.ProductoCategorias.Select(pc => pc.CategoriaId)).Distinct().ToList(),
-        //            // si quieres traer fotos, aquí deberías mapearlas a IFormFile o a otra estructura
-        //            Fotos = new List<IFormFile>() // placeholder, depende de cómo quieras mapear ProductoFoto
-        //        })
-        //        .ToList();
-
-        //    return agrupados;
-        //}
-
-        //public async Task<ProductosAgrupados?> ObtenerProductoAgrupadoPorSku(string sku)
-        //{
-        //    if (string.IsNullOrEmpty(sku) || sku.Length < 2)
-        //        return null;
-
-        //    var prefijo = sku.Substring(0, 2);
-
-        //    var productos = await _repositorios.Productos
-        //        .GetQuery()
-        //        .AsNoTracking()
-        //        .Include(p => p.ProductoCategorias)
-        //        .Include(p => p.Fotos)
-        //        .Where(p => p.SKU != null && p.SKU.StartsWith(prefijo)) // 👈 filtrar por prefijo
-        //        .ToListAsync();
-
-        //    if (!productos.Any())
-        //        return null;
-
-        //    var agrupado = new ProductosAgrupados
-        //    {
-        //        SKU = prefijo,
-        //        Codigo = productos.First().Codigo,
-        //        Descripcion = productos.First().Descripcion,
-        //        EsActivo = productos.First().EsActivo,
-        //        PrecioVenta = productos.First().PrecioVenta,
-        //        MonedaVenta = productos.First().MonedaVenta?.Descripcion,
-        //        Stock = productos.Sum(p => p.Stock),
-        //        Talla = productos.Select(p => p.Talla)
-        //                         .Where(t => !string.IsNullOrEmpty(t))
-        //                         .Distinct()
-        //                         .ToList(),
-        //        Color = productos.Select(p => p.Color)
-        //                         .Where(c => !string.IsNullOrEmpty(c))
-        //                         .Distinct()
-        //                         .ToList(),
-        //        CategoriaIds = productos.SelectMany(p => p.ProductoCategorias
-        //                                                  .Select(pc => pc.CategoriaId))
-        //                                .Distinct()
-        //                                .ToList(),
-        //        Fotos = new List<IFormFile>() // aquí deberías mapear tus ProductoFoto si lo necesitas
-        //    };
-
-        //    return agrupado;
-        //}
-
+        public async Task<List<Producto>> ObtenerProductosRelacionados(List<Guid> categoriasIds, Guid productoActualId)
+        {
+            return await _repositorios.Productos
+                .GetQuery()
+                .AsNoTracking()
+                .Include(e => e.ProductosVariantes)
+                    .ThenInclude(e => e.Fotos)
+                .Include(e => e.ProductoCategorias)
+                    .ThenInclude(e => e.Categoria)
+                .Where(e => e.Id != productoActualId && e.EsActivo)
+                .Where(e => e.ProductoCategorias.Any(pc => categoriasIds.Contains(pc.CategoriaId)))
+                .ToListAsync();
+        }
     }
 }
