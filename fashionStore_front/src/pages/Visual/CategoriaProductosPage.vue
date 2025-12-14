@@ -139,7 +139,16 @@ async function cargarDatosCategoria(id) {
       if (firstArray) lista = firstArray
     }
 
-    productos.value = (lista ?? []).filter(p => p.esActivo !== false).map(p => ({ ...p, slide: 0 }))
+    // Filtrar productos sin stock
+    const productosConStock = (lista ?? []).filter(p => {
+      let stock = p.stock || p.cantidadDisponible || p.stockTotal || 0
+      if (!stock && Array.isArray(p.productoVariantes) && p.productoVariantes.length > 0) {
+        stock = p.productoVariantes[0].stock || 0
+      }
+      return stock > 0
+    })
+    
+    productos.value = productosConStock.map(p => ({ ...p, slide: 0 }))
     if (debugImg) console.log('[CategoriaProductos] mapped productos count:', productos.value.length)
 
     // cargar categorías para el TopBar

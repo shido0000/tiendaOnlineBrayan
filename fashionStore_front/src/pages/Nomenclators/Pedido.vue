@@ -531,7 +531,7 @@ import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
 import DialogEliminar from 'components/DialogBoxes/DialogEliminar.vue'
 
 import { dataColumnPedido } from 'src/assets/js/column_data/columnDataNomencladores'
-import { CancelarPedido, closeDialog, eliminarElemento, filterOptions, isValorRepetido, loadGet, obtener, saveData } from 'src/assets/js/util/funciones'
+import { CancelarPedido, closeDialog, eliminarElemento, filterOptions, isValorRepetido, loadGet, loadGetHastaData, obtener, saveData } from 'src/assets/js/util/funciones'
 import { PonerPuntosSupensivosACampo } from 'src/assets/js/util/extras'
 import DialogCancelarPedido from 'src/components/DialogBoxes/DialogCancelarPedido.vue'
 import { Error, Success } from 'src/assets/js/util/notify'
@@ -879,7 +879,7 @@ const Guardar = () => {
 
 // 2- Funcion para pasar por parametro el arreglo de los elmentos de la tabla
 const load = async () => {
-  items.value = await loadGet(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}`)??[]
+  items.value = await loadGetHastaData(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}`)??[]
 }
 
 // Funcion para eliminar elemento
@@ -890,6 +890,12 @@ const eliminar = async () => {
     load,
     dialogLoad
   )
+  
+  // Recargar los datos y luego recargar la página para que se refresquen los productos
+  await load()
+  setTimeout(() => {
+    window.location.reload()
+  }, 1500)
 }
 
 // Funcion para abrir el dialog de eliminar y pasar el id del elemento
