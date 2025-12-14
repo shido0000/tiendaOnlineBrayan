@@ -16,6 +16,7 @@ namespace API.Data.Dto.Pedido
         public decimal Shipping { get; set; }
         public decimal Discount { get; set; }
         public decimal Total { get; set; }
+        public Guid VendedorId { get; set; }
 
         // 🔑 Array de líneas del pedido
         public List<PedidoDetalleConfirmarDto> Detalles { get; set; } = new();

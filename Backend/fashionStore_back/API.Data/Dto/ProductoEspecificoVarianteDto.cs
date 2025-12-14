@@ -11,6 +11,7 @@ namespace API.Data.Dto
         public List<Guid> OtrasVariantesIds { get; set; } = new();
         public int Stock { get; set; }
         public bool Principal { get; set; }
+        public bool EsActivo { get; set; }
         public List<ProductoFotoDto> Fotos { get; set; } = new ();
        // public List<IFormFile> Fotos { get; set; } = new();
     }

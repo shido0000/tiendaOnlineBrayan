@@ -88,8 +88,8 @@
         <div class="q-mb-lg product-desc">{{ producto.descripcion || 'Sin descripción' }}</div>
 
         <div class="row items-center q-gutter-sm actions-row">
-          <q-input type="number" v-model.number="cantidad" min="1" style="width:110px" dense />
-          <q-btn color="primary" unelevated @click="onAddToCart">
+          <q-input type="number" v-model.number="cantidad" min="1" :max="displayedStock()" style="width:110px" dense @blur="validarCantidad" />
+          <q-btn color="primary" unelevated @click="onAddToCart" :disable="cantidad > displayedStock() || cantidad < 1">
             <q-icon name="add_shopping_cart" /> Añadir al carrito
           </q-btn>
           <q-btn flat color="secondary">Comprar ahora</q-btn>
@@ -402,6 +402,20 @@ function displayedStock() {
     return v?.stock ?? producto.value?.stock ?? producto.value?.cantidadDisponible ?? 'N/A'
   } catch (e) { return 'N/A' }
 }
+
+function validarCantidad() {
+  const stock = displayedStock()
+  if (typeof stock === 'number') {
+    if (cantidad.value > stock) {
+      cantidad.value = stock
+      Error(`La cantidad no puede exceder el stock disponible (${stock})`)
+    }
+    if (cantidad.value < 1) {
+      cantidad.value = 1
+    }
+  }
+}
+
 function displayedCodigo() {
   try {
     const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null

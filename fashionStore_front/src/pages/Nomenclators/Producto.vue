@@ -361,6 +361,7 @@ class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
                         label="Otras variantes"
                         emit-value
                         map-options
+                        clearable
                         :use-input="
                             variant.otrasVariantesIds === null ||
                             variant.otrasVariantesIds === ''
@@ -380,11 +381,6 @@ class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
                             }
                         "
                         lazy-rules
-                        :rules="[
-                            (val) =>
-                                (val !== null && val !== '') ||
-                                'Debe seleccionar un elemento',
-                        ]"
                     >
                         <template v-slot:no-option>
                             <q-item>
@@ -999,6 +995,7 @@ function agregarVariante() {
     color: null,
     principal: true,
     stock: 1,
+    otrasVariantesIds: null,
     fotos: []
   })
 }

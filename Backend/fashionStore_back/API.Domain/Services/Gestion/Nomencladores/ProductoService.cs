@@ -56,6 +56,8 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     Color = variante.Color,
                     Stock = variante.Stock,
                     Principal = variante.Principal,
+                    EsActivo = variante.Stock == 0 ? false : true,
+
                     // Fotos = variante.Fotos,
                 };
 
@@ -83,12 +85,13 @@ namespace API.Domain.Services.Gestion.Nomencladores
                         Url = url
                     });
                 }
-                foreach (var variantId in variante.OtrasVariantesIds) {
+                foreach (var variantId in variante.OtrasVariantesIds)
+                {
                     var nuevaOtraVariante = new OtraVarianteProductoVariante()
                     {
                         Id = Guid.NewGuid(),
                         OtraVarianteId = variantId,
-                        ProductoVarianteId = variante.ProductoId,
+                        ProductoVarianteId = nuevoProductoVariante.Id,
                     };
                     listaProductosOtrasVariantes.Add(nuevaOtraVariante);
                 }
@@ -132,7 +135,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
             // --- Sincronizar Categorías ---
             var categoriasExistentesIds = productoExistente.ProductoCategorias.Select(pc => pc.CategoriaId).ToList();
             //var otrasVariantesProductosVariantesExistentesIds = productoExistente.ProductosVariantes.Select(pc => pc.OtraVarianteProductoVariantes.Select(e=>e.OtraVarianteId)).ToList();
-              
+
             var categoriasAEliminar = productoExistente.ProductoCategorias
                 .Where(pc => !producto.CategoriasIds.Contains(pc.CategoriaId))
                 .ToList();
@@ -171,6 +174,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     varianteExistente.Color = varianteDto.Color;
                     varianteExistente.Stock = varianteDto.Stock;
                     varianteExistente.Principal = varianteDto.Principal;
+                    varianteExistente.EsActivo = varianteDto.Stock == 0 ? false : true;
 
                     // --- Sincronizar fotos ---
                     // Eliminar fotos que ya no vienen (comparando por Id)
@@ -238,6 +242,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                         Color = varianteDto.Color,
                         Stock = varianteDto.Stock,
                         Principal = varianteDto.Principal,
+                        EsActivo = varianteDto.Stock == 0 ? false : true,
                         Fotos = new List<ProductoFoto>()
                     };
 
@@ -274,7 +279,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     nuevasVariantes.Add(nuevaVariante);
                 }
 
-                
+
             }
 
             if (nuevasVariantes.Any())
@@ -312,7 +317,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
             var productoDevolver = new ProductoEspecificoDto()
             {
-                Id=producto.Id,
+                Id = producto.Id,
                 Codigo = producto.Codigo,
                 Descripcion = producto.Descripcion,
                 EsActivo = producto.EsActivo,
@@ -327,7 +332,8 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 ProductoVariantes = new(),
             };
 
-            foreach (var variant in producto.ProductosVariantes) {
+            foreach (var variant in producto.ProductosVariantes)
+            {
                 productoDevolver.ProductoVariantes.Add(new ProductoEspecificoVarianteDto
                 {
                     Id = variant.Id,
@@ -337,6 +343,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     Stock = variant.Stock,
                     Principal = variant.Principal,
                     OtrasVariantesIds = variant.OtraVarianteProductoVariantes.Select(e => e.OtraVarianteId.Value).ToList(),
+                    EsActivo = variant.EsActivo.HasValue ? variant.EsActivo.Value : false,
                     Fotos = variant.Fotos.Select(f => new ProductoFotoDto
                     {
                         Id = f.Id,

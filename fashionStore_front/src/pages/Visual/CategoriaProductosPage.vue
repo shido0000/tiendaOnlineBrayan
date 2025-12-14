@@ -139,7 +139,7 @@ async function cargarDatosCategoria(id) {
       if (firstArray) lista = firstArray
     }
 
-    productos.value = (lista ?? []).map(p => ({ ...p, slide: 0 }))
+    productos.value = (lista ?? []).filter(p => p.esActivo !== false).map(p => ({ ...p, slide: 0 }))
     if (debugImg) console.log('[CategoriaProductos] mapped productos count:', productos.value.length)
 
     // cargar categorías para el TopBar
