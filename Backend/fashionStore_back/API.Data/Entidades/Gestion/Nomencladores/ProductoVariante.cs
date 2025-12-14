@@ -9,6 +9,7 @@
         public List<OtraVarianteProductoVariante> OtraVarianteProductoVariantes { get; set; } = new List<OtraVarianteProductoVariante>();
         public int Stock { get; set; }
         public bool Principal { get; set; }
+        public bool? EsActivo { get; set; }=true;
         public ICollection<ProductoFoto> Fotos { get; set; } = new List<ProductoFoto>();
         public ICollection<PedidoDetalle> PedidosDetalles { get; set; } = new List<PedidoDetalle>();
     }

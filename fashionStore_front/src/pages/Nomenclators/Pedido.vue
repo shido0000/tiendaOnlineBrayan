@@ -679,7 +679,6 @@ verDatosPedido.value=soloVer
     const response = await api.get(`Pedido/ObtenerPedidoPorId/${id}`)
     const pedidoTemp = response.data
 
-    console.log("pedidoTemp: ", pedidoTemp)
 
     // Asignar el pedido seleccionado con los datos obtenidos
     pedidoSeleccionado.value = {
@@ -694,7 +693,7 @@ verDatosPedido.value=soloVer
       discount: pedidoTemp.discount,
       total: pedidoTemp.total,
       precioGestor: pedidoTemp.precioGestor || 0,
-      direccion: pedidoTemp.direccion || ''
+      direccion: pedidoTemp.direccion || '',
     }
 
     // Cargar las líneas del pedido desde detalles
@@ -802,7 +801,11 @@ verDatosPedido.value=soloVer
 const confirmarPedido = async () => {
   try {
     dialogLoad.value = true
+    const { api } = await import('src/boot/axios')
 
+const responseAuth = await api.get('/Autenticacion/UsuarioActual')
+const obj = responseAuth.data.result
+  const  Id=obj.id|| ''
     const dtoActualizarPedido = {
       id: pedidoSeleccionado.value.id,
       codigo: pedidoSeleccionado.value.codigo,
@@ -816,6 +819,8 @@ const confirmarPedido = async () => {
       shipping: pedidoSeleccionado.value.shipping || 0,
       discount: pedidoSeleccionado.value.discount || 0,
       total: precioTotalPedidoConCargos.value,
+      vendedorId:Id,
+
 
       // 🔑 Array de líneas
       detalles: lineasPedidoEditando.value.map(linea => ({
@@ -831,7 +836,6 @@ const confirmarPedido = async () => {
 
     console.log("DTO a enviar al backend:", dtoActualizarPedido)
 
-    const { api } = await import('src/boot/axios')
     dialogLoad.value=true
     const response = await api.post('Pedido/ActualizarPedidoConLineas', dtoActualizarPedido)
     dialogLoad.value=false

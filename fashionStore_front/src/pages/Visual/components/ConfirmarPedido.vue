@@ -190,6 +190,8 @@ import { loadGet, saveDataPronosticoEnviarObjeto } from 'src/assets/js/util/func
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
 import { Error, Success } from 'src/assets/js/util/notify'
 
+const emit = defineEmits(['pedido-confirmado'])
+
 const dialogLoad = ref(false)
 const router = useRouter()
 const cart = useCart()
@@ -315,6 +317,12 @@ const payload = JSON.parse(
 
       // 🔴 Si usas el store reactivo, también vacía el array
       items.splice(0, items.length)
+      
+      // Emitir evento para que se refresquen los productos
+      emit('pedido-confirmado')
+      
+      // Cerrar el diálogo
+      showDialog.value = false
     }
   })
   console.log('Pedido confirmado:', pedido)

@@ -228,7 +228,7 @@
 
 <script setup>
 import { onMounted, reactive, ref, computed, watch } from 'vue'
-import { loadGet, loadGetDatosInicio } from './assets/js/util/funciones'
+import { loadGet, loadGetDatosInicio, loadGetHastaData } from './assets/js/util/funciones'
 import DialogLoad from './components/DialogBoxes/DialogLoad.vue'
 import { apiFotosBaseUrl } from './boot/axios'
 import { EventBus } from './assets/js/util/eventBus'
@@ -275,7 +275,7 @@ const objeto = reactive({ ...objetoInicial })
 const rebajas = computed(() => {
   // try to pick products with descuento flag or price drop; fallback to productosNovedades
   const all = (objeto.productosNovedades || []).concat([])
-  return all.filter(p => p.tieneDescuento || p.descuento || p.precioOriginal).map(p => ({ ...p }))
+  return all.filter(p => (p.tieneDescuento || p.descuento || p.precioOriginal) && p.esActivo !== false).map(p => ({ ...p }))
 })
 
 // carousel state and slides
@@ -286,8 +286,8 @@ const categoriasSlide = ref(0)
 const itemsPerSlideProducts = 5
 const itemsPerSlideCategories = 5
 
-const novedadesSlides = computed(() => chunkCategorias((objeto.productosNovedades || []).slice(0, 20), itemsPerSlideProducts))
-const rebajasSlides = computed(() => chunkCategorias((rebajas.value || []).slice(0, 20), itemsPerSlideProducts))
+const novedadesSlides = computed(() => chunkCategorias(((objeto.productosNovedades || []).filter(p => p.esActivo !== false).slice(0, 20)), itemsPerSlideProducts))
+const rebajasSlides = computed(() => chunkCategorias(((rebajas.value || []).filter(p => p.esActivo !== false).slice(0, 20)), itemsPerSlideProducts))
 const categoriasSlides = computed(() => chunkCategorias((objeto.categoriasProductos || []), itemsPerSlideCategories))
 
 // selected category id used as filter for search
@@ -419,7 +419,36 @@ onMounted(async () => {
 
     objeto.categoriasProductos = elementosInicio?.categoriasProductos ?? elementosInicio?.categorias ?? elementosInicio?.data?.categorias ?? elementosInicio?.result?.categoriasProductos ?? []
 
-    if (debugImg) console.log('[IndexPage] mapped productosNovedades length:', (objeto.productosNovedades || []).length, 'categoriasProductos length:', (objeto.categoriasProductos || []).length)
+    if (debugImg) {
+      console.log('[IndexPage] mapped productosNovedades length:', (objeto.productosNovedades || []).length, 'categoriasProductos length:', (objeto.categoriasProductos || []).length)
+      if (objeto.productosNovedades && objeto.productosNovedades.length > 0) {
+        console.log('[IndexPage] First producto structure:', objeto.productosNovedades[0])
+      }
+    }
+
+    // Cargar productos completos con variantes para novedades
+    try {
+      if (objeto.productosNovedades && objeto.productosNovedades.length > 0) {
+        const productosActualizados = []
+        for (const novedad of objeto.productosNovedades) {
+          try {
+            const completo = await loadGetHastaData(`Producto/ObtenerProductoEspecifico/${novedad.id}`)
+            if (completo) {
+              productosActualizados.push(completo)
+            } else {
+              productosActualizados.push(novedad)
+            }
+          } catch (e) {
+            console.warn(`[IndexPage] Error loading producto ${novedad.id}:`, e)
+            productosActualizados.push(novedad)
+          }
+        }
+        objeto.productosNovedades = productosActualizados
+        if (debugImg) console.log('[IndexPage] Updated productosNovedades with complete data from ObtenerProductoEspecifico')
+      }
+    } catch (e) {
+      console.warn('[IndexPage] Error loading complete product data:', e)
+    }
   }
   dialogLoad.value = false
 })
@@ -498,8 +527,12 @@ function getCategoriaImage(cat) {
 // helper to pick the image field from a product record (covers different backend keys)
 function getProductoImage(prod) {
   if (!prod) return null
+  
+  // Log entire producto structure for debugging
+  if (debugImg) console.log('[IndexPage] getProductoImage full product:', JSON.stringify(prod, null, 2))
+  
   // First try direct fields
-  let candidate = prod.fotoUrl || prod.imagen || prod.imagenUrl || prod.url || prod.image || prod.picture || null
+  let candidate = prod.fotoUrl || prod.imagen || prod.imagenUrl || prod.imagenPrincipal || prod.url || prod.image || prod.picture || null
 
   // If the product has an array of fotos, prefer the first valid entry
   if ((!candidate || candidate === '') && Array.isArray(prod.fotos) && prod.fotos.length > 0) {
@@ -511,13 +544,26 @@ function getProductoImage(prod) {
     else if (first.path) candidate = first.path
   }
 
-  // Some APIs return an object like { imagen: '...'} at the root
-  if ((!candidate || candidate === '') && prod.imagenPrincipal) {
-    candidate = prod.imagenPrincipal
+  // prefer image from first variant if available (variants, variantes, or productoVariantes)
+  let vars = null
+  if (Array.isArray(prod.variants)) vars = prod.variants
+  else if (Array.isArray(prod.variantes)) vars = prod.variantes
+  else if (Array.isArray(prod.productoVariantes)) vars = prod.productoVariantes
+  
+  if ((!candidate || candidate === '') && vars && vars.length > 0) {
+    const firstVar = vars[0]
+    if (firstVar) {
+      candidate = candidate || firstVar.fotoUrl || firstVar.foto || firstVar.imagen || firstVar.imagenUrl || firstVar.url || firstVar.image || firstVar.picture || null
+      if ((!candidate || candidate === '') && Array.isArray(firstVar.fotos) && firstVar.fotos.length) {
+        const f = firstVar.fotos[0]
+        if (typeof f === 'string' && f.trim() !== '') candidate = f
+        else if (typeof f === 'object' && f !== null) candidate = f.url || f.img || f.path || candidate
+      }
+    }
   }
 
   if (debugImg) console.log('[IndexPage] getProductoImage:', { id: prod.id, candidate })
-  return candidate
+  return candidate || null
 }
 
 // función para dividir el array en chunks de 4

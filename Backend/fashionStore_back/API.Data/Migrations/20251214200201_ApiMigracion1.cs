@@ -122,6 +122,24 @@ namespace API.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Gestores",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    EsActiva = table.Column<bool>(type: "bit", nullable: false),
+                    FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActualizadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Gestores", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Monedas",
                 columns: table => new
                 {
@@ -138,6 +156,22 @@ namespace API.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Monedas", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OtrasVariantes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActualizadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OtrasVariantes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -200,6 +234,30 @@ namespace API.Data.Migrations
                         name: "FK_MovimientosContables_CuentasContables_CuentaContableId",
                         column: x => x.CuentaContableId,
                         principalTable: "CuentasContables",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Mensajerias",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Precio = table.Column<int>(type: "int", nullable: false),
+                    MonedaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActualizadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Mensajerias", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Mensajerias_Monedas_MonedaId",
+                        column: x => x.MonedaId,
+                        principalTable: "Monedas",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -280,6 +338,7 @@ namespace API.Data.Migrations
                     Username = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Contrasenna = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Correo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Telefono = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     DebeCambiarContrasenna = table.Column<bool>(type: "bit", nullable: false),
                     EsActivo = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -392,6 +451,7 @@ namespace API.Data.Migrations
                     Color = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Stock = table.Column<int>(type: "int", nullable: false),
                     Principal = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    EsActivo = table.Column<bool>(type: "bit", nullable: true),
                     FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -459,6 +519,7 @@ namespace API.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Codigo = table.Column<int>(type: "int", nullable: false),
                     UsuarioId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Estado = table.Column<int>(type: "int", nullable: false),
                     Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
@@ -467,6 +528,7 @@ namespace API.Data.Migrations
                     Total = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     MonedaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CuponId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Direccion = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -528,12 +590,12 @@ namespace API.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OtrasVariantes",
+                name: "OtraVarianteProductoVariantes",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ProductoVarianteId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    OtraVarianteId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProductoVarianteId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -541,13 +603,19 @@ namespace API.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OtrasVariantes", x => x.Id);
+                    table.PrimaryKey("PK_OtraVarianteProductoVariantes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OtrasVariantes_ProductoVariantes_ProductoVarianteId",
+                        name: "FK_OtraVarianteProductoVariantes_OtrasVariantes_OtraVarianteId",
+                        column: x => x.OtraVarianteId,
+                        principalTable: "OtrasVariantes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OtraVarianteProductoVariantes_ProductoVariantes_ProductoVarianteId",
                         column: x => x.ProductoVarianteId,
                         principalTable: "ProductoVariantes",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -638,18 +706,49 @@ namespace API.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GestorPedidos",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    GestorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PedidoId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PrecioAdicional = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActualizadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GestorPedidos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GestorPedidos_Gestores_GestorId",
+                        column: x => x.GestorId,
+                        principalTable: "Gestores",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_GestorPedidos_Pedidos_PedidoId",
+                        column: x => x.PedidoId,
+                        principalTable: "Pedidos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PedidosDetalles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PedidoId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProductoId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProductoVarianteId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DescuentoId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Cantidad = table.Column<int>(type: "int", nullable: false),
                     PrecioUnitario = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DescuentoAplicado = table.Column<decimal>(type: "decimal(18,2)", nullable: false, defaultValue: 0m),
                     LineTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     EstadoLinea = table.Column<int>(type: "int", nullable: false),
+                    ProductoVarianteId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -671,11 +770,16 @@ namespace API.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_PedidosDetalles_Productos_ProductoId",
-                        column: x => x.ProductoId,
-                        principalTable: "Productos",
+                        name: "FK_PedidosDetalles_ProductoVariantes_ProductoVarianteId",
+                        column: x => x.ProductoVarianteId,
+                        principalTable: "ProductoVariantes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PedidosDetalles_ProductoVariantes_ProductoVarianteId1",
+                        column: x => x.ProductoVarianteId1,
+                        principalTable: "ProductoVariantes",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -740,7 +844,7 @@ namespace API.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     VentaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProductoId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProductoVarianteId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Cantidad = table.Column<int>(type: "int", nullable: false),
                     PrecioUnitario = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DescuentoAplicado = table.Column<decimal>(type: "decimal(18,2)", nullable: false, defaultValue: 0m),
@@ -753,9 +857,9 @@ namespace API.Data.Migrations
                 {
                     table.PrimaryKey("PK_VentaDetalles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_VentaDetalles_Productos_ProductoId",
-                        column: x => x.ProductoId,
-                        principalTable: "Productos",
+                        name: "FK_VentaDetalles_ProductoVariantes_ProductoVarianteId",
+                        column: x => x.ProductoVarianteId,
+                        principalTable: "ProductoVariantes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -771,12 +875,12 @@ namespace API.Data.Migrations
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "Descripcion", "FechaActualizado", "FechaCreado", "Nombre" },
                 values: new object[,]
                 {
-                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", "Permite ver, crear, modificar y eliminar usuarios en el sistema.", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3344), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3341), "Gestionar usuarios" },
-                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", "Permite ver los usuarios existentes en el sistema y sus datos.", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3326), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3321), "Listar usuarios" },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", "Permite ver los productos existentes en el sistema y sus datos.", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3499), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3476), "Listar Productos" },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", "Permite ver, crear, modificar y eliminar productos en el sistema.", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3509), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3507), "Gestionar Productos" },
-                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", "Permite ver, crear, modificar y eliminar roles en el sistema.", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3470), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3468), "Gestionar rol" },
-                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", "Permite ver los roles existentes en el sistema y sus datos.", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3462), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3454), "Listar roles" }
+                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", "Permite ver, crear, modificar y eliminar usuarios en el sistema.", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(786), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(784), "Gestionar usuarios" },
+                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", "Permite ver los usuarios existentes en el sistema y sus datos.", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(777), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(776), "Listar usuarios" },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", "Permite ver los productos existentes en el sistema y sus datos.", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(801), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(800), "Listar Productos" },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", "Permite ver, crear, modificar y eliminar productos en el sistema.", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(809), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(808), "Gestionar Productos" },
+                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", "Permite ver, crear, modificar y eliminar roles en el sistema.", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(796), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(795), "Gestionar rol" },
+                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", "Permite ver los roles existentes en el sistema y sus datos.", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(791), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(789), "Listar roles" }
                 });
 
             migrationBuilder.InsertData(
@@ -784,9 +888,9 @@ namespace API.Data.Migrations
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "FechaActualizado", "FechaCreado", "Nombre" },
                 values: new object[,]
                 {
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3149), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3089), "Administrador" },
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336523"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3178), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3176), "Vendedor" },
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336524"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3185), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(3183), "Cliente" }
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(669), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(609), "Administrador" },
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336523"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(704), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(703), "Vendedor" },
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336524"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(710), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(708), "Cliente" }
                 });
 
             migrationBuilder.InsertData(
@@ -794,18 +898,18 @@ namespace API.Data.Migrations
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "FechaActualizado", "FechaCreado", "PermisoId", "RolId" },
                 values: new object[,]
                 {
-                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4042), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4040), new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4030), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4021), new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4060), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4058), new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4077), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4065), new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4054), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4052), new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4048), new DateTime(2025, 11, 22, 20, 1, 15, 747, DateTimeKind.Local).AddTicks(4046), new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") }
+                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1105), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1104), new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1094), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1092), new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1118), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1117), new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1123), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1122), new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1114), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1113), new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1110), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(1108), new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") }
                 });
 
             migrationBuilder.InsertData(
                 table: "Usuarios",
-                columns: new[] { "Id", "ActualizadoPor", "Apellidos", "Contrasenna", "Correo", "CreadoPor", "DebeCambiarContrasenna", "EsActivo", "FechaActualizado", "FechaCreado", "Nombre", "RolId", "Username" },
-                values: new object[] { new Guid("42717fb8-6e3f-4c94-b6b1-a88e8718d0a6"), "", "1", "$2a$10$EixZaYVK1fsbw1Zfbx3OXePaWxn96p36Zf4d0xF4f5f5f5f5f5f5f", "1@api.cu", "", false, true, new DateTime(2025, 11, 22, 20, 1, 15, 748, DateTimeKind.Local).AddTicks(6468), new DateTime(2025, 11, 22, 20, 1, 15, 748, DateTimeKind.Local).AddTicks(6425), "1", new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "1" });
+                columns: new[] { "Id", "ActualizadoPor", "Apellidos", "Contrasenna", "Correo", "CreadoPor", "DebeCambiarContrasenna", "EsActivo", "FechaActualizado", "FechaCreado", "Nombre", "RolId", "Telefono", "Username" },
+                values: new object[] { new Guid("42717fb8-6e3f-4c94-b6b1-a88e8718d0a6"), "", "1", "$2a$10$EixZaYVK1fsbw1Zfbx3OXePaWxn96p36Zf4d0xF4f5f5f5f5f5f5f", "1@api.cu", "", false, true, new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(6966), new DateTime(2025, 12, 14, 15, 2, 1, 25, DateTimeKind.Local).AddTicks(6949), "1", new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "54364363", "1" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AsientosContables_Id",
@@ -881,6 +985,28 @@ namespace API.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Gestores_Id",
+                table: "Gestores",
+                column: "Id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GestorPedidos_GestorId",
+                table: "GestorPedidos",
+                column: "GestorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GestorPedidos_Id",
+                table: "GestorPedidos",
+                column: "Id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GestorPedidos_PedidoId",
+                table: "GestorPedidos",
+                column: "PedidoId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Inventarios_Id",
                 table: "Inventarios",
                 column: "Id",
@@ -918,6 +1044,17 @@ namespace API.Data.Migrations
                 name: "IX_ListasDeseosDetalles_ProductoId",
                 table: "ListasDeseosDetalles",
                 column: "ProductoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Mensajerias_Id",
+                table: "Mensajerias",
+                column: "Id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Mensajerias_MonedaId",
+                table: "Mensajerias",
+                column: "MonedaId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Monedas_Codigo",
@@ -960,8 +1097,19 @@ namespace API.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_OtrasVariantes_ProductoVarianteId",
-                table: "OtrasVariantes",
+                name: "IX_OtraVarianteProductoVariantes_Id",
+                table: "OtraVarianteProductoVariantes",
+                column: "Id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OtraVarianteProductoVariantes_OtraVarianteId",
+                table: "OtraVarianteProductoVariantes",
+                column: "OtraVarianteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OtraVarianteProductoVariantes_ProductoVarianteId",
+                table: "OtraVarianteProductoVariantes",
                 column: "ProductoVarianteId");
 
             migrationBuilder.CreateIndex(
@@ -1002,9 +1150,14 @@ namespace API.Data.Migrations
                 column: "PedidoId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PedidosDetalles_ProductoId",
+                name: "IX_PedidosDetalles_ProductoVarianteId",
                 table: "PedidosDetalles",
-                column: "ProductoId");
+                column: "ProductoVarianteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PedidosDetalles_ProductoVarianteId1",
+                table: "PedidosDetalles",
+                column: "ProductoVarianteId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Permisos_Id",
@@ -1169,9 +1322,9 @@ namespace API.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_VentaDetalles_ProductoId",
+                name: "IX_VentaDetalles_ProductoVarianteId",
                 table: "VentaDetalles",
-                column: "ProductoId");
+                column: "ProductoVarianteId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VentaDetalles_VentaId",
@@ -1206,16 +1359,22 @@ namespace API.Data.Migrations
                 name: "ComprobantesVentas");
 
             migrationBuilder.DropTable(
+                name: "GestorPedidos");
+
+            migrationBuilder.DropTable(
                 name: "Inventarios");
 
             migrationBuilder.DropTable(
                 name: "ListasDeseosDetalles");
 
             migrationBuilder.DropTable(
+                name: "Mensajerias");
+
+            migrationBuilder.DropTable(
                 name: "MovimientosContables");
 
             migrationBuilder.DropTable(
-                name: "OtrasVariantes");
+                name: "OtraVarianteProductoVariantes");
 
             migrationBuilder.DropTable(
                 name: "PedidosDetalles");
@@ -1242,6 +1401,9 @@ namespace API.Data.Migrations
                 name: "Carritos");
 
             migrationBuilder.DropTable(
+                name: "Gestores");
+
+            migrationBuilder.DropTable(
                 name: "ListasDeseos");
 
             migrationBuilder.DropTable(
@@ -1251,16 +1413,19 @@ namespace API.Data.Migrations
                 name: "CuentasContables");
 
             migrationBuilder.DropTable(
+                name: "OtrasVariantes");
+
+            migrationBuilder.DropTable(
                 name: "CategoriasProductos");
 
             migrationBuilder.DropTable(
                 name: "Descuentos");
 
             migrationBuilder.DropTable(
-                name: "ProductoVariantes");
+                name: "Permisos");
 
             migrationBuilder.DropTable(
-                name: "Permisos");
+                name: "ProductoVariantes");
 
             migrationBuilder.DropTable(
                 name: "Ventas");

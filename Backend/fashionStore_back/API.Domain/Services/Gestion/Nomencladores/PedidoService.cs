@@ -2,6 +2,7 @@
 using API.Data.Entidades.Gestion.Nomencladores;
 using API.Data.Enum;
 using API.Data.IUnitOfWorks.Interfaces;
+using API.Data.IUnitOfWorks.Interfaces.Gestion.Nomencladores;
 using API.Domain.Exceptions;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Services.NotificacionTiempoReal;
@@ -447,7 +448,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 Id = Guid.NewGuid(),
                 Consecutivo = ultimoConsecutivo + 1,
                 PedidoId = pedido.Id,
-                UsuarioVendedorId = pedido.Id,
+                UsuarioVendedorId = dto.VendedorId,
                 FechaConfirmacion = DateTime.Now,
                 TotalFinal = pedido.Total,
                 Detalles = new List<VentaDetalle>()
@@ -473,14 +474,57 @@ namespace API.Domain.Services.Gestion.Nomencladores
                                     .Where(p => pedido.Detalles.Select(d => d.ProductoVarianteId).Contains(p.Id))
                                     .ToListAsync();
 
-
+            var productosCantidades = new List<ProductoCantidadDto>();
             foreach (var producto in productos)
             {
                 var detalle = pedido.Detalles.First(d => d.ProductoVarianteId == producto.Id);
                 producto.Stock -= detalle.Cantidad;
+
+                if (producto.Stock == 0)
+                {
+                    producto.EsActivo = false;
+                }
+
+                if (!productosCantidades.Any())
+                {
+                    var prodct = new ProductoCantidadDto()
+                    {
+                        Id = producto.ProductoId.Value,
+                        Cantidad = detalle.Cantidad,
+                    };
+                    productosCantidades.Add(prodct);
+                }
+                else
+                {
+                    var elemento = productosCantidades.FirstOrDefault(e => e.Id == producto.ProductoId.Value);
+                    if (elemento == null)
+                    {
+                        var prodct = new ProductoCantidadDto()
+                        {
+                            Id = producto.ProductoId.Value,
+                            Cantidad = detalle.Cantidad,
+                        };
+                        productosCantidades.Add(prodct);
+                    }
+                    else
+                    {
+                        elemento.Cantidad += detalle.Cantidad;
+                    }
+                }
             }
             _repositorios.ProductoVariantes.UpdateRange(productos);
 
+            var productosGenerales = await _repositorios.Productos
+                               .GetQuery()
+                               .ToListAsync();
+
+            foreach (var prod in productosGenerales)
+            {
+                var element = productosCantidades.FirstOrDefault(e=>e.Id==prod.Id);
+                prod.StockTotal -= element.Cantidad;
+            }
+
+            _repositorios.Productos.UpdateRange(productosGenerales);
 
             _repositorios.Pedidos.Update(pedido);
             await _repositorios.SaveChangesAsync();
@@ -495,12 +539,62 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
             if (pedido == null) throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Pedido no encontrado." };
 
+            var listaProductosVariantesActualizar = new List<ProductoVariante>();
+            var productosCantidades = new List<ProductoCantidadDto>();
+
             pedido.Estado = EstadoPedido.Rechazado;
             foreach (var det in pedido.Detalles)
             {
                 det.EstadoLinea = EstadoLinea.Rechazada;
+                var productoVariante = await _repositorios.ProductoVariantes
+                                               .GetQuery()
+                                               .FirstOrDefaultAsync(e => e.Id == det.ProductoVarianteId);
+
+                productoVariante.Stock += det.Cantidad;
+
+                listaProductosVariantesActualizar.Add(productoVariante);
+
+                if (!productosCantidades.Any())
+                {
+                    var prodct = new ProductoCantidadDto()
+                    {
+                        Id = productoVariante.ProductoId.Value,
+                        Cantidad = productoVariante.Stock,
+                    };
+                    productosCantidades.Add(prodct);
+                }
+                else
+                {
+                    var elemento = productosCantidades.FirstOrDefault(e => e.Id == productoVariante.ProductoId.Value);
+                    if (elemento == null)
+                    {
+                        var prodct = new ProductoCantidadDto()
+                        {
+                            Id = productoVariante.ProductoId.Value,
+                            Cantidad = productoVariante.Stock,
+                        };
+                        productosCantidades.Add(prodct);
+                    }
+                    else
+                    {
+                        elemento.Cantidad += productoVariante.Stock;
+                    }
+                }
+
+            }
+            _repositorios.ProductoVariantes.UpdateRange(listaProductosVariantesActualizar);
+
+            var productosGenerales = await _repositorios.Productos
+                                .GetQuery()
+                                .ToListAsync();
+
+            foreach (var prod in productosGenerales)
+            {
+                var element = productosCantidades.FirstOrDefault(e => e.Id == prod.Id);
+                prod.StockTotal += element.Cantidad;
             }
 
+            _repositorios.Productos.UpdateRange(productosGenerales);
             _repositorios.Pedidos.Update(pedido);
             await _repositorios.SaveChangesAsync();
         }
