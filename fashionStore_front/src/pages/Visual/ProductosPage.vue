@@ -104,7 +104,6 @@ import { loadGetHastaData, loadGetDatosInicio, loadGet } from 'src/assets/js/uti
 import { apiFotosBaseUrl } from 'src/boot/axios'
 import { useWishlist } from 'src/stores/wishlistStore'
 import useCart from 'src/stores/cartStore'
-import { getProductosActualizados } from 'src/assets/js/productosEventBus'
 
 const router = useRouter()
 const route = useRoute()
@@ -169,12 +168,6 @@ watch(() => route.query, (q) => {
   }
   loadProducts(true)
 }, { deep: true })
-
-// Escuchar cambios en el evento bus de productos actualizados
-watch(() => getProductosActualizados(), () => {
-  if (debugImg) console.log('[ProductosPage] Productos actualizados, recargando...')
-  loadProducts(true)
-})
 
 async function ensureInventoryIndex() {
   if (inventoryIndex.value) return inventoryIndex.value

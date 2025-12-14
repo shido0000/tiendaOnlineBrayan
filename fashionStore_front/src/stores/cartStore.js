@@ -54,14 +54,12 @@ function addItem(product, qty = 1) {
 
     state.lastAddedAt = Date.now()
     Success("Producto agregado al Carrito")
-    this.$q.notify({ type: 'positive', message: 'Producto agregado al Carrito' })
 }
 
 function removeItem(id) {
     const idx = findIndexById(id)
     if (idx !== -1) state.items.splice(idx, 1)
     Success("Producto eliminado del Carrito")
-    this.$q.notify({ type: 'positive', message: 'Producto eliminado del Carrito' })
 }
 
 function updateQuantity(id, cantidad) {

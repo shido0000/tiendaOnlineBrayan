@@ -54,9 +54,11 @@
     :max="getMaxStock(it)"
     :rules="[
       val => val >= 1 || 'La cantidad mínima es 1',
-      val => val <= getMaxStock(it) || `La cantidad no puede exceder el stock disponible (${getMaxStock(it)})`
+      val => val <= getMaxStock(it) || `La cantidad máxima disponible es ${getMaxStock(it)}`
     ]"
-> <q-tooltip>Cantidad</q-tooltip></q-input>
+  >
+    <q-tooltip>Cantidad máxima: {{ getMaxStock(it) }}</q-tooltip>
+  </q-input>
               </div>
 
               <!-- Botón eliminar -->
@@ -87,7 +89,7 @@
     </div>
   </div>
 
-  <ConfirmarPedido ref="confirmarPedido" @pedido-confirmado="onPedidoConfirmado" />
+  <ConfirmarPedido ref="confirmarPedido" />
 </template>
 
 <script setup>
@@ -96,8 +98,6 @@ import useCart from 'src/stores/cartStore'
 import { apiFotosBaseUrl } from 'src/boot/axios'
 import ConfirmarPedido from './components/ConfirmarPedido.vue'
 import { ref } from 'vue'
-import { notifyProductosActualizados } from 'src/assets/js/productosEventBus'
-import { Error } from 'src/assets/js/util/notify'
 
 const cart = useCart()
 const items = cart.items
@@ -116,72 +116,37 @@ function getFotoUrl(foto) {
   return apiFotosBaseUrl + (candidate.startsWith('/') ? candidate : '/' + candidate)
 }
 
-function remove(id) { cart.removeItem(id) }
-
 function getMaxStock(item) {
-  // Intentar obtener el stock del producto raw primero
-  const raw = item?.raw
-  if (raw) {
-    // Si existe una variante seleccionada, usar su stock
-    if (raw.selectedVariant?.stock) {
-      return Math.max(1, raw.selectedVariant.stock)
+  // Intentar obtener stock desde el producto raw
+  if (item.raw) {
+    let stock = item.raw.stock || item.raw.cantidadDisponible || item.raw.stockTotal
+    if (stock) return stock
+    // Si tiene variantes, obtener del primer variante
+    if (Array.isArray(item.raw.productoVariantes) && item.raw.productoVariantes.length > 0) {
+      stock = item.raw.productoVariantes[0].stock
+      if (stock) return stock
     }
-    
-    // Si existen variantes, usar el stock de la primera
-    if (raw.variants?.[0]?.stock) {
-      return Math.max(1, raw.variants[0].stock)
-    }
-    
-    // Si existen productoVariantes, usar el stock de la primera
-    if (raw.productoVariantes?.[0]?.stock) {
-      return Math.max(1, raw.productoVariantes[0].stock)
-    }
-    
-    // Stock directo del producto
-    if (raw.stock) {
-      return Math.max(1, raw.stock)
-    }
-    
-    if (raw.cantidadDisponible) {
-      return Math.max(1, raw.cantidadDisponible)
-    }
-    
-    if (raw.stockTotal) {
-      return Math.max(1, raw.stockTotal)
+    if (Array.isArray(item.raw.variants) && item.raw.variants.length > 0) {
+      stock = item.raw.variants[0].stock
+      if (stock) return stock
     }
   }
-  
-  // Fallback a los campos del item directamente
-  let stock = item?.stock || item?.cantidadDisponible || item?.stockTotal || 0
-  
-  return Math.max(1, stock)
+  // Fallback a valores directos del item
+  return item.stock || item.cantidadDisponible || item.stockTotal || 1
 }
 
+function remove(id) { cart.removeItem(id) }
 function onQtyChange(item) {
   const maxStock = getMaxStock(item)
-  
+  // Validar que no exceda el stock disponible
+  if (item.cantidad > maxStock) {
+    item.cantidad = maxStock
+  }
   // si la cantidad es menor que 1, la forzamos a 1
   if (!item.cantidad || item.cantidad < 1) {
     item.cantidad = 1
   }
-  
-  // si la cantidad excede el stock disponible, la limitamos
-  if (item.cantidad > maxStock) {
-    item.cantidad = maxStock
-    Error(`La cantidad no puede exceder el stock disponible (${maxStock})`)
-  }
-  
   cart.updateQuantity(item.id, item.cantidad)
-}
-
-function onPedidoConfirmado() {
-  // Notificar que los productos han sido actualizados
-  notifyProductosActualizados()
-  
-  // Refrescar la página después de 2 segundos para que se recarguen los datos
-  setTimeout(() => {
-    window.location.href = '/productos'
-  }, 2000)
 }
 </script>
 

@@ -88,8 +88,21 @@
         <div class="q-mb-lg product-desc">{{ producto.descripcion || 'Sin descripción' }}</div>
 
         <div class="row items-center q-gutter-sm actions-row">
-          <q-input type="number" v-model.number="cantidad" min="1" :max="displayedStock()" style="width:110px" dense @blur="validarCantidad" />
-          <q-btn color="primary" unelevated @click="onAddToCart" :disable="cantidad > displayedStock() || cantidad < 1">
+          <q-input 
+            type="number" 
+            v-model.number="cantidad" 
+            min="1" 
+            :max="getMaxDisponible()"
+            style="width:110px" 
+            dense 
+            @update:model-value="validarCantidad"
+          />
+          <q-btn 
+            color="primary" 
+            unelevated 
+            @click="onAddToCart"
+            :disable="cantidad < 1 || getMaxDisponible() <= 0 || cantidad > getMaxDisponible()"
+          >
             <q-icon name="add_shopping_cart" /> Añadir al carrito
           </q-btn>
           <q-btn flat color="secondary">Comprar ahora</q-btn>
@@ -167,7 +180,7 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { loadGet, loadGetHastaData } from 'src/assets/js/util/funciones'
 import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
@@ -188,6 +201,16 @@ const exploreProducts = ref([])
 const wishlist = useWishlist()
 const cart = useCart()
 const selectedVariantIndex = ref(null)
+const cartRefresh = ref(0)
+
+// Watch profundo del carrito para detectar cualquier cambio
+watch(
+  () => cart.items,
+  () => {
+    cartRefresh.value++
+  },
+  { deep: true }
+)
 
 // helper to obtain fotos for carousel preferring product.fotos then first variant fotos
 function getFotosForCarousel() {
@@ -302,13 +325,15 @@ async function cargarProducto(id) {
   // cargar relacionados (usando la categoría si está disponible)
   const catId = objeto?.categoriaId || objeto?.categoria?.id || producto.value?.categoriasIds?.[0]
   if (catId) {
-    const lista = await loadGetHastaData(`Inventario/ObtenerProductosDelInventarioPorCategoria/${catId}`)
-    relatedProducts.value = (lista ?? []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
+    const respuesta = await loadGetHastaData(`Inventario/ObtenerProductosDelInventarioPorCategoria/${catId}`)
+    const lista = respuesta?.result || respuesta?.data || respuesta || []
+    relatedProducts.value = (Array.isArray(lista) ? lista : []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
   }
 
   // cargar explorar
-  const all = await loadGet('Producto/ObtenerListadoPaginado')
-  exploreProducts.value = (all ?? []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
+  const allResponse = await loadGet('Producto/ObtenerListadoPaginado')
+  const allLista = allResponse?.result || allResponse?.data || allResponse || []
+  exploreProducts.value = (Array.isArray(allLista) ? allLista : []).filter(p => p && String(p.id) !== String(producto.value?.id)).slice(0, 8)
   } catch (e) {
     console.warn('Error cargando producto', e)
   } finally {
@@ -402,20 +427,6 @@ function displayedStock() {
     return v?.stock ?? producto.value?.stock ?? producto.value?.cantidadDisponible ?? 'N/A'
   } catch (e) { return 'N/A' }
 }
-
-function validarCantidad() {
-  const stock = displayedStock()
-  if (typeof stock === 'number') {
-    if (cantidad.value > stock) {
-      cantidad.value = stock
-      Error(`La cantidad no puede exceder el stock disponible (${stock})`)
-    }
-    if (cantidad.value < 1) {
-      cantidad.value = 1
-    }
-  }
-}
-
 function displayedCodigo() {
   try {
     const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
@@ -452,14 +463,88 @@ function selectVariant(idx) {
   slide.value = 0
 }
 
+function getProductoEnCarrito() {
+  if (!producto.value) return 0
+  
+  // Buscar por el mismo ID que usa el carrito cuando agrega
+  let idABuscar = producto.value.id
+  
+  // Si hay variante seleccionada, el carrito usará el ID de la variante
+  if (selectedVariantIndex.value != null && producto.value?.variants && producto.value.variants[selectedVariantIndex.value]) {
+    idABuscar = producto.value.variants[selectedVariantIndex.value].id
+  }
+  
+  const item = cart.items.find(i => {
+    return String(i.id) === String(idABuscar)
+  })
+  
+  return item ? item.cantidad : 0
+}
+
+function getMaxDisponible() {
+  // Acceder a cartRefresh para forzar evaluación cuando cambia
+  const _ = cartRefresh.value
+  const stock = displayedStock()
+  if (stock === 'N/A') return 999
+  const enCarrito = getProductoEnCarrito()
+  const disponible = stock - enCarrito
+  
+  console.log('[ProductoDetalle] getMaxDisponible:', {
+    stock,
+    enCarrito,
+    disponible,
+    cartItems: cart.items.length,
+    productId: producto.value?.id
+  })
+  
+  return disponible > 0 ? disponible : 0
+}
+
+function validarCantidad() {
+  const maxDisp = getMaxDisponible()
+  
+  if (cantidad.value > maxDisp) {
+    cantidad.value = maxDisp
+  }
+  if (cantidad.value < 1) {
+    cantidad.value = 1
+  }
+}
+
 function onAddToCart() {
   if (!producto.value) return
-  if (cantidad.value < 1) cantidad.value = 1
-  // include selected variant information when adding to cart
+  
+  const maxDisp = getMaxDisponible()
+  
+  console.log('[ProductoDetalle] onAddToCart called:', {
+    cantidad: cantidad.value,
+    maxDisponible: maxDisp,
+    canAdd: maxDisp > 0 && cantidad.value <= maxDisp
+  })
+  
+  // Validar que hay disponibilidad
+  if (maxDisp <= 0) {
+    console.warn('[ProductoDetalle] No hay disponibilidad')
+    return
+  }
+  
+  // Validar que la cantidad no exceda
+  if (cantidad.value > maxDisp) {
+    console.warn('[ProductoDetalle] Cantidad excede máximo disponible')
+    cantidad.value = maxDisp
+    return
+  }
+  
+  if (cantidad.value < 1) {
+    cantidad.value = 1
+  }
+  
   let payload = { ...producto.value }
   if (selectedVariantIndex.value != null && producto.value?.variants && producto.value.variants[selectedVariantIndex.value]) {
     payload = { ...payload, selectedVariant: producto.value.variants[selectedVariantIndex.value] }
   }
+  
+  console.log('[ProductoDetalle] Agregando al carrito:', { cantidad: cantidad.value, productId: payload.id })
   cart.addItem(payload, cantidad.value)
 }
 
