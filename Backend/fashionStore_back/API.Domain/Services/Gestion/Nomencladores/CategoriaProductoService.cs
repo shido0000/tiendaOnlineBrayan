@@ -95,6 +95,5 @@ namespace API.Domain.Services.Gestion.Nomencladores
             return categoria.Id;
         }
 
-
     }
 }
