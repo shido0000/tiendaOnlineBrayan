@@ -392,5 +392,18 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 .Where(e => e.ProductoCategorias.Any(pc => categoriasIds.Contains(pc.CategoriaId)))
                 .ToListAsync();
         }
+
+        public async Task<List<Producto>> ObtenerProductosPorCategoria(Guid categoriaId)
+        {
+            return await _repositorios.Productos
+                .GetQuery()
+                .AsNoTracking()
+                .Include(e => e.ProductosVariantes)
+                    .ThenInclude(e => e.Fotos)
+                .Include(e => e.ProductoCategorias)
+                    .ThenInclude(e => e.Categoria)
+                .Where(e => e.EsActivo && e.ProductoCategorias.Any(pc => pc.CategoriaId == categoriaId))
+                .ToListAsync();
+        }
     }
 }

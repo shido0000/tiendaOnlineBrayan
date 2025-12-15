@@ -25,7 +25,7 @@
     >
 
       <!-- Carrusel de fotos -->
-      <div v-if="producto.fotos && producto.fotos.length" class="q-mb-md">
+      <div v-if="producto.productosVariantes && producto.productosVariantes.length" class="q-mb-md">
         <q-carousel
           v-model="producto.slide"
           animated
@@ -36,7 +36,7 @@
           class="rounded-borders"
         >
           <q-carousel-slide
-            v-for="(foto, idx) in producto.fotos"
+            v-for="(foto, idx) in producto.productosVariantes"
             :key="idx"
             :name="idx"
             class="flex flex-center bg-grey-2"
@@ -138,8 +138,7 @@ async function cargarDatosCategoria(id) {
     // Obtener datos de la categoría
     categoria.value = await loadGet(`CategoriaProducto/ObtenerPorId/${id}`)
 
-    let lista =  categoria.value.listadoDeProductos??[]
-
+    let lista = await loadGetHastaData(`Producto/ObtenerProductosPorCategoria/${id}`)??[]
     // Filtrar productos sin stock
     const productosConStock = (lista ?? []).filter(p => {
       let stock = p.stock || p.cantidadDisponible || p.stockTotal || 0
@@ -148,9 +147,9 @@ async function cargarDatosCategoria(id) {
       }
       return stock > 0
     })
-
     productos.value = productosConStock.map(p => ({ ...p, slide: 0 }))
     if (debugImg) console.log('[CategoriaProductos] mapped productos count:', productos.value.length)
+console.log(" productos.value : ", productos.value)
 
     // cargar categorías para el TopBar
     try {
@@ -193,9 +192,10 @@ function getFotoUrl(foto) {
 }
 
 function getFotoUrlFromFoto(foto) {
-  if (!foto) return '/img/sin-foto.jpg'
+    console.log("foto: ",foto)
+  if (!foto.fotos) return '/img/sin-foto.jpg'
   if (typeof foto === 'object') {
-    const candidate = foto?.url || foto?.img || foto?.path || foto?.imagen || null
+    const candidate = foto?.fotos[0].url
     return getFotoUrl(candidate)
   }
   return getFotoUrl(foto)
