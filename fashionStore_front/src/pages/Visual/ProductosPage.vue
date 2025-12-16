@@ -31,7 +31,6 @@
           <div class="q-mb-md">
             <q-checkbox v-model="filters.novedades" label="Novedades" dense />
             <q-checkbox v-model="filters.rebajas" label="Rebajas" dense />
-            <q-checkbox v-model="filters.disponible" label="Solo disponibles" dense />
           </div>
 
           <div class="row justify-end q-mt-md">
@@ -129,7 +128,6 @@ const filters = reactive({
   precioMax: route.query.precioMax ? Number(route.query.precioMax) : null,
   novedades: route.query.novedades === '1' || !!route.query.novedades,
   rebajas: route.query.rebajas === '1' || !!route.query.rebajas,
-  disponible: route.query.disponible === '1' || !!route.query.disponible,
 })
 
 // normalizedCategories removed; category filtering will be reimplemented from scratch
@@ -162,7 +160,6 @@ watch(() => route.query, (q) => {
     filters.precioMax = q.precioMax ? Number(q.precioMax) : null
     filters.novedades = q.novedades === '1' || !!q.novedades
     filters.rebajas = q.rebajas === '1' || !!q.rebajas
-    filters.disponible = q.disponible === '1' || !!q.disponible
   } catch (err) {
     if (debugImg) console.warn('[ProductosPage] error syncing route.query to filters', err)
   }
@@ -222,7 +219,6 @@ async function buildQueryParams(append = {}) {
   if (filters.precioMax != null && filters.precioMax !== '') params.set('precioMax', String(filters.precioMax))
   if (filters.novedades) params.set('novedades', '1')
   if (filters.rebajas) params.set('rebajas', '1')
-  if (filters.disponible) params.set('disponible', '1')
   if (page.value) params.set('page', String(page.value))
   if (pageSize.value) params.set('pageSize', String(pageSize.value))
   Object.entries(append).forEach(([k, v]) => params.set(k, String(v)))
@@ -378,25 +374,15 @@ async function loadProducts(reset = false) {
       // price range
       if (filters.precioMin != null) out = out.filter(p => Number(p.precioVenta ?? p.precio ?? p.precioVenta) >= Number(filters.precioMin))
       if (filters.precioMax != null) out = out.filter(p => Number(p.precioVenta ?? p.precio ?? p.precioVenta) <= Number(filters.precioMax))
-        // disponibilidad: if backend inventory exists, cross-check by product id or code
-        if (filters.disponible) {
-          // inventoryIndex may be prepared by caller; if not, attempt best-effort local fields
-          const inv = inventoryIndex.value
-          if (inv && (inv.ids.size || inv.codes.size)) {
-            out = out.filter(p => {
-              const pid = p.id ?? p.productoId ?? p.productId ?? p._id
-              if (pid && inv.ids.has(String(pid))) return true
-              if (p.codigo && inv.codes.has(String(p.codigo))) return true
-              if (p.productoCodigo && inv.codes.has(String(p.productoCodigo))) return true
-              return false
-            })
-          } else {
-            out = out.filter(p => {
-              const q = p.cantidadDisponible ?? p.stock ?? p.existencia ?? p.disponible ?? p.stok ?? 0
-              return Number(q) > 0
-            })
-          }
+
+      // SIEMPRE filtrar productos sin stock - no se muestran productos sin existencias
+      out = out.filter(p => {
+        let stock = p.stock || p.cantidadDisponible || p.stockTotal || 0
+        if (!stock && Array.isArray(p.productoVariantes) && p.productoVariantes.length > 0) {
+          stock = p.productoVariantes[0].stock || 0
         }
+        return stock > 0
+      })
       // rebajas flag
       if (filters.rebajas) {
         out = out.filter(p => {
@@ -418,7 +404,6 @@ async function loadProducts(reset = false) {
       return out
     }
 
-  if (filters.disponible) await ensureInventoryIndex()
   const filtered = applyClientFilters(items)
 
     // set total and page-slice results
@@ -474,7 +459,6 @@ function resetFilters() {
   filters.precioMax = null
   filters.novedades = false
   filters.rebajas = false
-  filters.disponible = false
   // also update route
   router.replace({ name: 'Productos', query: {} }).catch(() => {})
   loadProducts(true)
@@ -488,7 +472,6 @@ async function applyFilters() {
   if (filters.precioMax != null && filters.precioMax !== '') query.precioMax = String(filters.precioMax)
   if (filters.novedades) query.novedades = '1'
   if (filters.rebajas) query.rebajas = '1'
-  if (filters.disponible) query.disponible = '1'
   router.push({ name: 'Productos', query }).catch(() => {})
   loadProducts(true)
 }

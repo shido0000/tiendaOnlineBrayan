@@ -182,27 +182,34 @@ namespace API.Domain.Services.Gestion.Nomencladores
         {
             var cantPedidos = await _repositorios.Pedidos.CountAsync();
 
+            var primerProducto = generarPedidoDto.Productos.FirstOrDefault();
             var MonedaVentaId = await _repositorios.ProductoVariantes
-                                    .GetQuery()
-                                    .AsNoTracking()
-                                    .Include(e => e.Producto)
-                                    .Where(e => e.Id == generarPedidoDto.Productos.FirstOrDefault()!.ProductoId)
-                                    .Select(e => e.Producto.MonedaVentaId)
-                                    .FirstOrDefaultAsync();
+                                            .GetQuery()
+                                            .AsNoTracking()
+                                            .Include(e => e.Producto)
+                                            .Where(e => e.Id == primerProducto.ProductoId)
+                                            .Select(e => e.Producto.MonedaVentaId)
+                                            .FirstOrDefaultAsync();
 
-            var costoEnvio = await _repositorios.Mensajerias
-                                    .GetQuery()
-                                    .AsNoTracking()
-                                    .Where(e => e.Id == generarPedidoDto.MensajeriaId)
-                                    .Select(e => e.Precio)
-                                    .FirstOrDefaultAsync();
+            var costoEnvio = generarPedidoDto.MensajeriaId.HasValue
+    ? await _repositorios.Mensajerias
+                        .GetQuery()
+                        .AsNoTracking()
+                        .Where(e => e.Id == generarPedidoDto.MensajeriaId)
+                        .Select(e => e.Precio)
+                        .FirstOrDefaultAsync()
+    : null;
 
-            var descuentoCupon = await _repositorios.Cupones
-                                   .GetQuery()
-                                   .AsNoTracking()
-                                   .Where(e => e.Id == generarPedidoDto.CuponId)
-                                   .Select(e => new { e.MontoFijo, e.Porcentaje })
-                                   .FirstOrDefaultAsync();
+            Guid? cuponId = generarPedidoDto.CuponId;
+
+            var descuentoCupon = !cuponId.HasValue
+                ? null
+                : await _repositorios.Cupones
+                    .GetQuery()
+                    .AsNoTracking()
+                    .Where(e => e.Id == cuponId.Value)
+                    .Select(e => new { e.MontoFijo, e.Porcentaje })
+                    .FirstOrDefaultAsync();
 
             var decuentoPorCupon = 0m;
             var esPorciento = false;
@@ -215,7 +222,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 CuponId = generarPedidoDto.CuponId,
                 Estado = EstadoPedido.Pendiente,
                 Subtotal = 0m,
-                Shipping = (decimal)costoEnvio, // conversión segura de int a decimal
+                Shipping = costoEnvio.HasValue ? (decimal)costoEnvio : 0m,
                 Discount = 0m,
                 Total = 0m,
                 Direccion = generarPedidoDto.Direccion,

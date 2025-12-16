@@ -10,6 +10,11 @@ namespace API.Data.DbContexts
 {
     public class ApiDbContext : DbContext, IApiDbContext
     {
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+            optionsBuilder.EnableSensitiveDataLogging();
+        }
         // SEGURIDAD
         public DbSet<Permiso> Permisos { get; set; }
         public DbSet<RolPermiso> RolPermiso { get; set; }

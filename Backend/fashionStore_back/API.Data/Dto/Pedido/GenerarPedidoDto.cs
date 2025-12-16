@@ -9,7 +9,7 @@ namespace API.Data.Dto.Pedido
         public Guid? GestorId { get; set; }  
         public int? ImpuestoGestor { get; set; }  
         public string Direccion { get; set; } = string.Empty;
-        public Guid MensajeriaId { get; set; }
-        public Guid CuponId { get; set; }
+        public Guid? MensajeriaId { get; set; }
+        public Guid? CuponId { get; set; }
     }
 }

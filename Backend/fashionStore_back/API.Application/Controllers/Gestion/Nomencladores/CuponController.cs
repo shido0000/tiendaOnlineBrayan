@@ -26,5 +26,19 @@ namespace API.Application.Controllers.Gestion.Nomencladores
             return Ok(result);
         }
 
+        [HttpPost("IncrementarUsos/{cuponId}")]
+        public async Task<IActionResult> IncrementarUsos(Guid cuponId)
+        {
+            try
+            {
+                await _CuponService.IncrementarUsos(cuponId);
+                return Ok(new { mensaje = "Usos incrementados correctamente" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
     }
 }

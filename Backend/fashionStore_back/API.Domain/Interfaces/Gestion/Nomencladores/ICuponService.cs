@@ -8,5 +8,7 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
     {
         Task<decimal> AplicarCuponAsync(Guid pedidoId, Guid cuponId);
         Task<CuponEspecificoDto> ObtenerCuponPorCodigo(string codigo, decimal importePedido);
+        Task IncrementarUsos(Guid cuponId);
+
     }
 }

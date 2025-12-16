@@ -31,12 +31,12 @@
               <q-item-section>
                 <q-item-label>{{ it.nombre }}</q-item-label>
                 <q-item-label caption>
-                  Cantidad: {{ it.cantidad }} · Precio: ${{ it.precioVenta.toFixed(2) }}
+                  Cantidad: {{ it.cantidad }} · Precio: ${{ it.precioVenta.toFixed(2) }} {{ getItemMonedaCodigo(it) }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
                 <div class="text-weight-bold text-primary">
-                  ${{ (it.precioVenta * it.cantidad).toFixed(2) }}
+                  ${{ (it.precioVenta * it.cantidad).toFixed(2) }} {{ getItemMonedaCodigo(it) }}
                 </div>
               </q-item-section>
             </q-item>
@@ -82,29 +82,40 @@
 
           <!-- Desglose -->
           <div class="q-mt-md text-right text-subtitle2">
-            Carrito: ${{ totalPrice.toFixed(2) }}
+            Carrito: ${{ totalPrice.toFixed(2) }} {{ mostrarMonedas }}
           </div>
           <div v-if="gestorPrecio > 0" class="text-right text-subtitle2">
-            Gestor: ${{ gestorPrecio.toFixed(2) }}
+            Gestor: ${{ gestorPrecio.toFixed(2) }} {{ monedaGestor }}
           </div>
           <div v-if="mensajeriaPrecio > 0" class="text-right text-subtitle2">
-            Mensajería: ${{ mensajeriaPrecio.toFixed(2) }}
+            Mensajería: ${{ mensajeriaPrecio.toFixed(2) }} {{ monedaMensajeria }}
           </div>
           <div v-if="descuento > 0" class="text-right text-subtitle2 text-negative">
-            Descuento: -${{ descuento.toFixed(2) }}
+            Descuento: -${{ descuento.toFixed(2) }} {{ monedaDescuento }}
           </div>
 
           <!-- Totales -->
-          <div class="q-mt-md text-right text-h6">
-            <span v-if="descuento > 0" class="text-negative" style="text-decoration: line-through;">
-              ${{ (totalPrice + gestorPrecio + mensajeriaPrecio).toFixed(2) }}
-            </span>
-            <span v-else>
-              ${{ (totalPrice + gestorPrecio + mensajeriaPrecio).toFixed(2) }}
-            </span>
+           <div class="q-mt-lg">
+                <div v-if="mostrarSubtotal" class="q-mt-md text-right text-h6">
+                    <span v-if="descuento > 0" class="text-negative" style="text-decoration: line-through;">
+                     ${{ subtotalConvertido.toFixed(2) }} {{ monedaPrincipal }}
+                    </span>
+                    <span v-else>
+                     ${{ subtotalConvertido.toFixed(2) }} {{ monedaPrincipal }}
+                    </span>
+                </div>
+            <div class="text-right text-h5 text-primary">
+            Total a pagar: ${{ totalConExtras.toFixed(2) }} {{ monedaPrincipal }}
           </div>
-          <div class="text-right text-h5 text-primary">
-            Total a pagar: ${{ totalConExtras.toFixed(2) }}
+
+        </div>
+
+          <!-- Si hay múltiples monedas, mostrar equivalentes -->
+          <div v-if="tieneMúltiplesMonedas" class="q-mt-md q-pa-md bg-blue-1 rounded-borders">
+            <div class="text-subtitle2 text-weight-bold q-mb-md">Equivalentes en otras monedas:</div>
+            <div v-for="(monto, moneda) in totalesEnMonedas" :key="moneda" class="text-right q-mb-sm">
+              <strong>Total en {{ moneda }}:</strong> ${{ monto.toFixed(2) }}
+            </div>
           </div>
 
           <!-- Formulario de datos -->
@@ -146,14 +157,12 @@
               v-model="form.mensajeriaId"
               outlined
               dense
-              label="Mensajería *"
+              label="Mensajería"
               emit-value
               map-options
               option-label="textoMensajeriaPrecio"
               option-value="id"
               :options="filtradoMensajeria"
-              lazy-rules
-              :rules="[(val) => (val !== null && val !== '') || 'Debe seleccionar un elemento']"
             >
               <template v-slot:append v-if="form.mensajeriaId">
                 <q-icon name="close" class="cursor-pointer" @click.stop="form.mensajeriaId = ''">
@@ -202,10 +211,171 @@ const itemsGestor = ref([])
 const filtradoGestor = ref([])
 const itemsMensajeria = ref([])
 const filtradoMensajeria = ref([])
+const monedas = ref([]) // Lista de monedas del sistema
 
 const descuento = ref(0)
 const mensajeCupon = ref('')
 const estadoCupon = ref('success')
+
+// Mapeo de monedas: monedaId -> moneda objeto
+const monedaMap = computed(() => {
+  const map = {}
+  monedas.value.forEach(m => {
+    map[m.id] = m
+  })
+  return map
+})
+
+// Obtener código de moneda para un item del carrito
+function getItemMonedaCodigo(item) {
+  if (!item.raw) return 'USD'
+  const monedaId = item.raw.monedaVentaId
+  const moneda = monedaMap.value[monedaId]
+  return moneda ? `(${moneda.codigo})` : '(USD)'
+}
+
+
+// Obtener moneda del gestor
+const monedaGestor = computed(() => {
+  if (!form.value.gestorId) return '(USD)'
+  const gestor = itemsGestor.value.find(g => g.id === form.value.gestorId)
+  const monedaId = gestor?.monedaId
+  const moneda = monedaMap.value[monedaId]
+  return moneda ? `(${moneda.codigo})` : '(USD)'
+})
+
+// Obtener moneda de la mensajería
+const monedaMensajeria = computed(() => {
+  if (!form.value.mensajeriaId) return '(USD)'
+  const mensajeria = itemsMensajeria.value.find(m => m.id === form.value.mensajeriaId)
+  const monedaId = mensajeria?.monedaId
+  const moneda = monedaMap.value[monedaId]
+  return moneda ? `(${moneda.codigo})` : '(USD)'
+})
+
+// Obtener moneda del descuento (misma que el carrito, generalmente)
+const monedaDescuento = computed(() => mostrarMonedas.value)
+
+// Obtener todas las monedas usadas
+function obtenerMonedasUsadas() {
+  const monedasSet = new Set()
+
+  // Monedas de productos
+  items.forEach(item => {
+    const monedaId = item.raw?.monedaVentaId
+    if (monedaId) monedasSet.add(monedaId)
+  })
+
+
+
+  // Moneda de la mensajería
+  if (form.value.mensajeriaId) {
+    const mensajeria = itemsMensajeria.value.find(m => m.id === form.value.mensajeriaId)
+    if (mensajeria?.monedaId) monedasSet.add(mensajeria.monedaId)
+  }
+
+  return Array.from(monedasSet)
+}
+
+// Detectar si hay múltiples monedas
+const tieneMúltiplesMonedas = computed(() => {
+  return obtenerMonedasUsadas().length > 1
+})
+
+// Mostrar código de moneda principal
+const monedaPrincipal = computed(() => {
+  const monedasUsadas = obtenerMonedasUsadas()
+  if (monedasUsadas.length === 0) return '(USD)'
+
+  // Usar la primera moneda encontrada
+  const moneda = monedaMap.value[monedasUsadas[0]]
+  return moneda ? `(${moneda.codigo})` : '(USD)'
+})
+
+// Mostrar códigos de monedas para el carrito
+const mostrarMonedas = computed(() => {
+  const monedasSet = new Set()
+  items.forEach(item => {
+    const monedaId = item.raw?.monedaVentaId
+    const moneda = monedaMap.value[monedaId]
+    if (moneda) monedasSet.add(moneda.codigo)
+  })
+
+  if (monedasSet.size === 0) return '(USD)'
+  if (monedasSet.size === 1) return `(${Array.from(monedasSet)[0]})`
+  return `(${Array.from(monedasSet).join(', ')})`
+})
+
+// Calcular totales en cada moneda
+const totalesEnMonedas = computed(() => {
+  const totales = {}
+
+  const monedasUsadas = obtenerMonedasUsadas()
+  if (monedasUsadas.length <= 1) return totales
+
+  // Encontrar la moneda base (primera con tasa de cambio)
+  const monedaBase = monedaMap.value[monedasUsadas[0]]
+  if (!monedaBase) return totales
+
+  // Calcular el monto total en la moneda base
+  let totalEnBase = 0
+
+  // Sumar productos
+  items.forEach(item => {
+    const monedaItem = monedaMap.value[item.raw?.monedaVentaId]
+    const monto = item.precioVenta * item.cantidad
+
+    if (monedaItem && monedaItem.id !== monedaBase.id) {
+      // Convertir a moneda base: (monto en monedaItem * tasaBase) / tasaItem
+      const tasaItem = monedaItem.tasaCambio || 1
+      const tasaBase = monedaBase.tasaCambio || 1
+      totalEnBase += (monto * tasaBase) / tasaItem
+    } else {
+      totalEnBase += monto
+    }
+  })  // Sumar gestor
+  if (gestorPrecio.value > 0) {
+    const gestor = itemsGestor.value.find(g => g.id === form.value.gestorId)
+    const monedaGestorObj = monedaMap.value[gestor?.monedaId]
+
+    if (monedaGestorObj && monedaGestorObj.id !== monedaBase.id) {
+      const tasaGestor = monedaGestorObj.tasaCambio || 1
+      const tasaBase = monedaBase.tasaCambio || 1
+      totalEnBase += (gestorPrecio.value * tasaBase) / tasaGestor
+    } else {
+      totalEnBase += gestorPrecio.value
+    }
+  }
+
+  // Sumar mensajería
+  if (mensajeriaPrecio.value > 0) {
+    const mensajeria = itemsMensajeria.value.find(m => m.id === form.value.mensajeriaId)
+    const monedaMensajeriaObj = monedaMap.value[mensajeria?.monedaId]
+
+    if (monedaMensajeriaObj && monedaMensajeriaObj.id !== monedaBase.id) {
+      const tasaMensajeria = monedaMensajeriaObj.tasaCambio || 1
+      const tasaBase = monedaBase.tasaCambio || 1
+      totalEnBase += (mensajeriaPrecio.value * tasaBase) / tasaMensajeria
+    } else {
+      totalEnBase += mensajeriaPrecio.value
+    }
+  }
+
+  // Restar descuento (en moneda base)
+  totalEnBase -= descuento.value
+
+  // Convertir a cada moneda
+  monedasUsadas.forEach(monedaId => {
+    const moneda = monedaMap.value[monedaId]
+    if (moneda) {
+      const tasaDestino = moneda.tasaCambio || 1
+      const tasaBase = monedaBase.tasaCambio || 1
+      totales[moneda.codigo] = (totalEnBase * tasaDestino) / tasaBase
+    }
+  })
+
+  return totales
+})
 
 // precios extras
 const gestorPrecio = computed(() => {
@@ -217,10 +387,81 @@ const mensajeriaPrecio = computed(() => {
   return m?.precio || 0
 })
 
-// total con extras y descuento
+// Calcular totalPrice convertido considerando monedas
+const totalPriceConvertido = computed(() => {
+  if (!tieneMúltiplesMonedas.value) return totalPrice.value
+
+  const monedasUsadas = obtenerMonedasUsadas()
+  const monedaBase = monedaMap.value[monedasUsadas[0]]
+  if (!monedaBase) return totalPrice.value
+
+  let total = 0
+  items.forEach(item => {
+    const monedaItem = monedaMap.value[item.raw?.monedaVentaId]
+    const monto = item.precioVenta * item.cantidad
+
+    if (monedaItem && monedaItem.id !== monedaBase.id) {
+      const tasaItem = monedaItem.tasaCambio || 1
+      const tasaBase = monedaBase.tasaCambio || 1
+      total += (monto * tasaBase) / tasaItem
+    } else {
+      total += monto
+    }
+  })
+  return total
+})
+
+// Calcular gestorPrecio convertido considerando monedas
+const gestorPrecioConvertido = computed(() => {
+  if (!tieneMúltiplesMonedas.value || gestorPrecio.value <= 0) return gestorPrecio.value
+
+  const monedasUsadas = obtenerMonedasUsadas()
+  const monedaBase = monedaMap.value[monedasUsadas[0]]
+  if (!monedaBase) return gestorPrecio.value
+
+  const gestor = itemsGestor.value.find(g => g.id === form.value.gestorId)
+  const monedaGestorObj = monedaMap.value[gestor?.monedaId]
+
+  if (monedaGestorObj && monedaGestorObj.id !== monedaBase.id) {
+    const tasaGestor = monedaGestorObj.tasaCambio || 1
+    const tasaBase = monedaBase.tasaCambio || 1
+    return (gestorPrecio.value * tasaBase) / tasaGestor
+  }
+  return gestorPrecio.value
+})
+
+// Calcular mensajeriaPrecio convertido considerando monedas
+const mensajeriaPrecioConvertido = computed(() => {
+  if (!tieneMúltiplesMonedas.value || mensajeriaPrecio.value <= 0) return mensajeriaPrecio.value
+
+  const monedasUsadas = obtenerMonedasUsadas()
+  const monedaBase = monedaMap.value[monedasUsadas[0]]
+  if (!monedaBase) return mensajeriaPrecio.value
+
+  const mensajeria = itemsMensajeria.value.find(m => m.id === form.value.mensajeriaId)
+  const monedaMensajeriaObj = monedaMap.value[mensajeria?.monedaId]
+
+  if (monedaMensajeriaObj && monedaMensajeriaObj.id !== monedaBase.id) {
+    const tasaMensajeria = monedaMensajeriaObj.tasaCambio || 1
+    const tasaBase = monedaBase.tasaCambio || 1
+    return (mensajeriaPrecio.value * tasaBase) / tasaMensajeria
+  }
+  return mensajeriaPrecio.value
+})
+
+// total con extras y descuento (usando valores convertidos)
 const totalConExtras = computed(() => {
-  let base = totalPrice.value + gestorPrecio.value + mensajeriaPrecio.value
-  return base - descuento.value
+  return  totalPriceConvertido.value - descuento.value  + gestorPrecioConvertido.value + mensajeriaPrecioConvertido.value
+})
+
+// Calcular subtotal (suma de precios convertidos antes de descuento)
+const subtotalConvertido = computed(() => {
+  return totalPriceConvertido.value + gestorPrecioConvertido.value + mensajeriaPrecioConvertido.value
+})
+
+// Mostrar subtotal solo si difiere del total final
+const mostrarSubtotal = computed(() => {
+  return Math.abs(subtotalConvertido.value - totalConExtras.value) > 0.01
 })
 
 // formulario
@@ -261,7 +502,7 @@ function goToRegister() {
 
 async function confirmOrder() {
   // Validación básica
-  if (!form.value.nombre || !form.value.telefono || !form.value.mensajeriaId) {
+  if (!form.value.nombre || !form.value.telefono) {
     alert('Por favor completa los campos obligatorios.')
     return
   }
@@ -298,7 +539,7 @@ const payload = JSON.parse(
     gestorId:form.value.gestorId!==''?form.value.gestorId:null,
     impuestoGestor:form.value.impuestos,
     direccion:form.value.direccion,
-    mensajeriaId:form.value.mensajeriaId,
+    mensajeriaId: form.value.mensajeriaId !== '' ? form.value.mensajeriaId : null,
     cuponId:cuponId.value,
   }
 
@@ -328,6 +569,7 @@ onMounted(async () => {
   dialogLoad.value = true
   itemsGestor.value = await loadGet('Gestor/ObtenerListadoPaginado') ?? []
   itemsMensajeria.value = await loadGet('Mensajeria/ObtenerListadoPaginado') ?? []
+  monedas.value = await loadGet('Moneda/ObtenerListadoPaginado') ?? []
   filtradoGestor.value = itemsGestor.value
   filtradoMensajeria.value = itemsMensajeria.value
   dialogLoad.value = false
@@ -346,7 +588,30 @@ async function aplicarCupon() {
 
     if (respuesta && respuesta.resultado) {
       const cupon = respuesta.resultado // objeto CuponEspecificoDto
-      cuponId.value=cupon.id
+
+      // Verificar si el cupón está dentro del rango de fechas
+      const hoy = new Date()
+      const fechaInicio = new Date(cupon.fechaInicio)
+      const fechaFin = new Date(cupon.fechaFin)
+
+      if (hoy < fechaInicio || hoy > fechaFin) {
+        descuento.value = 0
+        mensajeCupon.value = 'El cupón ha expirado o aún no está válido'
+        estadoCupon.value = 'error'
+        dialogLoad.value = false
+        return
+      }
+
+      // Verificar si alcanzó el límite de usos
+      if (cupon.usosActuales >= cupon.maximoUsos) {
+        descuento.value = 0
+        mensajeCupon.value = 'El cupón ha alcanzado su límite máximo de usos'
+        estadoCupon.value = 'error'
+        dialogLoad.value = false
+        return
+      }
+
+      cuponId.value = cupon.id
       if (cupon.esMontoFijo) {
         // descuento fijo en dinero
         descuento.value = cupon.valor
@@ -357,6 +622,9 @@ async function aplicarCupon() {
         mensajeCupon.value = `Cupón aplicado: ${cupon.valor}% de descuento`
       }
       estadoCupon.value = 'success'
+
+      // Incrementar usos actuales del cupón
+      await incrementarUsosCupon(cupon.id)
     } else {
       descuento.value = 0
       mensajeCupon.value = 'Cupón inválido o no encontrado'
@@ -369,6 +637,15 @@ async function aplicarCupon() {
     estadoCupon.value = 'error'
   } finally {
     dialogLoad.value = false
+  }
+}
+
+async function incrementarUsosCupon(cuponId) {
+  try {
+    const ruta = `Cupon/IncrementarUsos/${cuponId}`
+    await saveDataPronosticoEnviarObjeto(ruta, {}, dialogLoad)
+  } catch (err) {
+    console.error('Error al incrementar usos del cupón:', err)
   }
 }
 

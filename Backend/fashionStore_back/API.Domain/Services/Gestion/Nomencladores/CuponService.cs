@@ -7,12 +7,10 @@ using API.Domain.Validators.Gestion.Nomencladores;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace API.Domain.Services.Gestion.Nomencladores
 {
     public class CuponService : BasicService<Cupon, CuponValidator>, ICuponService
     {
-
         public CuponService(IUnitOfWork<Cupon> repositorios, IHttpContextAccessor httpContext) : base(repositorios, httpContext)
         {
         }
@@ -26,7 +24,6 @@ namespace API.Domain.Services.Gestion.Nomencladores
                         .FirstOrDefaultAsync(p => p.Id == pedidoId)
                          ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Pedido no encontrado." };
 
-
             var cupon = await _repositorios.Cupones
                         .GetQuery()
                         .FirstOrDefaultAsync(c => c.Id == cuponId && c.EsActivo)
@@ -37,7 +34,6 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
             if (cupon.MaximoUsos > 0 && cupon.UsosActuales >= cupon.MaximoUsos)
                 throw new CustomException() { Status = StatusCodes.Status400BadRequest, Message = "Cupón agotado." };
-
 
             if (cupon.MontoMinimoPedido.HasValue && pedido.Total < cupon.MontoMinimoPedido.Value)
                 throw new CustomException() { Status = StatusCodes.Status400BadRequest, Message = "El pedido no cumple el mínimo para aplicar el cupón." };
@@ -83,15 +79,23 @@ namespace API.Domain.Services.Gestion.Nomencladores
                                 Id = cupon.Id,
                                 EsMontoFijo = false,
                                 Valor = cupon.Porcentaje.Value,
+                                UsosActuales = cupon.UsosActuales,
+                                MaximoUsos = cupon.MaximoUsos,
+                                FechaInicio = cupon.FechaInicio,
+                                FechaFin = cupon.FechaFin
                             };
                         }
                         else if (cupon.MontoFijo.HasValue && cupon.MontoFijo.Value > 0)
                         {
                             return new CuponEspecificoDto()
                             {
-                                Id=cupon.Id,
+                                Id = cupon.Id,
                                 EsMontoFijo = true,
                                 Valor = cupon.MontoFijo.Value,
+                                UsosActuales = cupon.UsosActuales,
+                                MaximoUsos = cupon.MaximoUsos,
+                                FechaInicio = cupon.FechaInicio,
+                                FechaFin = cupon.FechaFin
                             };
                         }
                         else throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Cupón no disponible." };
@@ -101,6 +105,18 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 else throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Cupón no disponible." };
             }
             else throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Cupón no disponible." };
+        }
+
+        public async Task IncrementarUsos(Guid cuponId)
+        {
+            var cupon = await _repositorios.Cupones
+                            .GetQuery()
+                            .FirstOrDefaultAsync(c => c.Id == cuponId)
+                            ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Cupón no encontrado" };
+
+            cupon.UsosActuales += 1;
+            _repositorios.Cupones.Update(cupon);
+            await _repositorios.SaveChangesAsync();
         }
     }
 }

@@ -105,7 +105,14 @@
           >
             <q-icon name="add_shopping_cart" /> Añadir al carrito
           </q-btn>
-          <q-btn flat color="secondary">Comprar ahora</q-btn>
+          <q-btn
+            flat
+            color="secondary"
+            @click="comprarAhora"
+            :disable="cantidad < 1 || getMaxDisponible() <= 0 || cantidad > getMaxDisponible()"
+          >
+            Comprar ahora
+          </q-btn>
         </div>
 
         <!-- Detalles con color visual -->
@@ -178,6 +185,8 @@
 
     <DialogLoad :dialogLoad="dialogLoad" />
   </div>
+
+  <ConfirmarPedido ref="confirmarPedido" />
 </template>
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
@@ -188,6 +197,7 @@ import { apiFotosBaseUrl } from 'src/boot/axios'
 import useCart from 'src/stores/cartStore'
 import { useWishlist } from 'src/stores/wishlistStore'
 import TopBar from './components/TopBar.vue'
+import ConfirmarPedido from './components/ConfirmarPedido.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -202,6 +212,7 @@ const wishlist = useWishlist()
 const cart = useCart()
 const selectedVariantIndex = ref(null)
 const cartRefresh = ref(0)
+const confirmarPedido = ref(null)
 
 // Watch profundo del carrito para detectar cualquier cambio
 watch(
@@ -551,6 +562,13 @@ function onAddToCart() {
 
   console.log('[ProductoDetalle] Agregando al carrito:', { cantidad: cantidad.value, productId: payload.id })
   cart.addItem(payload, cantidad.value)
+}
+
+function comprarAhora() {
+  // Solo abrir el diálogo de confirmación sin agregar al carrito
+  if (confirmarPedido.value) {
+    confirmarPedido.value.openDialog()
+  }
 }
 
 function goToRelated(p) {
