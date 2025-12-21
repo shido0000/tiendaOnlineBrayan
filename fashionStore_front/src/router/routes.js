@@ -15,7 +15,7 @@ const routes = [
         component: () => import('src/IndexPage.vue')
     },
     {
-        path: '/categoria/:id',
+        path: '/categorias/:id',
         name: 'CategoriaProductos',
         component: () => import('src/pages/Visual/CategoriaProductosPage.vue')
     },
@@ -33,6 +33,11 @@ const routes = [
         path: '/productos',
         name: 'Productos',
         component: () => import('src/pages/Visual/ProductosPage.vue')
+    },
+    {
+        path: '/categorias',
+        name: 'Categorias',
+        component: () => import('src/pages/Visual/CategoriasPage.vue')
     },
     {
         path: '/carrito',

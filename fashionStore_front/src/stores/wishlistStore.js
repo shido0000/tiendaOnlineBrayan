@@ -1,5 +1,6 @@
 import { Success } from 'src/boot/notify'
 import { reactive, computed, watch } from 'vue'
+import { getFotoFromVarianteWithFallback } from 'src/assets/js/util/funciones'
 
 const STORAGE_KEY = 'fashion_wishlist_v1'
 
@@ -32,11 +33,68 @@ function add(product) {
     if (!id) return
     const idx = findIndexById(id)
     if (idx !== -1) return // already in wishlist
+
+    // Obtener foto desde múltiples fuentes posibles (misma lógica que cartStore)
+    let foto = null
+
+    // Prioridad 1: Foto de la variante seleccionada
+    if (product.selectedVariant?.fotos?.[0]) {
+        const fotoVariante = product.selectedVariant.fotos[0]
+        foto = typeof fotoVariante === 'object' ? (fotoVariante.url || fotoVariante.imagen || fotoVariante.path) : fotoVariante
+    }
+
+    // Prioridad 2: Fotos del producto principal
+    if (!foto && Array.isArray(product.fotos) && product.fotos.length > 0) {
+        const fotoPrincipal = product.fotos[0]
+        if (typeof fotoPrincipal === 'object') {
+            foto = fotoPrincipal.url || fotoPrincipal.imagen || fotoPrincipal.path || fotoPrincipal
+        } else {
+            foto = fotoPrincipal
+        }
+    }
+
+    // Prioridad 3: Fotos de la primera variante (si existe) - con herencia
+    if (!foto && Array.isArray(product.variants) && product.variants.length > 0) {
+        const primerVariante = product.variants[0]
+        // Intentar obtener foto directa de la variante
+        if (Array.isArray(primerVariante.fotos) && primerVariante.fotos.length > 0) {
+            const fotoVar = primerVariante.fotos[0]
+            foto = typeof fotoVar === 'object' ? (fotoVar.url || fotoVar.imagen || fotoVar.path) : fotoVar
+        } else {
+            // Si la variante no tiene foto, buscar en variantes hermanas
+            const fotoHeredada = getFotoFromVarianteWithFallback(primerVariante, product)
+            if (fotoHeredada) {
+                foto = typeof fotoHeredada === 'object' ? (fotoHeredada.url || fotoHeredada.imagen || fotoHeredada.path) : fotoHeredada
+            }
+        }
+    }
+
+    // Prioridad 4: Fotos de productosVariantes (estructura del API)
+    if (!foto && Array.isArray(product.productosVariantes) && product.productosVariantes.length > 0) {
+        const primerVariante = product.productosVariantes[0]
+        // Intentar obtener foto directa de la variante
+        if (Array.isArray(primerVariante.fotos) && primerVariante.fotos.length > 0) {
+            const fotoVar = primerVariante.fotos[0]
+            foto = typeof fotoVar === 'object' ? (fotoVar.url || fotoVar.imagen || fotoVar.path) : fotoVar
+        } else {
+            // Si la variante no tiene foto, buscar en variantes hermanas
+            const fotoHeredada = getFotoFromVarianteWithFallback(primerVariante, product)
+            if (fotoHeredada) {
+                foto = typeof fotoHeredada === 'object' ? (fotoHeredada.url || fotoHeredada.imagen || fotoHeredada.path) : fotoHeredada
+            }
+        }
+    }
+
+    // Prioridad 5: Propiedades directas de foto
+    if (!foto && (product.imagen || product.fotoUrl)) {
+        foto = product.imagen || product.fotoUrl
+    }
+
     const toAdd = {
         id,
         nombre: product.nombre || product.descripcion || '',
         precioVenta: product.precioVenta ?? product.precio ?? 0,
-        foto: (product.fotos && product.fotos[0]) || product.imagen || product.fotoUrl || null,
+        foto: foto,
         raw: product
     }
     state.items.push(toAdd)
@@ -46,7 +104,7 @@ function add(product) {
 function remove(id) {
     const idx = findIndexById(id)
     if (idx !== -1) state.items.splice(idx, 1)
-        Success("Producto eliminado a la lista de deseos")
+    Success("Producto eliminado a la lista de deseos")
 }
 
 function toggle(product) {

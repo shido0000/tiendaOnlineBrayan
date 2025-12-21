@@ -77,8 +77,8 @@
                 <div class="text-subtitle1 text-weight-bold">$ {{ formatPrice(p.precioVenta) }}</div>
               </q-card-section>
               <q-card-actions align="right">
-                <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" @click.stop="() => wishlist.toggle(p)" />
-                <q-btn dense round flat icon="add_shopping_cart" color="primary" @click.stop="() => cart.addItem(p,1)" />
+                <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" @click.stop="() => wishlist.toggle(normalizarProductoParaCarrito(p, getProductoImagePreferVariant(p) || getProductoImage(p)))" />
+                <q-btn dense round flat icon="add_shopping_cart" color="primary" @click.stop="() => cart.addItem(normalizarProductoParaCarrito(p, getProductoImagePreferVariant(p) || getProductoImage(p)),1)" />
               </q-card-actions>
             </q-card>
           </div>
@@ -99,7 +99,7 @@ import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import TopBar from 'src/pages/Visual/components/TopBar.vue'
 import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
-import { loadGetHastaData, loadGetDatosInicio, loadGet } from 'src/assets/js/util/funciones'
+import { loadGetHastaData, loadGetDatosInicio, loadGet, getFotoFromVarianteWithFallback } from 'src/assets/js/util/funciones'
 import { apiFotosBaseUrl } from 'src/boot/axios'
 import { useWishlist } from 'src/stores/wishlistStore'
 import useCart from 'src/stores/cartStore'
@@ -421,15 +421,33 @@ async function loadProducts(reset = false) {
             if (debugImg) console.log('[ProductosPage] preloading image for product', prodId)
             const detailed = await loadGetHastaData(`Producto/ObtenerProductoEspecifico/${prodId}`)
             if (debugImg) console.log('[ProductosPage] got detailed product for', prodId, ':', detailed)
-            if (detailed && detailed.productoVariantes && detailed.productoVariantes.length) {
+            // Fusionar variantes del producto detallado al producto del listado
+            if (detailed && detailed.productosVariantes) {
+              p.productosVariantes = detailed.productosVariantes
+              if (debugImg) console.log('[ProductosPage] merged productosVariantes:', p.productosVariantes.length, 'variants')
+            }
+                        if (detailed && detailed.productoVariantes && detailed.productoVariantes.length) {
               const pv = detailed.productoVariantes[0]
+              let fotoUrl = null
+
+              // Prioridad 1: Foto directa de la variante
               if (pv && Array.isArray(pv.fotos) && pv.fotos.length) {
                 const f0 = pv.fotos[0]
-                const fotoUrl = (typeof f0 === 'object') ? (f0.url || f0.img || f0.path) : f0
-                if (fotoUrl) {
-                  p.__preloadedFoto = fotoUrl
-                  if (debugImg) console.log('[ProductosPage] preloaded foto for', prodId, ':', fotoUrl)
+                fotoUrl = (typeof f0 === 'object') ? (f0.url || f0.img || f0.path) : f0
+              }
+
+              // Prioridad 2: Buscar herencia en otras variantes
+              if (!fotoUrl) {
+                const fotoHeredada = getFotoFromVarianteWithFallback(pv, detailed)
+                if (fotoHeredada) {
+                  fotoUrl = typeof fotoHeredada === 'object' ? (fotoHeredada.url || fotoHeredada.img || fotoHeredada.path) : fotoHeredada
+                  if (debugImg) console.log('[ProductosPage] using inherited foto for', prodId)
                 }
+              }
+
+              if (fotoUrl) {
+                p.__preloadedFoto = fotoUrl
+                if (debugImg) console.log('[ProductosPage] preloaded foto for', prodId, ':', fotoUrl)
               }
             }
           } catch (e) {
@@ -439,7 +457,11 @@ async function loadProducts(reset = false) {
       }
     }))
 
-    productos.value = productos.value.concat(pageItems.map(p => ({ ...p })))
+    if (reset) {
+      productos.value = pageItems.map(p => ({ ...p }))
+    } else {
+      productos.value = productos.value.concat(pageItems.map(p => ({ ...p })))
+    }
     if (debugImg) console.log('[ProductosPage] loaded items count:', productos.value.length, productos.value[0])
   } catch (e) {
     console.warn('[ProductosPage] loadProducts error', e)
@@ -481,6 +503,89 @@ function goToProduct(productOrId) {
   if (typeof productOrId === 'object') id = productOrId.id || productOrId.productoId || productOrId.productId || productOrId._id || null
   if (!id) return
   router.push({ name: 'ProductoDetalle', params: { id: String(id) } }).catch(() => router.push('/producto/' + id))
+}
+
+// Normalizar producto antes de agregarlo al carrito
+function normalizarProductoParaCarrito(producto, fotoPreferida = null) {
+  if (!producto) return producto
+
+  // Normalizar variantes exactamente como en ProductoDetallePage
+  const variants = (producto.productoVariantes || producto.variants || []).map(v => ({
+    id: v.id,
+    productoId: v.productoId,
+    talla: v.talla,
+    color: v.color,
+    stock: v.stock,
+    principal: v.principal,
+    otrasVariantesIds: v.otrasVariantesIds || [],
+    // Mapear fotos con la estructura correcta
+    fotos: (v.fotos || []).map(f => {
+      if (typeof f === 'string') {
+        // Si es string, asumimos que es una URL
+        return { id: null, url: f, descripcion: '', esPrincipal: false, orden: 0 }
+      } else {
+        // Si es objeto, mapear con los campos disponibles
+        return {
+          id: f.id || null,
+          url: f.url || f.imagen || f.path || '',
+          descripcion: f.descripcion || '',
+          esPrincipal: f.esPrincipal || false,
+          orden: f.orden || 0
+        }
+      }
+    }),
+    slide: 1 // índice inicial del carrusel de esta variante
+  }))
+
+  // Obtener ID de variante (usar la primera por defecto, preferentemente la principal)
+  const varianteId = variants.find(v => v.principal === true || v.principal === 'true')?.id ||
+                     (variants.length > 0 ? variants[0].id : null)
+
+  // Mapear fotos del producto principal con la estructura correcta
+  let fotos = (producto.fotos || []).map(f => {
+    if (typeof f === 'string') {
+      return { id: null, url: f, descripcion: '', esPrincipal: false, orden: 0 }
+    } else {
+      return {
+        id: f.id || null,
+        url: f.url || f.imagen || f.path || '',
+        descripcion: f.descripcion || '',
+        esPrincipal: f.esPrincipal || false,
+        orden: f.orden || 0
+      }
+    }
+  })
+
+  // Si se proporcionó una fotoPreferida y no hay fotos, agregarla al principio
+  if (fotoPreferida && fotos.length === 0) {
+    fotos.unshift({
+      id: null,
+      url: fotoPreferida,
+      descripcion: '',
+      esPrincipal: true,
+      orden: 0
+    })
+  }
+
+  // Estructura normalizada idéntica a ProductoDetallePage
+  const normalizado = {
+    id: producto.id,
+    codigo: producto.codigo,
+    descripcion: producto.descripcion || producto.nombre,
+    esActivo: producto.esActivo,
+    sku: producto.sku,
+    precioCosto: producto.precioCosto,
+    precioVenta: producto.precioVenta || producto.precio,
+    monedaCostoId: producto.monedaCostoId,
+    monedaVentaId: producto.monedaVentaId,
+    categoriasIds: producto.categoriasIds || [],
+    categoriasDescripcion: producto.categoriasDescripcion,
+    varianteId: varianteId, // ID consistente para identificar en carrito
+    fotos: fotos,
+    variants: variants
+  }
+
+  return normalizado
 }
 
 function formatPrice(v) {
@@ -570,6 +675,11 @@ function getProductoImage(prod) {
             if (nested) candidate = nested
           }
         }
+        // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+        if ((!candidate || candidate === '') && Array.isArray(vars)) {
+          const fotoHeredada = getFotoFromVarianteWithFallback(firstVar, prod)
+          if (fotoHeredada) candidate = fotoHeredada
+        }
       }
     }
   }
@@ -583,6 +693,11 @@ function getProductoImage(prod) {
         const f0 = pv.fotos[0]
         if (typeof f0 === 'string' && f0.trim() !== '') candidate = f0
         else if (f0 && typeof f0 === 'object') candidate = f0.url || f0.img || f0.path || candidate
+      }
+      // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+      if ((!candidate || candidate === '') && Array.isArray(prod.productosVariantes)) {
+        const fotoHeredada = getFotoFromVarianteWithFallback(pv, prod)
+        if (fotoHeredada) candidate = fotoHeredada
       }
       // also check common fields on the variante object
       if ((!candidate || candidate === '') && typeof pv === 'object') {
@@ -642,6 +757,9 @@ function getProductoImagePreferVariant(prod) {
         const f0 = v0.fotos[0]
         return (typeof f0 === 'object') ? (f0.url || f0.img || f0.path) : f0
       }
+      // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+      const fotoHeredada = getFotoFromVarianteWithFallback(v0, prod)
+      if (fotoHeredada) return fotoHeredada
       return v0.fotoUrl || v0.foto || v0.imagen || v0.imagenUrl || v0.url || v0.image || v0.picture || null
     }
   }
@@ -655,6 +773,9 @@ function getProductoImagePreferVariant(prod) {
         const f0 = pv0.fotos[0]
         return (typeof f0 === 'object') ? (f0.url || f0.img || f0.path) : f0
       }
+      // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+      const fotoHeredada = getFotoFromVarianteWithFallback(pv0, prod)
+      if (fotoHeredada) return fotoHeredada
       return pv0.fotoUrl || pv0.foto || pv0.imagen || pv0.url || null
     }
   }

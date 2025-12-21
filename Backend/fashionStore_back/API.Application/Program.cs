@@ -17,7 +17,7 @@ builder.Services.AddSignalR();
 
 
 var app = builder.Build();
-// Habilitar wwwroot como carpeta pública
+// Habilitar wwwroot como carpeta pï¿½blica
 app.UseStaticFiles();
 
 // Startup.cs o Program.cs

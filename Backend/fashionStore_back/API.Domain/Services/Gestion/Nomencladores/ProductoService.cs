@@ -324,7 +324,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 SKU = producto.SKU,
                 PrecioCosto = producto.PrecioCosto,
                 PrecioVenta = producto.PrecioVenta,
-
+                
                 MonedaCostoId = producto.MonedaCostoId,
                 MonedaVentaId = producto.MonedaVentaId,
                 StockTotal = producto.StockTotal,

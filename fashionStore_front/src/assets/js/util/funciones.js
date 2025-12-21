@@ -1695,6 +1695,75 @@ const cerrarSesion = (endpoint, objeto) => {
         });
 };
 
+// Función para resolver foto de una variante, buscando en otras variantes si no tiene
+const getFotoFromVarianteWithFallback = (variante, producto) => {
+    if (!variante || !producto) {
+        console.warn('[getFotoFromVarianteWithFallback] Missing variante or producto', { variante, producto })
+        return null
+    }
+
+    console.log('[getFotoFromVarianteWithFallback] Buscando foto para variante:', {
+        varianteId: variante.id,
+        tieneFotos: Array.isArray(variante.fotos) && variante.fotos.length > 0,
+        fotosCount: Array.isArray(variante.fotos) ? variante.fotos.length : 0
+    })
+
+    // Primero intenta obtener la foto de la variante actual
+    if (Array.isArray(variante.fotos) && variante.fotos.length > 0) {
+        const foto = variante.fotos[0]
+        if (typeof foto === 'string' && foto.trim() !== '') {
+            console.log('[getFotoFromVarianteWithFallback] Foto encontrada en la variante:', foto)
+            return foto
+        }
+        if (typeof foto === 'object' && foto !== null) {
+            const url = foto.url || foto.img || foto.path || foto.imagen || null
+            if (url) {
+                console.log('[getFotoFromVarianteWithFallback] Foto objeto encontrada en la variante:', url)
+                return url
+            }
+        }
+    }
+
+    // Si la variante no tiene foto, busca en las otras variantes del mismo producto
+    console.log('[getFotoFromVarianteWithFallback] Variante sin foto, buscando en hermanas...')
+    console.log('[getFotoFromVarianteWithFallback] Producto completo keys:', Object.keys(producto))
+    console.log('[getFotoFromVarianteWithFallback] Producto.productosVariantes:', producto.productosVariantes)
+    console.log('[getFotoFromVarianteWithFallback] Producto.productoVariantes:', producto.productoVariantes)
+    const todasLasVariantes = producto.productoVariantes || producto.variants || producto.productosVariantes || []
+    console.log('[getFotoFromVarianteWithFallback] Total de variantes disponibles:', todasLasVariantes.length)
+
+    for (const v of todasLasVariantes) {
+        if (!v || v.id === variante.id) {
+            console.log('[getFotoFromVarianteWithFallback] Saltando variante (es la actual o null)')
+            continue
+        }
+
+        console.log('[getFotoFromVarianteWithFallback] Revisando variante hermana:', {
+            varianteId: v.id,
+            tieneFotos: Array.isArray(v.fotos) && v.fotos.length > 0,
+            fotosCount: Array.isArray(v.fotos) ? v.fotos.length : 0
+        })
+
+        if (Array.isArray(v.fotos) && v.fotos.length > 0) {
+            const foto = v.fotos[0]
+            if (typeof foto === 'string' && foto.trim() !== '') {
+                console.log('[getFotoFromVarianteWithFallback] ✅ Foto heredada (string):', foto)
+                return foto
+            }
+            if (typeof foto === 'object' && foto !== null) {
+                const url = foto.url || foto.img || foto.path || foto.imagen || null
+                if (url) {
+                    console.log('[getFotoFromVarianteWithFallback] ✅ Foto heredada (objeto):', url)
+                    return url
+                }
+            }
+        }
+    }
+
+    console.log('[getFotoFromVarianteWithFallback] ❌ No se encontró foto heredada')
+    return null
+}
+
 export {
     saveData,
     closeDialog,
@@ -1770,4 +1839,5 @@ export {
     obtenerHastaData,
     saveDataPerfil,
     CancelarPedido,
+    getFotoFromVarianteWithFallback,
 };

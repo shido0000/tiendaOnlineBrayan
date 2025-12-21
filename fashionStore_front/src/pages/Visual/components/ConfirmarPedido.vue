@@ -26,21 +26,24 @@
         <div v-else>
           <!-- Resumen del pedido -->
           <div class="text-subtitle1 q-mb-md">Resumen del pedido:</div>
-          <q-list bordered separator>
+          <q-list v-if="items.length > 0" bordered separator>
             <q-item v-for="it in items" :key="it.id">
               <q-item-section>
-                <q-item-label>{{ it.nombre }}</q-item-label>
+                <q-item-label>{{ it.nombre || it.descripcion || 'Sin nombre' }}</q-item-label>
                 <q-item-label caption>
-                  Cantidad: {{ it.cantidad }} · Precio: ${{ it.precioVenta.toFixed(2) }} {{ getItemMonedaCodigo(it) }}
+                  Cantidad: {{ $props.desdeElCarrito ? it.cantidad : props.cantidad || 0 }} · Precio: ${{ (it.precioVenta || 0).toFixed(2) }} {{ getItemMonedaCodigo(it) }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
                 <div class="text-weight-bold text-primary">
-                  ${{ (it.precioVenta * it.cantidad).toFixed(2) }} {{ getItemMonedaCodigo(it) }}
+                  ${{ ((it.precioVenta || 0) * ($props.desdeElCarrito ? it.cantidad : props.cantidad|| 0)).toFixed(2) }} {{ getItemMonedaCodigo(it) }}
                 </div>
               </q-item-section>
             </q-item>
           </q-list>
+          <div v-else class="text-center text-grey-6 q-pa-md">
+            Cargando productos...
+          </div>
 
           <!-- Campo de cupón -->
           <q-input
@@ -192,20 +195,107 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import useCart from 'src/stores/cartStore'
 import { loadGet, saveDataPronosticoEnviarObjeto } from 'src/assets/js/util/funciones'
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
 import { Error, Success } from 'src/assets/js/util/notify'
 
+const props = defineProps({
+  desdeElCarrito: Boolean,
+  productoItem: {
+    type: Object,
+    default: ref(null),
+    required:false
+  },
+  cantidad:Number,
+
+})
+
+
 const dialogLoad = ref(false)
 const router = useRouter()
 const cart = useCart()
 
+console.log("props.productoItem: ",props.productoItem)
 const showDialog = ref(false)
-const items = cart.items
-const totalPrice = cart.totalPrice
+
+// Items como ref para que se actualice con watch
+const items = ref([])
+
+// Función para actualizar items desde las props
+function actualizarItems() {
+  let sourceItems = []
+  if (props.desdeElCarrito) {
+    sourceItems = cart.items || []
+  } else {
+    // Cuando viene desde props.productoItem, normalizar la estructura
+    if (props.productoItem) {
+      let producto = props.productoItem
+      if (!Array.isArray(producto)) {
+        producto = [producto]
+      }
+
+      sourceItems = producto.map(p => {
+        // Obtener la variante si existe (para acceder a ID de variante)
+        let varianteId = p.id
+        let variantePrincipal = null
+
+        if (p.variants && Array.isArray(p.variants) && p.variants.length > 0) {
+          variantePrincipal = p.variants[0]
+          varianteId = variantePrincipal.id
+        } else if (p.selectedVariant) {
+          variantePrincipal = p.selectedVariant
+          varianteId = p.selectedVariant.id
+        }
+
+        return {
+          // Propiedades básicas del producto
+          id: p.id,
+          varianteId: varianteId, // ID de la variante para la orden
+          nombre: p.nombre || p.descripcion,
+          descripcion: p.descripcion,
+          cantidad: props.cantidad || 1,
+          precioVenta: p.precioVenta || p.precio || 0,
+          monedaVentaId: p.monedaVentaId,
+
+          // Propiedad raw simulada para compatibilidad con getMonedaVentaId
+          raw: {
+            monedaVentaId: p.monedaVentaId
+          },
+
+          // Propiedades adicionales que puedan venir del producto
+          codigo: p.codigo,
+          sku: p.sku,
+          stock: p.stock,
+          color: p.color,
+          talla: p.talla,
+          selectedVariant: p.selectedVariant,
+          variants: p.variants
+        }
+      })
+    }
+  }
+
+  // Filtrar null y items sin id
+  items.value = (sourceItems || []).filter(item => item && item.id)
+  console.log('Items actualizados:', items.value)
+}
+
+// Watch para detectar cambios en las props y el carrito
+watch(
+  [() => props.productoItem, () => props.desdeElCarrito, () => cart.items],
+  () => {
+    actualizarItems()
+  },
+  { deep: true }
+)
+
+// Inicializar items
+actualizarItems()
+
+const totalPrice = computed(() => props.desdeElCarrito ? cart.totalPrice :  props.cantidad*props.productoItem.precioVenta )
 
 const itemsGestor = ref([])
 const filtradoGestor = ref([])
@@ -226,20 +316,32 @@ const monedaMap = computed(() => {
   return map
 })
 
+// Helper para obtener monedaVentaId de un item (compatible con items del carrito y productos directos)
+function getMonedaVentaId(item) {
+  if (!item) return null
+  // Si viene del carrito, tendrá la propiedad raw
+  if (item.raw?.monedaVentaId) return item.raw.monedaVentaId
+  // Si viene directamente como props (producto), tendrá monedaVentaId directo
+  return item.monedaVentaId || null
+}
+
 // Obtener código de moneda para un item del carrito
 function getItemMonedaCodigo(item) {
-  if (!item.raw) return 'USD'
-  const monedaId = item.raw.monedaVentaId
+  if (!item) return 'USD'
+  const monedaId = getMonedaVentaId(item)
+  if (!monedaId) return 'USD'
   const moneda = monedaMap.value[monedaId]
   return moneda ? `(${moneda.codigo})` : '(USD)'
 }
 
 
-// Obtener moneda del gestor
+// Obtener moneda del gestor (siempre es la moneda base de la compra)
 const monedaGestor = computed(() => {
   if (!form.value.gestorId) return '(USD)'
-  const gestor = itemsGestor.value.find(g => g.id === form.value.gestorId)
-  const monedaId = gestor?.monedaId
+  // El gestor siempre usa la moneda de la compra (moneda base)
+  const monedasUsadas = obtenerMonedasUsadas()
+  if (monedasUsadas.length === 0) return '(USD)'
+  const monedaId = monedasUsadas[0]
   const moneda = monedaMap.value[monedaId]
   return moneda ? `(${moneda.codigo})` : '(USD)'
 })
@@ -261,12 +363,12 @@ function obtenerMonedasUsadas() {
   const monedasSet = new Set()
 
   // Monedas de productos
-  items.forEach(item => {
-    const monedaId = item.raw?.monedaVentaId
+  items.value.forEach(item => {
+    const monedaId = getMonedaVentaId(item)
     if (monedaId) monedasSet.add(monedaId)
   })
 
-
+  // Nota: El gestor NO tiene moneda, siempre usa la moneda de la compra (moneda base)
 
   // Moneda de la mensajería
   if (form.value.mensajeriaId) {
@@ -274,6 +376,7 @@ function obtenerMonedasUsadas() {
     if (mensajeria?.monedaId) monedasSet.add(mensajeria.monedaId)
   }
 
+  console.log('Monedas usadas:', Array.from(monedasSet))
   return Array.from(monedasSet)
 }
 
@@ -295,8 +398,8 @@ const monedaPrincipal = computed(() => {
 // Mostrar códigos de monedas para el carrito
 const mostrarMonedas = computed(() => {
   const monedasSet = new Set()
-  items.forEach(item => {
-    const monedaId = item.raw?.monedaVentaId
+  items.value.forEach(item => {
+    const monedaId = getMonedaVentaId(item)
     const moneda = monedaMap.value[monedaId]
     if (moneda) monedasSet.add(moneda.codigo)
   })
@@ -321,8 +424,9 @@ const totalesEnMonedas = computed(() => {
   let totalEnBase = 0
 
   // Sumar productos
-  items.forEach(item => {
-    const monedaItem = monedaMap.value[item.raw?.monedaVentaId]
+  items.value.forEach(item => {
+    const monedaId = getMonedaVentaId(item)
+    const monedaItem = monedaMap.value[monedaId]
     const monto = item.precioVenta * item.cantidad
 
     if (monedaItem && monedaItem.id !== monedaBase.id) {
@@ -333,18 +437,9 @@ const totalesEnMonedas = computed(() => {
     } else {
       totalEnBase += monto
     }
-  })  // Sumar gestor
+  })  // Sumar gestor (siempre en moneda base, sin conversión)
   if (gestorPrecio.value > 0) {
-    const gestor = itemsGestor.value.find(g => g.id === form.value.gestorId)
-    const monedaGestorObj = monedaMap.value[gestor?.monedaId]
-
-    if (monedaGestorObj && monedaGestorObj.id !== monedaBase.id) {
-      const tasaGestor = monedaGestorObj.tasaCambio || 1
-      const tasaBase = monedaBase.tasaCambio || 1
-      totalEnBase += (gestorPrecio.value * tasaBase) / tasaGestor
-    } else {
-      totalEnBase += gestorPrecio.value
-    }
+    totalEnBase += gestorPrecio.value
   }
 
   // Sumar mensajería
@@ -389,15 +484,16 @@ const mensajeriaPrecio = computed(() => {
 
 // Calcular totalPrice convertido considerando monedas
 const totalPriceConvertido = computed(() => {
-  if (!tieneMúltiplesMonedas.value) return totalPrice.value
-
   const monedasUsadas = obtenerMonedasUsadas()
+  if (monedasUsadas.length <= 1) return totalPrice.value
+
   const monedaBase = monedaMap.value[monedasUsadas[0]]
   if (!monedaBase) return totalPrice.value
 
   let total = 0
-  items.forEach(item => {
-    const monedaItem = monedaMap.value[item.raw?.monedaVentaId]
+  items.value.forEach(item => {
+    const monedaId = getMonedaVentaId(item)
+    const monedaItem = monedaMap.value[monedaId]
     const monto = item.precioVenta * item.cantidad
 
     if (monedaItem && monedaItem.id !== monedaBase.id) {
@@ -412,29 +508,18 @@ const totalPriceConvertido = computed(() => {
 })
 
 // Calcular gestorPrecio convertido considerando monedas
+// El gestor NO necesita conversión porque siempre está en la moneda base de la compra
 const gestorPrecioConvertido = computed(() => {
-  if (!tieneMúltiplesMonedas.value || gestorPrecio.value <= 0) return gestorPrecio.value
-
-  const monedasUsadas = obtenerMonedasUsadas()
-  const monedaBase = monedaMap.value[monedasUsadas[0]]
-  if (!monedaBase) return gestorPrecio.value
-
-  const gestor = itemsGestor.value.find(g => g.id === form.value.gestorId)
-  const monedaGestorObj = monedaMap.value[gestor?.monedaId]
-
-  if (monedaGestorObj && monedaGestorObj.id !== monedaBase.id) {
-    const tasaGestor = monedaGestorObj.tasaCambio || 1
-    const tasaBase = monedaBase.tasaCambio || 1
-    return (gestorPrecio.value * tasaBase) / tasaGestor
-  }
   return gestorPrecio.value
 })
 
 // Calcular mensajeriaPrecio convertido considerando monedas
 const mensajeriaPrecioConvertido = computed(() => {
-  if (!tieneMúltiplesMonedas.value || mensajeriaPrecio.value <= 0) return mensajeriaPrecio.value
+  if (mensajeriaPrecio.value <= 0) return mensajeriaPrecio.value
 
   const monedasUsadas = obtenerMonedasUsadas()
+  if (monedasUsadas.length <= 1) return mensajeriaPrecio.value
+
   const monedaBase = monedaMap.value[monedasUsadas[0]]
   if (!monedaBase) return mensajeriaPrecio.value
 
@@ -525,10 +610,13 @@ const payload = JSON.parse(
   }
   // Construir lista de productos para el DTO
   let productoLista = []
-  items.forEach(element => {
+  console.log('items.value: ',items.value)
+  items.value.forEach(element => {
+    // Usar varianteId si está disponible (cuando viene de props), si no usar el id del producto
+    let productoId = element.varianteId || element.id
     let nuevo = {
-      productoId: element.id,       // id del producto
-      cantidad: element.cantidad    // cantidad seleccionada
+      productoId: productoId,
+      cantidad: element.cantidad
     }
     productoLista.push(nuevo)
   })
@@ -555,12 +643,17 @@ const payload = JSON.parse(
       localStorage.removeItem('fashion_cart_v1')
 
       // 🔴 Si usas el store reactivo, también vacía el array
-      items.splice(0, items.length)
+      items.value.splice(0, items.value.length)
+       if(!props.desdeElCarrito){
+        router.push({ name: 'IndexPage' })
+    }
     }
   })
   console.log('Pedido confirmado:', pedido)
   showDialog.value = false
  // router.push({ name: 'CheckoutPage' }) // o la página de confirmación final
+
+
 }
 
 defineExpose({ openDialog })

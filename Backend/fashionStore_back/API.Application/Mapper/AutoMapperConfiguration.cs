@@ -37,6 +37,8 @@ namespace API.Application.Mapper
             cfg.AddProfile<MensajeriaDtoProfile>();
             cfg.AddProfile<GestorDtoProfile>();
             cfg.AddProfile<OtraVarianteDtoProfile>();
+            cfg.AddProfile<BannerPromocionProfile>();
+
 
             // CONTABILIDAD
             cfg.AddProfile<CuentaContableDtoProfile>();

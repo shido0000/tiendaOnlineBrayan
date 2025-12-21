@@ -84,6 +84,12 @@
               <div class="cat-label"><span class="cat-label-text">Categorías</span></div>
             </template>
             <q-list>
+              <q-item clickable v-close-popup @click="() => router.push({ name: 'Categorias' })">
+                <q-item-section>
+                  <q-item-label>Todos</q-item-label>
+                </q-item-section>
+              </q-item>
+
               <template v-if="normalizedCategories && normalizedCategories.length">
                 <q-item
                   v-for="(cat, index) in normalizedCategories"
@@ -162,7 +168,16 @@ function goHome() {
   router.push({ name: 'IndexPage' }).catch(() => router.push('/'))
 }
 function goLogin() {
-  router.push({ name: 'LoginPage' }).catch(() => router.push('/login'))
+  // Verificar si el usuario está logueado
+  const token = sessionStorage.getItem('token')
+
+  if (token) {
+    // Usuario logueado, ir al perfil
+    router.push({ name: 'Perfil' }).catch(() => router.push('/perfil'))
+  } else {
+    // Usuario no logueado, ir al login
+    router.push({ name: 'LoginPage' }).catch(() => router.push('/login'))
+  }
 }
 function goToCategory(id) {
   if (!id) return

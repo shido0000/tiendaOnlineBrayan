@@ -3,9 +3,26 @@
     <TopBar/>
 
     <div class="q-pa-lg bg-grey-1 carrito-page">
-      <div class="text-h5 text-weight-bold q-mb-lg text-primary">
-        Carrito de Compras
+      <div class="row items-center q-mb-lg">
+        <div class="col">
+          <div class="text-h5 text-weight-bold text-primary">
+             Carrito de Compras
+          </div>
+        </div>
+        <div class="col-auto">
+          <q-btn
+          dense
+          round
+            flat
+            color="negative"
+            @click="clearAll"
+            icon="delete"
+            v-if="items.length"
+          ><q-tooltip>Eliminar Productos</q-tooltip>
+        </q-btn>
+          </div>
       </div>
+
 
       <!-- Carrito vacío -->
       <div v-if="!items.length" class="q-pa-xl text-center text-grey-7">
@@ -21,7 +38,7 @@
               <!-- Imagen -->
               <div class="col-auto">
                 <q-img
-                  :src="getFotoUrl(it.foto || (it.raw && it.raw.fotos && it.raw.fotos[0]))"
+                  :src="obtenerFotoDelItem(it)"
                   class="carrito-img"
                 />
               </div>
@@ -89,20 +106,88 @@
     </div>
   </div>
 
-  <ConfirmarPedido ref="confirmarPedido" />
+  <ConfirmarPedido ref="confirmarPedido" :desdeElCarrito="true" :productoItem="null" :cantidad="0"/>
 </template>
 
 <script setup>
+import { Success } from 'src/boot/notify'
 import TopBar from './components/TopBar.vue'
 import useCart from 'src/stores/cartStore'
 import { apiFotosBaseUrl } from 'src/boot/axios'
 import ConfirmarPedido from './components/ConfirmarPedido.vue'
 import { ref } from 'vue'
+import { getFotoFromVarianteWithFallback } from 'src/assets/js/util/funciones'
 
 const cart = useCart()
 const items = cart.items
 const totalPrice = cart.totalPrice
 const confirmarPedido = ref(null)
+
+function obtenerFotoDelItem(item) {
+  // Prioridad 1: foto directo del item (guardada desde cartStore)
+  if (item.foto) {
+    return getFotoUrl(item.foto)
+  }
+
+  // Prioridad 2: primer foto del raw (producto completo)
+  if (item.raw) {
+    // Si tiene fotos como array de objetos (estructura ProductoDetallePage)
+    if (Array.isArray(item.raw.fotos) && item.raw.fotos.length > 0) {
+      const foto = item.raw.fotos[0]
+      if (typeof foto === 'object') {
+        return getFotoUrl(foto.url || foto.imagen || foto.path)
+      } else {
+        return getFotoUrl(foto)
+      }
+    }
+
+    // Si tiene fotoUrl directo
+    if (item.raw.fotoUrl) {
+      return getFotoUrl(item.raw.fotoUrl)
+    }
+
+    // Si tiene variants (variantes)
+    if (Array.isArray(item.raw.variants) && item.raw.variants.length > 0) {
+      const variant = item.raw.variants[0]
+      if (Array.isArray(variant.fotos) && variant.fotos.length > 0) {
+        const foto = variant.fotos[0]
+        if (typeof foto === 'object') {
+          return getFotoUrl(foto.url || foto.imagen || foto.path)
+        } else {
+          return getFotoUrl(foto)
+        }
+      }
+      // Si la variante no tiene foto, buscar en otras variantes del mismo producto
+      const fotoHeredada = getFotoFromVarianteWithFallback(variant, item.raw)
+      if (fotoHeredada) {
+        const heredada = typeof fotoHeredada === 'object' ? (fotoHeredada.url || fotoHeredada.imagen || fotoHeredada.path) : fotoHeredada
+        if (heredada) return getFotoUrl(heredada)
+      }
+    }
+
+    // Si tiene productoVariantes (estructura del API)
+    if (Array.isArray(item.raw.productoVariantes) && item.raw.productoVariantes.length > 0) {
+      const variant = item.raw.productoVariantes[0]
+      if (Array.isArray(variant.fotos) && variant.fotos.length > 0) {
+        const foto = variant.fotos[0]
+        if (typeof foto === 'object') {
+          return getFotoUrl(foto.url || foto.imagen || foto.path)
+        } else {
+          return getFotoUrl(foto)
+        }
+      }
+      // Si la variante no tiene foto, buscar en otras variantes del mismo producto
+      const fotoHeredada = getFotoFromVarianteWithFallback(variant, item.raw)
+      if (fotoHeredada) {
+        const heredada = typeof fotoHeredada === 'object' ? (fotoHeredada.url || fotoHeredada.imagen || fotoHeredada.path) : fotoHeredada
+        if (heredada) return getFotoUrl(heredada)
+      }
+    }
+  }
+
+  // Default
+  return '/img/sin-foto.jpg'
+}
 
 function getFotoUrl(foto) {
   if (!foto) return '/img/sin-foto.jpg'
@@ -114,6 +199,11 @@ function getFotoUrl(foto) {
   if (typeof candidate !== 'string') candidate = String(candidate)
   if (/^https?:\/\//.test(candidate)) return candidate
   return apiFotosBaseUrl + (candidate.startsWith('/') ? candidate : '/' + candidate)
+}
+
+function clearAll() {
+  cart.items.splice(0, cart.items.length)
+  Success("Carrito vaciado")
 }
 
 function getMaxStock(item) {

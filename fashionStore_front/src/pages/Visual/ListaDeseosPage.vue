@@ -39,7 +39,7 @@
             <!-- Imagen del producto -->
             <div class="col-auto">
               <q-img
-                :src="getFotoUrlFromFoto(p.foto || (p.raw && p.raw.fotos && p.raw.fotos[0]))"
+                :src="obtenerFotoDelItem(p)"
                 class="wishlist-img"
               >
                 <template v-slot:error>
@@ -105,6 +105,7 @@ import { useCart } from 'src/stores/cartStore'
 import { useRouter } from 'vue-router'
 import { apiFotosBaseUrl } from 'src/boot/axios'
 import { Success } from 'src/boot/notify'
+import { getFotoFromVarianteWithFallback } from 'src/assets/js/util/funciones'
 
 const wishlist = useWishlist()
 const cart = useCart()
@@ -133,7 +134,45 @@ function goToProduct(id) {
   )
 }
 
-function getFotoUrlFromFoto(foto) {
+function obtenerFotoDelItem(item) {
+  if (!item) return '/img/sin-foto.jpg'
+
+  // Nivel 1: Foto directa en el item
+  if (item.foto) {
+    return getFotoUrl(item.foto)
+  }
+
+  // Nivel 2: Array de fotos en item.raw.fotos
+  if (item.raw?.fotos && Array.isArray(item.raw.fotos) && item.raw.fotos.length > 0) {
+    return getFotoUrl(item.raw.fotos[0])
+  }
+
+  // Nivel 3: Variante seleccionada en item.raw.variants o variants
+  const variants = item.raw?.variants || item.variants
+  if (variants && Array.isArray(variants) && variants.length > 0) {
+    if (variants[0].fotos && Array.isArray(variants[0].fotos) && variants[0].fotos.length > 0) {
+      return getFotoUrl(variants[0].fotos[0])
+    }
+    // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+    const fotoHeredada = getFotoFromVarianteWithFallback(variants[0], item.raw)
+    if (fotoHeredada) return getFotoUrl(fotoHeredada)
+  }
+
+  // Nivel 4: productoVariantes de la API
+  const productoVariantes = item.raw?.productoVariantes
+  if (productoVariantes && Array.isArray(productoVariantes) && productoVariantes.length > 0) {
+    if (productoVariantes[0].fotos && Array.isArray(productoVariantes[0].fotos) && productoVariantes[0].fotos.length > 0) {
+      return getFotoUrl(productoVariantes[0].fotos[0])
+    }
+    // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+    const fotoHeredada = getFotoFromVarianteWithFallback(productoVariantes[0], item.raw)
+    if (fotoHeredada) return getFotoUrl(fotoHeredada)
+  }
+
+  return '/img/sin-foto.jpg'
+}
+
+function getFotoUrl(foto) {
   if (!foto) return '/img/sin-foto.jpg'
   let candidate = foto
   if (typeof foto === 'object') {
@@ -143,6 +182,10 @@ function getFotoUrlFromFoto(foto) {
   if (typeof candidate !== 'string') candidate = String(candidate)
   if (/^https?:\/\//.test(candidate)) return candidate
   return apiFotosBaseUrl + (candidate.startsWith('/') ? candidate : '/' + candidate)
+}
+
+function getFotoUrlFromFoto(foto) {
+  return getFotoUrl(foto)
 }
 
 function formatPrice(v) {

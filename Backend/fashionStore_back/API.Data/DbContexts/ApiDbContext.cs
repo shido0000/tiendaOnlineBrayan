@@ -50,6 +50,7 @@ namespace API.Data.DbContexts
         public DbSet<GestorPedido> GestorPedidos { get; set; }
         public DbSet<Mensajeria> Mensajerias { get; set; }
         public DbSet<OtraVarianteProductoVariante> OtraVarianteProductoVariantes { get; set; }
+        public DbSet<BannerPromocion> BannerPromocionales { get; set; }
 
 
 
@@ -100,6 +101,7 @@ namespace API.Data.DbContexts
             GestorPedidoConfiguracionDB.SetEntityBuilder(modelBuilder);
             MensajeriaConfiguracionDB.SetEntityBuilder(modelBuilder);
             OtraVarianteProductoVarianteConfiguracionDB.SetEntityBuilder(modelBuilder);
+            BannerPromocionConfiguracionDB.SetEntityBuilder(modelBuilder);
 
 
             // CONTABILIDAD

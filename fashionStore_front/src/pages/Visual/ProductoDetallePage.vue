@@ -78,10 +78,10 @@
           </div>
         </div>        <div class="product-price q-mt-md">
           <div class="text-subtitle1 text-weight-bold">
-            $ {{ displayedPrice() != null ? Number(displayedPrice()).toLocaleString('es-ES', { minimumFractionDigits:2 }) : '0.00' }}
+            $ {{ displayedPrice() != null ? Number(displayedPrice()).toLocaleString('es-ES', { minimumFractionDigits:2 }) : '0.00' }} {{ displayedMonedaCodigo() }}
           </div>
           <div v-if="displayedOriginalPrice()" class="text-caption text-grey-6">
-            <s>$ {{ Number(displayedOriginalPrice()).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}</s>
+            <s>$ {{ Number(displayedOriginalPrice()).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }} {{ displayedMonedaCodigo() }}</s>
           </div>
         </div>
 
@@ -186,12 +186,12 @@
     <DialogLoad :dialogLoad="dialogLoad" />
   </div>
 
-  <ConfirmarPedido ref="confirmarPedido" />
+  <ConfirmarPedido ref="confirmarPedido" :desdeElCarrito="false" :productoItem="producto" :cantidad="cantidad"/>
 </template>
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { loadGet, loadGetHastaData, saveDataPronosticoEnviarObjeto } from 'src/assets/js/util/funciones'
+import { loadGet, loadGetHastaData, saveDataPronosticoEnviarObjeto, getFotoFromVarianteWithFallback } from 'src/assets/js/util/funciones'
 import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
 import { apiFotosBaseUrl } from 'src/boot/axios'
 import useCart from 'src/stores/cartStore'
@@ -213,6 +213,16 @@ const cart = useCart()
 const selectedVariantIndex = ref(null)
 const cartRefresh = ref(0)
 const confirmarPedido = ref(null)
+const monedas = ref([]) // Almacenar listado de monedas
+
+// Mapeo de monedas: monedaId -> moneda objeto
+const monedaMap = computed(() => {
+  const map = {}
+  monedas.value.forEach(m => {
+    map[m.id] = m
+  })
+  return map
+})
 
 // Watch profundo del carrito para detectar cualquier cambio
 watch(
@@ -231,6 +241,11 @@ function getFotosForCarousel() {
     if (sel != null && producto.value?.variants && producto.value.variants[sel]) {
       const v = producto.value.variants[sel]
       if (Array.isArray(v.fotos) && v.fotos.length) return v.fotos.map(f => (typeof f === 'object' ? (f.url || f.img || f.path) : f))
+
+      // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+      const fotoHeredada = getFotoFromVarianteWithFallback(v, producto.value)
+      if (fotoHeredada) return [fotoHeredada]
+
       const cand = v.fotos && v.fotos.length ? v.fotos[0] : (v.foto || v.fotoUrl || v.url)
       if (cand) return [cand]
     }
@@ -243,6 +258,9 @@ function getFotosForCarousel() {
       const f0 = vars[0]
       if (f0) {
         if (Array.isArray(f0.fotos) && f0.fotos.length) return f0.fotos
+        // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+        const fotoHeredada = getFotoFromVarianteWithFallback(f0, producto.value)
+        if (fotoHeredada) return [fotoHeredada]
         const candidate = f0.foto || f0.fotoUrl || f0.imagen || f0.imagenUrl || f0.url || f0.image || f0.picture
         if (candidate) return [candidate]
       }
@@ -254,6 +272,9 @@ function getFotosForCarousel() {
       const pv0 = pvs[0]
       if (pv0) {
         if (Array.isArray(pv0.fotos) && pv0.fotos.length) return pv0.fotos.map(f => (typeof f === 'object' ? (f.url || f.img || f.path) : f))
+        // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+        const fotoHeredada = getFotoFromVarianteWithFallback(pv0, producto.value)
+        if (fotoHeredada) return [fotoHeredada]
         const candidate = pv0.foto || pv0.fotoUrl || pv0.imagen || pv0.imagenUrl || pv0.url || pv0.image || pv0.picture
         if (candidate) return [candidate]
       }
@@ -349,8 +370,17 @@ async function cargarProducto(id) {
   }
 }
 
-onMounted(() => {
-  cargarProducto(route.params.id)
+onMounted(async() => {
+ // Cargar monedas primero
+ try {
+   monedas.value = await loadGet('Moneda/ObtenerListadoPaginado') ?? []
+ } catch (e) {
+   console.warn('Error cargando monedas:', e)
+ }
+
+ await cargarProducto(route.params.id)
+
+ console.log("PP: ",producto.value)
 })
 
 watch(() => route.params.id, (nuevoId) => {
@@ -428,6 +458,26 @@ function displayedPrice() {
     const v = sel != null && producto.value?.variants ? producto.value?.variants[sel] : (producto.value?.variants?.[0] || producto.value?.variantes?.[0] || producto.value?.productosVariantes?.[0])
     return v?.precioVenta ?? producto.value?.precioVenta ?? producto.value?.precio ?? null
   } catch (e) { return producto.value?.precioVenta ?? producto.value?.precio ?? null }
+}
+function displayedMonedaCodigo() {
+  try {
+    if (!producto.value) return '(USD)'
+
+    const monedaId = producto.value?.monedaVentaId
+    if (!monedaId) return '(USD)'
+
+    // Buscar en el mapa de monedas
+    const moneda = monedaMap.value[monedaId]
+    if (moneda && moneda.codigo) {
+      return `(${moneda.codigo})`
+    }
+
+    // Si no encuentra, retorna por defecto
+    return '(USD)'
+  } catch (e) {
+    console.error('Error al obtener moneda:', e)
+    return '(USD)'
+  }
 }
 function displayedOriginalPrice() {
   try {
@@ -557,10 +607,15 @@ function onAddToCart() {
 
   let payload = { ...producto.value }
   if (selectedVariantIndex.value != null && producto.value?.variants && producto.value.variants[selectedVariantIndex.value]) {
-    payload = { ...payload, selectedVariant: producto.value.variants[selectedVariantIndex.value] }
+    const variant = producto.value.variants[selectedVariantIndex.value]
+    payload = {
+      ...payload,
+      selectedVariant: variant,
+      varianteId: variant.id // Asegurar que varianteId está presente
+    }
   }
 
-  console.log('[ProductoDetalle] Agregando al carrito:', { cantidad: cantidad.value, productId: payload.id })
+  console.log('[ProductoDetalle] Agregando al carrito:', { cantidad: cantidad.value, productId: payload.id, varianteId: payload.varianteId })
   cart.addItem(payload, cantidad.value)
 }
 

@@ -228,7 +228,7 @@
 
 <script setup>
 import { onMounted, reactive, ref, computed, watch } from 'vue'
-import { loadGet, loadGetDatosInicio } from './assets/js/util/funciones'
+import { loadGet, loadGetDatosInicio, getFotoFromVarianteWithFallback } from './assets/js/util/funciones'
 import DialogLoad from './components/DialogBoxes/DialogLoad.vue'
 import { apiFotosBaseUrl } from './boot/axios'
 import { EventBus } from './assets/js/util/eventBus'
@@ -382,11 +382,85 @@ function addToCart(product) {
   try {
     // prefer using cart store
     const cart = useCart()
-    cart.addItem(product, 1)
+    // Normalizar el producto antes de agregarlo
+    const productoNormalizado = normalizarProductoParaCarrito(product)
+    cart.addItem(productoNormalizado, 1)
     if (debugImg) console.log('[IndexPage] added to cart', product && (product.id || product.productoId))
   } catch (e) {
     console.warn('[IndexPage] addToCart error', e)
   }
+}
+
+// Normalizar producto antes de agregarlo al carrito
+function normalizarProductoParaCarrito(producto) {
+  if (!producto) return producto
+
+  // Normalizar variantes exactamente como en ProductoDetallePage
+  const variants = (producto.productoVariantes || producto.variants || []).map(v => ({
+    id: v.id,
+    productoId: v.productoId,
+    talla: v.talla,
+    color: v.color,
+    stock: v.stock,
+    principal: v.principal,
+    otrasVariantesIds: v.otrasVariantesIds || [],
+    // Mapear fotos con la estructura correcta
+    fotos: (v.fotos || []).map(f => {
+      if (typeof f === 'string') {
+        // Si es string, asumimos que es una URL
+        return { id: null, url: f, descripcion: '', esPrincipal: false, orden: 0 }
+      } else {
+        // Si es objeto, mapear con los campos disponibles
+        return {
+          id: f.id || null,
+          url: f.url || f.imagen || f.path || '',
+          descripcion: f.descripcion || '',
+          esPrincipal: f.esPrincipal || false,
+          orden: f.orden || 0
+        }
+      }
+    }),
+    slide: 1 // índice inicial del carrusel de esta variante
+  }))
+
+  // Obtener ID de variante (usar la primera por defecto, preferentemente la principal)
+  const varianteId = variants.find(v => v.principal === true || v.principal === 'true')?.id ||
+                     (variants.length > 0 ? variants[0].id : null)
+
+  // Mapear fotos del producto principal con la estructura correcta
+  const fotos = (producto.fotos || []).map(f => {
+    if (typeof f === 'string') {
+      return { id: null, url: f, descripcion: '', esPrincipal: false, orden: 0 }
+    } else {
+      return {
+        id: f.id || null,
+        url: f.url || f.imagen || f.path || '',
+        descripcion: f.descripcion || '',
+        esPrincipal: f.esPrincipal || false,
+        orden: f.orden || 0
+      }
+    }
+  })
+
+  // Estructura normalizada idéntica a ProductoDetallePage
+  const normalizado = {
+    id: producto.id,
+    codigo: producto.codigo,
+    descripcion: producto.descripcion || producto.nombre,
+    esActivo: producto.esActivo,
+    sku: producto.sku,
+    precioCosto: producto.precioCosto,
+    precioVenta: producto.precioVenta || producto.precio,
+    monedaCostoId: producto.monedaCostoId,
+    monedaVentaId: producto.monedaVentaId,
+    categoriasIds: producto.categoriasIds || [],
+    categoriasDescripcion: producto.categoriasDescripcion,
+    varianteId: varianteId, // ID consistente para identificar en carrito
+    fotos: fotos,
+    variants: variants
+  }
+
+  return normalizado
 }
 
 const wishlist = useWishlist()
@@ -567,6 +641,10 @@ function getProductoImage(prod) {
       else if (firstFoto?.url) candidate = firstFoto.url
       else if (firstFoto?.img) candidate = firstFoto.img
       else if (firstFoto?.path) candidate = firstFoto.path
+    } else if (firstVariant) {
+      // Si la variante no tiene fotos, busca en otras variantes del mismo producto
+      const fotoHeredada = getFotoFromVarianteWithFallback(firstVariant, prod)
+      if (fotoHeredada) candidate = fotoHeredada
     }
   }
 

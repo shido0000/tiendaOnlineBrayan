@@ -1,9 +1,10 @@
 <template>
   <div class="login-bg">
     <div class="login-card">
-      <q-avatar size="80px" class="q-mb-md bg-white">
-        <q-icon name="person" size="60px" color="grey-5" />
-      </q-avatar>
+      <div @click="goToHome" class="logo-container q-mb-md">
+        <q-img src="/img/Logo.png" style="width: 120px; height: 120px; object-fit: contain;" />
+        <q-tooltip>Volver a la tienda</q-tooltip>
+      </div>
 
       <q-form @submit.prevent="onLogin">
        <q-input
@@ -170,6 +171,10 @@ const login = async () => {
     }
   )
 }
+
+function goToHome() {
+  router.push('/')
+}
 </script>
 
 <style scoped lang="scss">
@@ -205,5 +210,17 @@ const login = async () => {
   color: $bry-white;
   font-weight: bold;
   letter-spacing: 2px;
+}
+
+.logo-container {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-container:hover {
+  transform: scale(1.05);
 }
 </style>
