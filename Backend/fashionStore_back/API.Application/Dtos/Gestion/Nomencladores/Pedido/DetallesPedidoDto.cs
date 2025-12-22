@@ -5,6 +5,7 @@
         public string Usuario { get; set; } = "-";
         public string MonedaCodigo { get; set; } = "-";
         public string CuponCodigo { get; set; } = "-";
+        public int Codigo { get; set; }
 
     }
 }

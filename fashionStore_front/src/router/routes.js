@@ -117,6 +117,26 @@ const routes = [
                 name: 'OtraVariante',
                 component: () => import('src/pages/Nomenclators/OtraVariante.vue')
             },
+            {
+                path: 'CuentasContables',
+                name: 'CuentasContables',
+                component: () => import('src/pages/Nomenclators/Contabilidad/CuentasContables.vue')
+            },
+            {
+                path: 'AsientosContables',
+                name: 'AsientosContables',
+                component: () => import('src/pages/Nomenclators/Contabilidad/AsientosContables.vue')
+            },
+            {
+                path: 'ReporteContable',
+                name: 'ReporteContable',
+                component: () => import('src/pages/Nomenclators/Contabilidad/ReporteContable.vue')
+            },
+            {
+                path: 'Contabilidad',
+                name: 'Contabilidad',
+                component: () => import('src/pages/Nomenclators/Contabilidad/ContabilidadPage.vue')
+            },
 
         ]
     },

@@ -48,7 +48,7 @@
             map-options
             style="min-width: 200px; margin-right: 12px"
             color="primary"
-            @update:model-value="load"
+            @update:model-value="load()"
           />
 
           <q-btn
@@ -64,15 +64,7 @@
             </q-tooltip>
           </q-btn>
 
-          <DialogCancelarPedido
-            v-if="isDialogoEliminarAbierto"
-            :isOpen="isDialogoEliminarAbierto"
-            :idElemento="idElementoSeleccionado"
-            @eliminar="eliminar"
-            @closeDialog="handleCloseDialog"
-          />
 
-          <DialogLoad :dialogLoad="dialogLoad" />
         </template>
 
         <template v-slot:body-cell-estado="props">
@@ -101,7 +93,9 @@
         <template v-slot:body-cell-acciones="props">
           <q-td :props="props">
             <div class="q-gutter-sm">
-              <q-btn
+              <q-btn v-show="props.row.estado === 'Rechazado'||
+                  props.row.estado === 'Confirmado'"
+
                 flat
                 dense
                 size="sm"
@@ -111,11 +105,9 @@
               >
                 <q-tooltip>Ver datos del pedido</q-tooltip>
               </q-btn>
-              <q-btn
-                :disable="
-                  props.row.estado === 'Rechazado' ||
-                  props.row.estado === 'Confirmado'
-                "
+              <q-btn v-show="props.row.estado !== 'Rechazado' &&
+                  props.row.estado !== 'Confirmado'"
+
                 flat
                 dense
                 size="sm"
@@ -125,7 +117,7 @@
               >
                 <q-tooltip>Editar líneas del pedido</q-tooltip>
               </q-btn>
-              <q-btn
+         <!--     <q-btn
                 :disable="props.row.estado === 'Rechazado'"
                 flat
                 dense
@@ -135,7 +127,7 @@
                 icon="delete"
               >
                 <q-tooltip>Cancelar pedido</q-tooltip>
-              </q-btn>
+              </q-btn>-->
             </div>
           </q-td>
         </template>
@@ -331,6 +323,13 @@
             label="Salir"
             @click="cerrarDialogoEditar(false)"
           />
+           <q-btn
+            v-show="!verDatosPedido && !pedidoConfirmado"
+            class="text-white"
+            color="primary"
+            label="Rechazar Pedido"
+            @click="abrirDialogoEliminar(pedidoSeleccionado.id)"
+          />
           <q-btn
             v-if="!verDatosPedido && !pedidoConfirmado"
             class="text-white"
@@ -350,6 +349,16 @@
       </q-card>
     </div>
   </div>
+
+  <DialogCancelarPedido
+            v-if="isDialogoEliminarAbierto"
+            :isOpen="isDialogoEliminarAbierto"
+            :idElemento="idElementoSeleccionado"
+            @eliminar="eliminar"
+            @closeDialog="handleCloseDialog"
+          />
+
+          <DialogLoad :dialogLoad="dialogLoad" />
 </template>
 
 <script setup>
@@ -374,10 +383,10 @@ const filtroEstado = ref('todos')
 
 // Opciones para el filtro de estado
 const opcionesFiltroEstado = [
-  { label: 'Todos', value: 'todos' },
-  { label: 'Confirmados', value: 'Confirmado' },
-  { label: 'Rechazados', value: 'Rechazado' },
-  { label: 'Pendientes', value: 'Pendiente' }
+  { label: 'Todos', value:null},
+  { label: 'Confirmados', value: 2},
+  { label: 'Rechazados', value: 3},
+  { label: 'Pendientes', value:4 }
 ]
 
 // Arreglos
@@ -409,7 +418,7 @@ const columnasTableaPedidos = [
     name: 'moneda',
     label: 'Moneda',
     align: 'center',
-    field: 'moneda'
+    field: 'monedaCodigo'
   },
   {
     name: 'total',
@@ -593,7 +602,6 @@ const confirmarPedido = async () => {
     }
 
     const response = await api.post('Pedido/ActualizarPedidoConLineas', dtoActualizarPedido)
-    dialogLoad.value = false
 
     if (response.data.success || response.status === 200) {
       pedidoConfirmado.value = true
@@ -623,7 +631,9 @@ const cerrarDialogoEditar = (valor) => {
 }
 
 const load = async () => {
-  items.value = await loadGetHastaData(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}`) ?? []
+    dialogLoad.value = true
+  items.value = await loadGet(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}`) ?? []
+  dialogLoad.value = false
 }
 
 const eliminar = async () => {

@@ -1,4 +1,5 @@
 ﻿using API.Application.Mapper;
+using API.Application.Mapper.Contabilidad;
 using API.Data.DbContexts;
 using API.Data.Entidades;
 using API.Data.IUnitOfWorks;
@@ -61,6 +62,9 @@ namespace API.Application.IoC
             services.AddEndpointsApiExplorer();
 
             services.AddAutoMappers(AutoMapperConfiguration.CreateExpression().AddAutoMapperLeadOportunidade());
+
+            // Registrar resolvers de AutoMapper
+            services.AddScoped<VentaConsecutivoResolver>();
 
             services.AddHttpContextAccessor();
 
@@ -253,6 +257,7 @@ namespace API.Application.IoC
             services.AddScoped<IAsientoContableService, AsientoContableService>();
             services.AddScoped<ICuentaContableService, CuentaContableService>();
             services.AddScoped<IMovimientoContableService, MovimientoContableService>();
+            services.AddScoped<IReporteContabilidadService, ReporteContabilidadService>();
 
             // BASE
             services.AddScoped(typeof(IBaseService<EntidadBase, AbstractValidator<EntidadBase>>), typeof(BasicService<EntidadBase, AbstractValidator<EntidadBase>>));

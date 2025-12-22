@@ -16,6 +16,8 @@ namespace API.Application.Mapper.Contabilidad
         public void MapDetallesMovimientoContableDto()
         {
             CreateMap<MovimientoContable, DetallesMovimientoContableDto>()
+              .ForMember(dest => dest.CodigoCuenta, opt => opt.MapFrom(src => src.Cuenta != null ? src.Cuenta.Codigo : string.Empty))
+              .ForMember(dest => dest.NombreCuenta, opt => opt.MapFrom(src => src.Cuenta != null ? src.Cuenta.Nombre : string.Empty))
               .ReverseMap()
             ;
         }

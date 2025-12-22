@@ -4,7 +4,7 @@ export const Success = (message) => {
     Notify.create({
         message,
         type: 'positive',
-        position: 'top-right',
+        position: 'bottom',
         progress: true
     })
 }
@@ -14,7 +14,7 @@ export const Info = (message) => {
         message,
         type: 'warning',
         textColor: 'white',
-        position: 'top-right',
+        position: 'bottom',
         progress: true
     })
 }
@@ -23,7 +23,7 @@ export const Verify = (message) => {
     Notify.create({
         message,
         type: 'warning',
-        position: 'top-right',
+        position: 'bottom',
         progress: true
     })
 }
@@ -32,7 +32,7 @@ export const Warning = (message) => {
     Notify.create({
         message,
         type: 'warning',
-        position: 'top-right',
+        position: 'bottom',
         progress: true
     })
 }
@@ -41,7 +41,7 @@ export const Error = (message) => {
     Notify.create({
         message,
         type: 'negative',
-        position: 'top-right',
+        position: 'bottom',
         progress: true
     })
 }

@@ -33,6 +33,35 @@ namespace API.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "BannerPromocions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Imagen = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TextoTitulo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TextoSubtitulo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BotonTexto = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BotonVinculo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    EsActivo = table.Column<bool>(type: "bit", nullable: false),
+                    Destacado = table.Column<bool>(type: "bit", nullable: false),
+                    Orden = table.Column<int>(type: "int", nullable: false),
+                    Ubicaciones = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Dispositivos = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FechaInicio = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FechaFin = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActualizadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BannerPromocions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CategoriasProductos",
                 columns: table => new
                 {
@@ -875,12 +904,12 @@ namespace API.Data.Migrations
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "Descripcion", "FechaActualizado", "FechaCreado", "Nombre" },
                 values: new object[,]
                 {
-                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", "Permite ver, crear, modificar y eliminar usuarios en el sistema.", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2151), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2149), "Gestionar usuarios" },
-                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", "Permite ver los usuarios existentes en el sistema y sus datos.", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2137), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2134), "Listar usuarios" },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", "Permite ver los productos existentes en el sistema y sus datos.", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2194), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2173), "Listar Productos" },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", "Permite ver, crear, modificar y eliminar productos en el sistema.", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2202), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2200), "Gestionar Productos" },
-                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", "Permite ver, crear, modificar y eliminar roles en el sistema.", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2169), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2168), "Gestionar rol" },
-                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", "Permite ver los roles existentes en el sistema y sus datos.", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2164), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2158), "Listar roles" }
+                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", "Permite ver, crear, modificar y eliminar usuarios en el sistema.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2869), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2865), "Gestionar usuarios" },
+                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", "Permite ver los usuarios existentes en el sistema y sus datos.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2848), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2839), "Listar usuarios" },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", "Permite ver los productos existentes en el sistema y sus datos.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2934), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2905), "Listar Productos" },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", "Permite ver, crear, modificar y eliminar productos en el sistema.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2948), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2945), "Gestionar Productos" },
+                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", "Permite ver, crear, modificar y eliminar roles en el sistema.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2897), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2894), "Gestionar rol" },
+                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", "Permite ver los roles existentes en el sistema y sus datos.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2887), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2883), "Listar roles" }
                 });
 
             migrationBuilder.InsertData(
@@ -888,9 +917,9 @@ namespace API.Data.Migrations
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "FechaActualizado", "FechaCreado", "Nombre" },
                 values: new object[,]
                 {
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2003), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(1935), "Administrador" },
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336523"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2034), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2032), "Vendedor" },
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336524"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2039), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2037), "Cliente" }
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2577), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2400), "Administrador" },
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336523"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2620), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2616), "Vendedor" },
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336524"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2631), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2628), "Cliente" }
                 });
 
             migrationBuilder.InsertData(
@@ -898,22 +927,28 @@ namespace API.Data.Migrations
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "FechaActualizado", "FechaCreado", "PermisoId", "RolId" },
                 values: new object[,]
                 {
-                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2410), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2408), new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2398), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2395), new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2424), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2423), new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2432), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2428), new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2420), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2418), new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2415), new DateTime(2025, 12, 15, 12, 14, 40, 228, DateTimeKind.Local).AddTicks(2413), new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") }
+                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4059), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4050), new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(3832), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(3810), new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4218), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4215), new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4244), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4226), new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4210), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4206), new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4199), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4194), new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") }
                 });
 
             migrationBuilder.InsertData(
                 table: "Usuarios",
                 columns: new[] { "Id", "ActualizadoPor", "Apellidos", "Contrasenna", "Correo", "CreadoPor", "DebeCambiarContrasenna", "EsActivo", "FechaActualizado", "FechaCreado", "Nombre", "RolId", "Telefono", "Username" },
-                values: new object[] { new Guid("42717fb8-6e3f-4c94-b6b1-a88e8718d0a6"), "", "1", "$2a$10$EixZaYVK1fsbw1Zfbx3OXePaWxn96p36Zf4d0xF4f5f5f5f5f5f5f", "1@api.cu", "", false, true, new DateTime(2025, 12, 15, 12, 14, 40, 229, DateTimeKind.Local).AddTicks(2897), new DateTime(2025, 12, 15, 12, 14, 40, 229, DateTimeKind.Local).AddTicks(2870), "1", new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "54364363", "1" });
+                values: new object[] { new Guid("42717fb8-6e3f-4c94-b6b1-a88e8718d0a6"), "", "1", "$2a$10$EixZaYVK1fsbw1Zfbx3OXePaWxn96p36Zf4d0xF4f5f5f5f5f5f5f", "1@api.cu", "", false, true, new DateTime(2025, 12, 21, 5, 39, 15, 825, DateTimeKind.Local).AddTicks(2311), new DateTime(2025, 12, 21, 5, 39, 15, 825, DateTimeKind.Local).AddTicks(2238), "1", new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "54364363", "1" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AsientosContables_Id",
                 table: "AsientosContables",
+                column: "Id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BannerPromocions_Id",
+                table: "BannerPromocions",
                 column: "Id",
                 unique: true);
 
@@ -1352,6 +1387,9 @@ namespace API.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "BannerPromocions");
+
             migrationBuilder.DropTable(
                 name: "CarritosDetalles");
 

@@ -4,53 +4,58 @@
 export const cardsNomencladores = Object.freeze([
     {
         title: "Categoria de producto",
-        icon: "view_quilt",
+        icon: "category",
         link: "Categoria",
     },
     {
         title: "Monedas",
-        icon: "view_quilt",
+        icon: "attach_money",
         link: "Moneda",
     },
     {
         title: "Productos",
-        icon: "view_quilt",
+        icon: "inventory_2",
         link: "Producto",
     },
     {
         title: "Descuentos",
-        icon: "view_quilt",
+        icon: "local_offer",
         link: "Descuento",
     },
     {
         title: "Cupones",
-        icon: "view_quilt",
+        icon: "confirmation_number",
         link: "Cupon",
     },
     {
         title: "Pedidos",
-        icon: "view_quilt",
+        icon: "shopping_cart",
         link: "Pedido",
     },
     {
         title: "Usuarios",
-        icon: "view_quilt",
+        icon: "people",
         link: "Usuario",
     },
     {
         title: "Gestores",
-        icon: "view_quilt",
+        icon: "admin_panel_settings",
         link: "Gestor",
     },
     {
         title: "Mensajerías",
-        icon: "view_quilt",
+        icon: "local_shipping",
         link: "Mensajeria",
     },
     {
         title: "Otras Variantes",
-        icon: "view_quilt",
+        icon: "widgets",
         link: "OtraVariante",
+    },
+    {
+        title: "Contabilidad",
+        icon: "account_balance",
+        link: "Contabilidad",
     },
 
 ]);

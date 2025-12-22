@@ -23,11 +23,9 @@ namespace API.Domain.Validators.Contabilidad
             RuleFor(m => m.Nombre).NotEmpty().WithMessage("No puede ser un texto vacio.")
                                      .NotNull().WithMessage("Es un campo obligatorio.");
 
-            RuleFor(m => m.EsActivo).NotEmpty().WithMessage("No puede ser un texto vacio.")
-                                     .NotNull().WithMessage("Es un campo obligatorio.");
+            RuleFor(m => m.EsActivo).NotNull().WithMessage("Es un campo obligatorio.");
 
-            RuleFor(m => m.EsDeMovimiento).NotEmpty().WithMessage("No puede ser un texto vacio.")
-                                     .NotNull().WithMessage("Es un campo obligatorio.");
+            RuleFor(m => m.EsDeMovimiento).NotNull().WithMessage("Es un campo obligatorio.");
         }
     }
 }

@@ -136,6 +136,11 @@ function updateQuantity(id, cantidad) {
     if (idx !== -1) state.items[idx].cantidad = cantidad
 }
 
+function clearCart() {
+    state.items = []
+    state.lastAddedAt = null
+}
+
 const totalCount = computed(() => state.items.reduce((s, i) => s + (i.cantidad || 0), 0))
 const totalPrice = computed(() => state.items.reduce((s, i) => s + ((i.precioVenta || 0) * (i.cantidad || 0)), 0))
 
@@ -146,6 +151,7 @@ export function useCart() {
         addItem,
         removeItem,
         updateQuantity,
+        clearCart,
         totalCount,
         totalPrice,
         state

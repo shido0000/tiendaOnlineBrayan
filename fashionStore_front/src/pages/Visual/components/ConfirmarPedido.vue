@@ -295,7 +295,7 @@ watch(
 // Inicializar items
 actualizarItems()
 
-const totalPrice = computed(() => props.desdeElCarrito ? cart.totalPrice :  props.cantidad*props.productoItem.precioVenta )
+//const totalPrice = computed(() => props.desdeElCarrito ? cart.totalPrice :  props.cantidad*props.productoItem.precioVenta )
 
 const itemsGestor = ref([])
 const filtradoGestor = ref([])
@@ -482,6 +482,20 @@ const mensajeriaPrecio = computed(() => {
   return m?.precio || 0
 })
 
+// Calcular totalPrice correctamente considerando ambas fuentes
+const totalPrice = computed(() => {
+  if (props.desdeElCarrito) {
+    // Si viene del carrito, usar el totalPrice del store (que ya es un computed con .value)
+    return cart.totalPrice.value || 0
+  } else {
+    // Si viene como prop, calcular manualmente
+    if (props.productoItem && props.cantidad) {
+      return (props.productoItem.precioVenta || 0) * (props.cantidad || 0)
+    }
+    return 0
+  }
+})
+
 // Calcular totalPrice convertido considerando monedas
 const totalPriceConvertido = computed(() => {
   const monedasUsadas = obtenerMonedasUsadas()
@@ -635,22 +649,22 @@ const payload = JSON.parse(
   await saveDataPronosticoEnviarObjeto(ruta,generarPedidoDto,dialogLoad).then(resultado=>{
     if(!!resultado?.mensajeError){
         Error(resultado?.mensajeError)
-
     }
     else{
         Success("Pedido enviado con éxito")
-        // 🔴 Limpiar carrito del localStorage
-      localStorage.removeItem('fashion_cart_v1')
+        // Limpiar carrito del store
+        cart.clearCart()
 
-      // 🔴 Si usas el store reactivo, también vacía el array
-      items.value.splice(0, items.value.length)
-       if(!props.desdeElCarrito){
-        router.push({ name: 'IndexPage' })
-    }
+        // Limpiar localStorage también para mayor seguridad
+        localStorage.removeItem('fashion_cart_v1')
+
+        if(!props.desdeElCarrito){
+          router.push({ name: 'IndexPage' })
+        }
+  showDialog.value = false
     }
   })
-  console.log('Pedido confirmado:', pedido)
-  showDialog.value = false
+
  // router.push({ name: 'CheckoutPage' }) // o la página de confirmación final
 
 

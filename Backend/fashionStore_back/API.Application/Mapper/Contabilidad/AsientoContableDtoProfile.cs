@@ -10,16 +10,22 @@ namespace API.Application.Mapper.Contabilidad
         {
             //   MapAsientoContableDto();
             MapDetallesAsientoContableDto();
+            MapListadoAsientoContableDto();
         }
 
 
         public void MapDetallesAsientoContableDto()
         {
             CreateMap<AsientoContable, DetallesAsientoContableDto>()
-              .ReverseMap()
-            ;
+              .ForMember(dest => dest.Movimientos, opt => opt.MapFrom(src => src.Movimientos));
+             // .ForMember(dest => dest.Consecutivo, opt => opt.MapFrom<VentaConsecutivoResolver>());
         }
-
+        public void MapListadoAsientoContableDto()
+        {
+            CreateMap<AsientoContable, ListadoPaginadoAsientoContableDto>()
+              .ForMember(dest => dest.Movimientos, opt => opt.MapFrom(src => src.Movimientos));
+            //  .ForMember(dest => dest.Consecutivo, opt => opt.MapFrom<VentaConsecutivoResolver>());
+        }
 
     }
 }
