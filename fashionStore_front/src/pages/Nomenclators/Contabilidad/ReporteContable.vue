@@ -25,7 +25,7 @@
     </div>
 
     <div class="row q-mb-lg q-gutter-md">
-      <q-input
+     <!-- <q-input
         outlined
         v-model="filtro.fechaInicio"
         type="date"
@@ -60,7 +60,7 @@
         label="Aplicar"
         @click="aplicarFiltros"
         class="col-auto"
-      />
+      />-->
       <q-btn
         color="primary"
         icon="file_download"
@@ -81,7 +81,6 @@
               :rows="estadoCuentas"
               :columns="columnasEstado"
               row-key="id"
-              :filter="filtro.cuenta"
               no-data-label="No hay datos disponibles"
               flat
               bordered
@@ -222,7 +221,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { loadGet } from 'src/assets/js/util/funciones'
+import { loadGet, loadGetPaginado } from 'src/assets/js/util/funciones'
 import { Error } from 'src/assets/js/util/notify'
 import { Success } from 'src/boot/notify'
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
@@ -409,9 +408,31 @@ const cargarDatos = async () => {
     }))
   } catch (error) {
     Error('Error al cargar los datos')
-    console.error(error)
+    dialogLoad.value = false
+  }
     dialogLoad.value = false
 
+}
+
+const cargarDatosFiltros = async () => {
+    dialogLoad.value = true
+
+  try {
+    const params = {}
+    if (filtro.fechaInicio) params.fechaInicio = filtro.fechaInicio
+    if (filtro.fechaFin) params.fechaFin = filtro.fechaFin
+    if (filtro.cuenta) params.cuenta = filtro.cuenta
+
+    console.log("filtro.fechaInicio: ",params.fechaInicio)
+    console.log("filtro.fechaFin: ",params.fechaFin)
+    console.log("filtro.cuenta: ",params.cuenta)
+
+    const response = await loadGetPaginado('AsientoContable/ObtenerListadoPaginado', params) ?? {}
+    asientos.value = response.elementos || []
+
+  } catch (error) {
+    Error('Error al cargar los datos')
+    dialogLoad.value = false
   }
     dialogLoad.value = false
 
@@ -451,7 +472,7 @@ const sumarMovimientosPorTipo = (tipo) => {
 }
 
 const aplicarFiltros = async () => {
-  await cargarDatos()
+  await cargarDatosFiltros()
 }
 
 const exportarReporte = async () => {

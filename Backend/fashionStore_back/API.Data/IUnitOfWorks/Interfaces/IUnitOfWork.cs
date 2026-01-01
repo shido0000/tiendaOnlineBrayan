@@ -45,6 +45,7 @@ namespace API.Data.IUnitOfWorks.Interfaces
         IMensajeria Mensajerias { get; }
         IOtraVarianteProductoVariante OtraVarianteProductoVariantes { get; }
         IBannerPromocion BannerPromociones { get; }
+        IInformacionGeneral InformacionesGenerales { get; }
 
         // CONTABILIDAD 
         IAsientoContable AsientosContables { get; }

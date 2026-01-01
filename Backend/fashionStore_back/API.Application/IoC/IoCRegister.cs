@@ -246,6 +246,7 @@ namespace API.Application.IoC
             services.AddScoped<IGestorService, GestorService>();
             services.AddScoped<IMensajeriaService, MensajeriaService>();
             services.AddScoped<IBannerPromocionService, BannerPromocionService>();
+            services.AddScoped<IInformacionGeneralService, InformacionGeneralService>();
 
 
 

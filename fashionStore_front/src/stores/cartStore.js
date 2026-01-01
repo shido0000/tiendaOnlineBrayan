@@ -107,16 +107,20 @@ function addItem(product, qty = 1) {
         if (!foto && (product.imagen || product.fotoUrl)) {
             foto = product.imagen || product.fotoUrl
         }
-
+        console.log("product.tieneDescuento: ", product.tieneDescuento)
         const toAdd = {
             id, // ID consistente (variante o producto)
+            tieneDescuento: product.tieneDescuento || false,
+            precioVentaDescuento: product.precioVentaDescuento || product.precioVenta,
             nombre: product.nombre || product.descripcion || '',
             precioVenta: product.selectedVariant?.precioVenta ?? product.precioVenta ?? product.precio ?? 0,
             cantidad: qty,
             foto: foto,
             talla: product.selectedVariant?.talla || null,
             color: product.selectedVariant?.color || null,
-            raw: product
+
+            raw: product,
+
         }
         state.items.push(toAdd)
     }
@@ -141,9 +145,29 @@ function clearCart() {
     state.lastAddedAt = null
 }
 
-const totalCount = computed(() => state.items.reduce((s, i) => s + (i.cantidad || 0), 0))
-const totalPrice = computed(() => state.items.reduce((s, i) => s + ((i.precioVenta || 0) * (i.cantidad || 0)), 0))
+//const totalCount = computed(() => state.items.reduce((s, i) => s + (i.cantidad || 0), 0))
+//const totalPrice = computed(() => state.items.reduce((s, i) => s + ((i.precioVenta || 0) * (i.cantidad || 0)), 0))
+const totalPrice = computed(() =>
+    state.items.reduce((s, i) => {
+        const unitPrice = i.tieneDescuento
+            ? (i.precioVentaDescuento || i.precioVenta || 0)
+            : (i.precioVenta || 0)
+        return s + unitPrice * (i.cantidad || 0)
+    }, 0)
+)
 
+// Ahorro total: diferencia entre precio original y precio con descuento
+const totalSavings = computed(() =>
+    state.items.reduce((s, i) => {
+        if (i.tieneDescuento) {
+            const original = (i.precioVenta || 0) * (i.cantidad || 0)
+            const discounted = (i.precioVentaDescuento || i.precioVenta || 0) * (i.cantidad || 0)
+            return s + (original - discounted)
+        }
+        return s
+    }, 0)
+)
+const totalCount = computed(() => state.items.reduce((s, i) => s + (i.cantidad || 0), 0))
 export function useCart() {
     return {
         items: state.items,
@@ -154,6 +178,7 @@ export function useCart() {
         clearCart,
         totalCount,
         totalPrice,
+        totalSavings,
         state
     }
 }

@@ -46,18 +46,49 @@
               <!-- Info producto -->
               <div class="col q-pl-md">
                 <div class="text-subtitle1 text-weight-bold">{{ it.nombre }}</div>
-                <div class="text-caption text-grey-6">
-                  Precio unitario: ${{ (it.precioVenta || 0).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
-                </div>
-              </div>
+               <!-- Precio unitario -->
+ <!-- Precio unitario -->
+<!-- Precio unitario -->
+<div v-if="it.tieneDescuento" class="row items-center q-gutter-sm">
+  <!-- Precio original tachado -->
+  <div class="text-caption text-grey-6">
+    <s>
+      ${{ (it.precioVenta || 0).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+    </s>
+  </div>
+  <!-- Precio con descuento -->
+  <div class="text-caption text-weight-bold text-primary">
+    ${{ (it.precioVentaDescuento || 0).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+  </div>
+</div>
+<div v-else class="text-caption text-grey-6">
+  Precio unitario: ${{ (it.precioVenta || 0).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+</div>
 
 
-              <!-- Subtotal -->
-              <div class="col-auto text-right q-pr-md">
-                <div class="text-subtitle2 text-weight-bold text-primary">
-                  ${{ ((it.precioVenta||0) * (it.cantidad||0)).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
-                </div>
-              </div>
+
+
+</div>
+
+<!-- Subtotal -->
+<div class="col-auto text-right q-pr-md">
+  <div v-if="it.tieneDescuento" class="row items-center q-gutter-sm">
+    <!-- Subtotal original tachado -->
+    <div class="text-subtitle2 text-grey-6">
+      <s>
+        ${{ ((it.precioVenta||0) * (it.cantidad||0)).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+      </s>
+    </div>
+    <!-- Subtotal con descuento -->
+    <div class="text-subtitle2 text-weight-bold text-primary">
+      ${{ ((it.precioVentaDescuento||0) * (it.cantidad||0)).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+    </div>
+  </div>
+  <div v-else class="text-subtitle2 text-weight-bold text-primary">
+    ${{ ((it.precioVenta||0) * (it.cantidad||0)).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+  </div>
+</div>
+
 <!-- Cantidad -->
              <div class="col-auto flex items-end ">
   <q-input
@@ -92,8 +123,12 @@
         <q-separator spaced />
         <div class="q-pt-md row items-center justify-end carrito-total">
           <div class="text-h6 text-weight-bold q-mr-lg">
-            Total: ${{ totalPrice.toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
-          </div>
+  Total: ${{ totalPrice.toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+</div>
+<div v-if="cart.totalSavings > 0" class="text-caption text-positive q-mr-lg">
+  Has ahorrado ${{ cart.totalSavings.toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+</div>
+
           <q-btn
   color="primary"
   unelevated
@@ -119,8 +154,8 @@ import { ref } from 'vue'
 import { getFotoFromVarianteWithFallback } from 'src/assets/js/util/funciones'
 
 const cart = useCart()
-const items = cart.items
-const totalPrice = cart.totalPrice
+const items = ref(cart.items)
+const totalPrice = ref(cart.totalPrice)
 const confirmarPedido = ref(null)
 
 function obtenerFotoDelItem(item) {
@@ -265,4 +300,6 @@ function onQtyChange(item) {
   padding: 16px;
   border-radius: 8px;
 }
+.text-strike { text-decoration: line-through; }
+
 </style>

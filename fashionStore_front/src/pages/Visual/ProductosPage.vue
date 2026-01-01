@@ -72,10 +72,27 @@
                   <div class="text-center text-grey-6 q-pa-md">Sin imagen</div>
                 </template>
               </q-img>
-              <q-card-section>
-                <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
-                <div class="text-subtitle1 text-weight-bold">$ {{ formatPrice(p.precioVenta) }}</div>
-              </q-card-section>
+             <q-card-section>
+  <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">
+    {{ p.descripcion || p.nombre || 'Sin título' }}
+  </div>
+
+  <!-- Mostrar precio normal o con descuento -->
+  <div v-if="p.tieneDescuento" class="row items-center">
+    <!-- Precio original tachado -->
+    <div class="text-subtitle1 text-grey-6 q-mr-sm">
+      <s>$ {{ formatPrice(p.precioVenta) }}</s>
+    </div>
+    <!-- Precio con descuento -->
+    <div class="text-subtitle1 text-weight-bold text-primary">
+      $ {{ formatPrice(p.precioVentaDescuento) }}
+    </div>
+  </div>
+  <div v-else class="text-subtitle1 text-weight-bold">
+    $ {{ formatPrice(p.precioVenta) }}
+  </div>
+</q-card-section>
+
               <q-card-actions align="right">
                 <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" @click.stop="() => wishlist.toggle(normalizarProductoParaCarrito(p, getProductoImagePreferVariant(p) || getProductoImage(p)))" />
                 <q-btn dense round flat icon="add_shopping_cart" color="primary" @click.stop="() => cart.addItem(normalizarProductoParaCarrito(p, getProductoImagePreferVariant(p) || getProductoImage(p)),1)" />
@@ -142,9 +159,6 @@ onMounted(async () => {
     } catch (e) {
       categories.value = []
     }
-
-  if (debugImg) console.log('[ProductosPage] on mount, initial filters q:', filters.q)
-
     await loadProducts(true)
   } finally {
     dialogLoad.value = false
@@ -152,8 +166,7 @@ onMounted(async () => {
 })
 
 // keep filters synced when route.query changes (e.g. user navigates directly or uses links)
-watch(() => route.query, (q) => {
-  if (debugImg) console.log('[ProductosPage] route.query changed ->', q)
+watch(() => route.query, async( q) => {
   try {
     filters.q = q.q || ''
     filters.precioMin = q.precioMin ? Number(q.precioMin) : null
@@ -163,13 +176,12 @@ watch(() => route.query, (q) => {
   } catch (err) {
     if (debugImg) console.warn('[ProductosPage] error syncing route.query to filters', err)
   }
-  loadProducts(true)
+  await loadProducts(true)
 }, { deep: true })
 
 async function ensureInventoryIndex() {
   if (inventoryIndex.value) return inventoryIndex.value
   try {
-    if (debugImg) console.log('[ProductosPage] loading inventory index')
     // use loadGetHastaData to try to obtain the raw list (handles several payload shapes)
     const invRaw = await loadGetHastaData('Inventario/ObtenerListadoPaginado')
     // normalize to an array
@@ -202,10 +214,8 @@ async function ensureInventoryIndex() {
       }
     }
     inventoryIndex.value = { ids, codes }
-    if (debugImg) console.log('[ProductosPage] inventory index built:', { ids: ids.size, codes: codes.size })
     return inventoryIndex.value
   } catch (e) {
-    if (debugImg) console.warn('[ProductosPage] could not load inventory index', e)
     inventoryIndex.value = { ids: new Set(), codes: new Set() }
     return inventoryIndex.value
   }
@@ -265,30 +275,25 @@ async function loadProducts(reset = false) {
 
     for (const ep of triedEndpoints) {
       try {
-        if (debugImg) console.log('[ProductosPage] trying endpoint:', ep)
         let r
         // use loadGet for endpoints that follow the paginado pattern (it extracts result.elementos)
-        if (ep.startsWith('Producto/ObtenerListadoPaginado') || ep.startsWith('Inventario/ObtenerListadoPaginado')) {
+        if (ep.startsWith('Producto/ObtenerListadoPaginado')) {
           r = await loadGet(ep)
         } else {
           r = await loadGetHastaData(ep)
         }
-        if (debugImg) console.log('[ProductosPage] response from', ep, ':', r)
         // accept only responses that actually contain items; otherwise continue to next candidate
         if (responseHasItems(r)) {
           resp = r
           break
         } else {
-          if (debugImg) console.log('[ProductosPage] response from', ep, 'had no items, trying next')
         }
       } catch (err) {
         if (debugImg) console.warn('[ProductosPage] endpoint failed:', ep, err)
       }
     }
-    if (debugImg) console.log('[ProductosPage] selected response:', resp)
 
     if (!resp) {
-      if (debugImg) console.warn('[ProductosPage] no response returned by endpoints')
       productos.value = []
       total.value = 0
       return
@@ -312,16 +317,9 @@ async function loadProducts(reset = false) {
     }
 
     if (debugImg) {
-      console.log('[ProductosPage] normalized items length:', Array.isArray(items) ? items.length : 0)
       if (Array.isArray(items) && items.length) {
         const s = items[0]
-        console.log('[ProductosPage] sample item (id,categoriaId,categoriaIds,categorias,categoriasList):', s && {
-          id: s.id ?? s.productoId ?? s._id ?? null,
-          categoriaId: s.categoriaId ?? s.categoria ?? null,
-          categoriaIds: s.categoriaIds ?? s.categoriasIds ?? null,
-          categorias: s.categorias ?? null,
-          categoriasList: s.categoriasList ?? s.categoriasObj ?? null
-        })
+
       }
     }
 
@@ -418,13 +416,10 @@ async function loadProducts(reset = false) {
         const prodId = p.id || p.productoId || p.productId || p._id
         if (prodId) {
           try {
-            if (debugImg) console.log('[ProductosPage] preloading image for product', prodId)
             const detailed = await loadGetHastaData(`Producto/ObtenerProductoEspecifico/${prodId}`)
-            if (debugImg) console.log('[ProductosPage] got detailed product for', prodId, ':', detailed)
             // Fusionar variantes del producto detallado al producto del listado
             if (detailed && detailed.productosVariantes) {
               p.productosVariantes = detailed.productosVariantes
-              if (debugImg) console.log('[ProductosPage] merged productosVariantes:', p.productosVariantes.length, 'variants')
             }
                         if (detailed && detailed.productoVariantes && detailed.productoVariantes.length) {
               const pv = detailed.productoVariantes[0]
@@ -441,13 +436,11 @@ async function loadProducts(reset = false) {
                 const fotoHeredada = getFotoFromVarianteWithFallback(pv, detailed)
                 if (fotoHeredada) {
                   fotoUrl = typeof fotoHeredada === 'object' ? (fotoHeredada.url || fotoHeredada.img || fotoHeredada.path) : fotoHeredada
-                  if (debugImg) console.log('[ProductosPage] using inherited foto for', prodId)
                 }
               }
 
               if (fotoUrl) {
                 p.__preloadedFoto = fotoUrl
-                if (debugImg) console.log('[ProductosPage] preloaded foto for', prodId, ':', fotoUrl)
               }
             }
           } catch (e) {
@@ -462,7 +455,6 @@ async function loadProducts(reset = false) {
     } else {
       productos.value = productos.value.concat(pageItems.map(p => ({ ...p })))
     }
-    if (debugImg) console.log('[ProductosPage] loaded items count:', productos.value.length, productos.value[0])
   } catch (e) {
     console.warn('[ProductosPage] loadProducts error', e)
   } finally {
@@ -470,12 +462,12 @@ async function loadProducts(reset = false) {
   }
 }
 
-function loadMore() {
+async function loadMore() {
   page.value += 1
-  loadProducts(false)
+  await loadProducts(false)
 }
 
-function resetFilters() {
+async function resetFilters() {
   filters.q = ''
   filters.precioMin = null
   filters.precioMax = null
@@ -483,7 +475,7 @@ function resetFilters() {
   filters.rebajas = false
   // also update route
   router.replace({ name: 'Productos', query: {} }).catch(() => {})
-  loadProducts(true)
+  await loadProducts(true)
 }
 
 async function applyFilters() {
@@ -495,7 +487,7 @@ async function applyFilters() {
   if (filters.novedades) query.novedades = '1'
   if (filters.rebajas) query.rebajas = '1'
   router.push({ name: 'Productos', query }).catch(() => {})
-  loadProducts(true)
+  await loadProducts(true)
 }
 
 function goToProduct(productOrId) {
@@ -518,13 +510,10 @@ function normalizarProductoParaCarrito(producto, fotoPreferida = null) {
     stock: v.stock,
     principal: v.principal,
     otrasVariantesIds: v.otrasVariantesIds || [],
-    // Mapear fotos con la estructura correcta
     fotos: (v.fotos || []).map(f => {
       if (typeof f === 'string') {
-        // Si es string, asumimos que es una URL
         return { id: null, url: f, descripcion: '', esPrincipal: false, orden: 0 }
       } else {
-        // Si es objeto, mapear con los campos disponibles
         return {
           id: f.id || null,
           url: f.url || f.imagen || f.path || '',
@@ -534,14 +523,12 @@ function normalizarProductoParaCarrito(producto, fotoPreferida = null) {
         }
       }
     }),
-    slide: 1 // índice inicial del carrusel de esta variante
+    slide: 1
   }))
 
-  // Obtener ID de variante (usar la primera por defecto, preferentemente la principal)
-  const varianteId = variants.find(v => v.principal === true || v.principal === 'true')?.id ||
-                     (variants.length > 0 ? variants[0].id : null)
+console.log("variants: ",variants)
 
-  // Mapear fotos del producto principal con la estructura correcta
+  // Mapear fotos del producto principal
   let fotos = (producto.fotos || []).map(f => {
     if (typeof f === 'string') {
       return { id: null, url: f, descripcion: '', esPrincipal: false, orden: 0 }
@@ -556,7 +543,6 @@ function normalizarProductoParaCarrito(producto, fotoPreferida = null) {
     }
   })
 
-  // Si se proporcionó una fotoPreferida y no hay fotos, agregarla al principio
   if (fotoPreferida && fotos.length === 0) {
     fotos.unshift({
       id: null,
@@ -567,9 +553,12 @@ function normalizarProductoParaCarrito(producto, fotoPreferida = null) {
     })
   }
 
-  // Estructura normalizada idéntica a ProductoDetallePage
+    // Obtener ID de variante (usar la principal si existe, si no la primera)
+// Obtener ID de variante (usar la principal si existe, si no la primera, si no el producto)
+const varianteId = variants.find(v => v.principal === true || v.principal === 'true')?.id || (variants.length > 0 ? variants[0].id : producto.id)
+  // Estructura normalizada
   const normalizado = {
-    id: producto.id,
+    id: varianteId, // 👈 ahora guarda el id de la variante
     codigo: producto.codigo,
     descripcion: producto.descripcion || producto.nombre,
     esActivo: producto.esActivo,
@@ -580,13 +569,16 @@ function normalizarProductoParaCarrito(producto, fotoPreferida = null) {
     monedaVentaId: producto.monedaVentaId,
     categoriasIds: producto.categoriasIds || [],
     categoriasDescripcion: producto.categoriasDescripcion,
-    varianteId: varianteId, // ID consistente para identificar en carrito
-    fotos: fotos,
-    variants: variants
+    varianteId: varianteId,
+    fotos,
+    variants,
+    tieneDescuento: producto.tieneDescuento ?? false,
+    precioVentaDescuento: producto.precioVentaDescuento ?? producto.precioVenta
   }
 
   return normalizado
 }
+
 
 function formatPrice(v) {
   if (v == null) return '0.00'
@@ -616,18 +608,6 @@ function getFotoUrlFromFoto(foto) {
 
 function getProductoImage(prod) {
   if (!prod) return null
-
-  // Show product structure for first few items (debug)
-  if (!window.__productosPageDebugged) {
-    window.__productosPageDebugged = true
-    console.group('[ProductosPage DEBUG] Sample producto structure:')
-    console.log('First producto:', prod)
-    console.log('Available keys:', Object.keys(prod))
-    if (prod.productosVariantes) console.log('productosVariantes[0]:', prod.productosVariantes[0])
-    if (prod.variants) console.log('variants[0]:', prod.variants[0])
-    console.groupEnd()
-  }
-
   // robust resolution: try many common fields and nested structures
   const tryFields = (obj, keys) => {
     if (!obj) return null
@@ -731,7 +711,6 @@ function getProductoImage(prod) {
     }
   }
 
-  if (debugImg) console.log('[ProductosPage] resolved image candidate for product', prod.id ?? prod.productoId ?? prod._id ?? null, '->', candidate)
   return candidate || null
 }
 
@@ -740,7 +719,6 @@ function getProductoImagePreferVariant(prod) {
 
   // Return pre-loaded foto if available
   if (prod.__preloadedFoto) {
-    if (debugImg) console.log('[ProductosPage] using preloaded foto:', prod.__preloadedFoto)
     return prod.__preloadedFoto
   }
 
@@ -780,7 +758,6 @@ function getProductoImagePreferVariant(prod) {
     }
   }
 
-  if (debugImg) console.log('[ProductosPage] getProductoImagePreferVariant returning null for product', prod.id)
   return null
 }
 
@@ -795,4 +772,5 @@ function getProductoImagePreferVariant(prod) {
 .clickable-card { cursor: pointer }
 .product-img { min-height: 160px; display: block }
 .product-img .q-img__image { object-fit: cover; width: 100%; height: 100% }
+.text-strike { text-decoration: line-through; }
 </style>

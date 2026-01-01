@@ -27,7 +27,14 @@
             :name="idx"
             class="flex flex-center bg-grey-2"
           >
-            <q-img :src="getFotoUrlFromFoto(foto)" style="height:100%; width:100%; object-fit:cover;" />
+            <q-img :src="getFotoUrlFromFoto(foto)" style="height:100%; width:100%; object-fit:cover;">
+  <template v-slot:after>
+    <q-badge v-if="producto.tieneDescuento" color="red" text-color="white" class="absolute-top-left q-ma-sm">
+      Oferta
+    </q-badge>
+  </template>
+</q-img>
+
           </q-carousel-slide>
         </q-carousel>
 
@@ -76,14 +83,33 @@
               </div>
             </q-btn>
           </div>
-        </div>        <div class="product-price q-mt-md">
-          <div class="text-subtitle1 text-weight-bold">
-            $ {{ displayedPrice() != null ? Number(displayedPrice()).toLocaleString('es-ES', { minimumFractionDigits:2 }) : '0.00' }} {{ displayedMonedaCodigo() }}
-          </div>
-          <div v-if="displayedOriginalPrice()" class="text-caption text-grey-6">
-            <s>$ {{ Number(displayedOriginalPrice()).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }} {{ displayedMonedaCodigo() }}</s>
-          </div>
         </div>
+        <div class="product-price q-mt-md">
+  <!-- Si el producto tiene descuento -->
+  <div v-if="producto.tieneDescuento" class="row items-center q-gutter-sm">
+    <!-- Precio original tachado -->
+    <div class="text-subtitle1 text-grey-6">
+      <s>
+        $ {{ Number(producto.precioVenta).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+        {{ displayedMonedaCodigo() }}
+      </s>
+    </div>
+    <!-- Precio con descuento -->
+    <div class="text-subtitle1 text-weight-bold text-primary">
+      $ {{ Number(producto.precioVentaDescuento).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+      {{ displayedMonedaCodigo() }}
+    </div>
+  </div>
+
+  <!-- Si no tiene descuento -->
+  <div v-else class="text-subtitle1 text-weight-bold">
+    $ {{ displayedPrice() != null
+          ? Number(displayedPrice()).toLocaleString('es-ES',{ minimumFractionDigits:2 })
+          : '0.00' }}
+    {{ displayedMonedaCodigo() }}
+  </div>
+</div>
+
 
         <div class="q-mb-lg product-desc">{{ producto.descripcion || 'Sin descripción' }}</div>
 
@@ -169,15 +195,32 @@
 
       <!-- Información -->
       <q-card-section class="rel-card-info">
-        <div class="text-subtitle2 ellipsis rel-card-name">
-          {{ item.descripcion || item.nombre }}
-        </div>
-        <div class="text-subtitle1 text-weight-bold rel-card-price">
-          $ {{ item.precioVenta != null ? Number(item.precioVenta).toLocaleString('es-ES',{ minimumFractionDigits:2 }) : '0.00' }}
-        </div>
+  <div class="text-subtitle2 ellipsis rel-card-name">
+    {{ item.descripcion || item.nombre }}
+  </div>
 
+  <!-- Mostrar precio con descuento si aplica -->
+  <div v-if="item.tieneDescuento" class="row items-center q-gutter-sm">
+    <!-- Precio original tachado -->
+    <div class="text-subtitle1 text-grey-6">
+      <s>
+        $ {{ Number(item.precioVenta).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+      </s>
+    </div>
+    <!-- Precio con descuento -->
+    <div class="text-subtitle1 text-weight-bold text-primary">
+      $ {{ Number(item.precioVentaDescuento).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
+    </div>
+  </div>
 
-      </q-card-section>
+  <!-- Si no tiene descuento -->
+  <div v-else class="text-subtitle1 text-weight-bold rel-card-price">
+    $ {{ item.precioVenta != null
+          ? Number(item.precioVenta).toLocaleString('es-ES',{ minimumFractionDigits:2 })
+          : '0.00' }}
+  </div>
+</q-card-section>
+
     </q-card>
   </div>
 </div>
@@ -301,7 +344,6 @@ async function cargarProducto(id) {
   try {
   // Obtener el objeto específico desde la API (usa la ruta que indicaste)
   const objeto = await loadGetHastaData(`Producto/ObtenerProductoEspecifico/${id}`)
-  console.debug('[ProductoDetalle] raw objeto ->', objeto)
 
   // Adaptamos el objeto recibido a la estructura que usamos en el front
   producto.value = {
@@ -316,6 +358,9 @@ async function cargarProducto(id) {
     monedaVentaId: objeto?.monedaVentaId,
     categoriasIds: objeto?.categoriasIds || [],
     categoriasDescripcion: objeto?.categoriasDescripcion || "-",
+    tieneDescuento:objeto?.tieneDescuento,
+    precioVentaDescuento:objeto?.precioVentaDescuento,
+
 
     // Mapeamos las variantes
     variants: (objeto?.productoVariantes || []).map(v => ({
@@ -379,7 +424,7 @@ onMounted(async() => {
  }
 
  await cargarProducto(route.params.id)
-
+console.log('Producto recibido en detalle:', producto)
  console.log("PP: ",producto.value)
 })
 
@@ -803,4 +848,7 @@ function getProductoImageRelacionados(prod) {
     height: 320px !important;
   }
 }
+
+.text-strike { text-decoration: line-through; }
+
 </style>

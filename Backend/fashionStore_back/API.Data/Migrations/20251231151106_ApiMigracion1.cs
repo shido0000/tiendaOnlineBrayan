@@ -237,6 +237,30 @@ namespace API.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Mensajerias",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Precio = table.Column<int>(type: "int", nullable: false),
+                    MonedaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActualizadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Mensajerias", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Mensajerias_Monedas_MonedaId",
+                        column: x => x.MonedaId,
+                        principalTable: "Monedas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "MovimientosContables",
                 columns: table => new
                 {
@@ -245,6 +269,7 @@ namespace API.Data.Migrations
                     CuentaContableId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Debe = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Haber = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    MonedaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -265,26 +290,8 @@ namespace API.Data.Migrations
                         principalTable: "CuentasContables",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Mensajerias",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Precio = table.Column<int>(type: "int", nullable: false),
-                    MonedaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FechaCreado = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FechaActualizado = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ActualizadoPor = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Mensajerias", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Mensajerias_Monedas_MonedaId",
+                        name: "FK_MovimientosContables_Monedas_MonedaId",
                         column: x => x.MonedaId,
                         principalTable: "Monedas",
                         principalColumn: "Id",
@@ -900,16 +907,26 @@ namespace API.Data.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "CuentasContables",
+                columns: new[] { "Id", "ActualizadoPor", "Codigo", "CreadoPor", "CuentaPadreId", "EsActivo", "EsDeMovimiento", "FechaActualizado", "FechaCreado", "Nombre" },
+                values: new object[,]
+                {
+                    { new Guid("11111111-1111-1111-1111-111111111111"), "", "1.1.01", "", null, true, true, new DateTime(2025, 12, 31, 10, 11, 4, 247, DateTimeKind.Local).AddTicks(2448), new DateTime(2025, 12, 31, 10, 11, 4, 247, DateTimeKind.Local).AddTicks(2395), "Caja" },
+                    { new Guid("22222222-2222-2222-2222-222222222222"), "", "5.1.01", "", null, true, true, new DateTime(2025, 12, 31, 10, 11, 4, 247, DateTimeKind.Local).AddTicks(2484), new DateTime(2025, 12, 31, 10, 11, 4, 247, DateTimeKind.Local).AddTicks(2482), "Gastos" },
+                    { new Guid("44444444-4444-4444-4444-444444444444"), "", "4.1.01", "", null, true, true, new DateTime(2025, 12, 31, 10, 11, 4, 247, DateTimeKind.Local).AddTicks(2492), new DateTime(2025, 12, 31, 10, 11, 4, 247, DateTimeKind.Local).AddTicks(2490), "Ingresos por Ventas" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "Permisos",
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "Descripcion", "FechaActualizado", "FechaCreado", "Nombre" },
                 values: new object[,]
                 {
-                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", "Permite ver, crear, modificar y eliminar usuarios en el sistema.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2869), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2865), "Gestionar usuarios" },
-                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", "Permite ver los usuarios existentes en el sistema y sus datos.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2848), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2839), "Listar usuarios" },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", "Permite ver los productos existentes en el sistema y sus datos.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2934), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2905), "Listar Productos" },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", "Permite ver, crear, modificar y eliminar productos en el sistema.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2948), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2945), "Gestionar Productos" },
-                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", "Permite ver, crear, modificar y eliminar roles en el sistema.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2897), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2894), "Gestionar rol" },
-                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", "Permite ver los roles existentes en el sistema y sus datos.", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2887), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2883), "Listar roles" }
+                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", "Permite ver, crear, modificar y eliminar usuarios en el sistema.", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1217), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1214), "Gestionar usuarios" },
+                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", "Permite ver los usuarios existentes en el sistema y sus datos.", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1201), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1196), "Listar usuarios" },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", "Permite ver los productos existentes en el sistema y sus datos.", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1262), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1245), "Listar Productos" },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", "Permite ver, crear, modificar y eliminar productos en el sistema.", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1274), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1272), "Gestionar Productos" },
+                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", "Permite ver, crear, modificar y eliminar roles en el sistema.", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1240), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1237), "Gestionar rol" },
+                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", "Permite ver los roles existentes en el sistema y sus datos.", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1231), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1229), "Listar roles" }
                 });
 
             migrationBuilder.InsertData(
@@ -917,9 +934,9 @@ namespace API.Data.Migrations
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "FechaActualizado", "FechaCreado", "Nombre" },
                 values: new object[,]
                 {
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2577), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2400), "Administrador" },
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336523"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2620), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2616), "Vendedor" },
-                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336524"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2631), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(2628), "Cliente" }
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1022), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(961), "Administrador" },
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336523"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1056), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1054), "Vendedor" },
+                    { new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336524"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1064), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1062), "Cliente" }
                 });
 
             migrationBuilder.InsertData(
@@ -927,18 +944,18 @@ namespace API.Data.Migrations
                 columns: new[] { "Id", "ActualizadoPor", "CreadoPor", "FechaActualizado", "FechaCreado", "PermisoId", "RolId" },
                 values: new object[,]
                 {
-                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4059), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4050), new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(3832), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(3810), new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4218), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4215), new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4244), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4226), new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4210), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4206), new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
-                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4199), new DateTime(2025, 12, 21, 5, 39, 15, 822, DateTimeKind.Local).AddTicks(4194), new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") }
+                    { new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1658), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1656), new Guid("4129cf49-cc22-46a1-9625-501855f2da8b"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1643), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1636), new Guid("56b3924b-209b-40fb-9f31-ad75c12f4528"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1676), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1674), new Guid("80abf232-a641-478d-8720-f0ae49e8a301"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1692), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1682), new Guid("80abf232-a641-478d-8720-f0ae49e8a302"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1670), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1668), new Guid("90abf232-a641-478d-8720-f0ae49e8a306"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") },
+                    { new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), "", "", new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1665), new DateTime(2025, 12, 31, 10, 11, 4, 225, DateTimeKind.Local).AddTicks(1662), new Guid("e36d283c-8b25-42b6-83bd-56edd953e770"), new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522") }
                 });
 
             migrationBuilder.InsertData(
                 table: "Usuarios",
                 columns: new[] { "Id", "ActualizadoPor", "Apellidos", "Contrasenna", "Correo", "CreadoPor", "DebeCambiarContrasenna", "EsActivo", "FechaActualizado", "FechaCreado", "Nombre", "RolId", "Telefono", "Username" },
-                values: new object[] { new Guid("42717fb8-6e3f-4c94-b6b1-a88e8718d0a6"), "", "1", "$2a$10$EixZaYVK1fsbw1Zfbx3OXePaWxn96p36Zf4d0xF4f5f5f5f5f5f5f", "1@api.cu", "", false, true, new DateTime(2025, 12, 21, 5, 39, 15, 825, DateTimeKind.Local).AddTicks(2311), new DateTime(2025, 12, 21, 5, 39, 15, 825, DateTimeKind.Local).AddTicks(2238), "1", new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "54364363", "1" });
+                values: new object[] { new Guid("42717fb8-6e3f-4c94-b6b1-a88e8718d0a6"), "", "1", "$2a$10$EixZaYVK1fsbw1Zfbx3OXePaWxn96p36Zf4d0xF4f5f5f5f5f5f5f", "1@api.cu", "", false, true, new DateTime(2025, 12, 31, 10, 11, 4, 226, DateTimeKind.Local).AddTicks(4487), new DateTime(2025, 12, 31, 10, 11, 4, 226, DateTimeKind.Local).AddTicks(4441), "1", new Guid("c0b7e3b3-a06e-4580-b985-bb2fc4336522"), "54364363", "1" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AsientosContables_Id",
@@ -1124,6 +1141,11 @@ namespace API.Data.Migrations
                 table: "MovimientosContables",
                 column: "Id",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MovimientosContables_MonedaId",
+                table: "MovimientosContables",
+                column: "MonedaId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OtrasVariantes_Id",

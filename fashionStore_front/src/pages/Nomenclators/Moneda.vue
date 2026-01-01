@@ -49,7 +49,7 @@
             >Adicionar</q-tooltip
           >
         </q-btn>
-        <q-btn
+      <!--  <q-btn
           outline
           class="bg-white q-ml-sm"
           style="width: 20px"
@@ -60,7 +60,7 @@
           <q-tooltip class="bg-primary" :offset="[10, 10]">
             Imprimir
           </q-tooltip>
-        </q-btn>
+        </q-btn>-->
         <q-dialog v-model="dialog" persistent>
           <q-card style="width: 700px; max-width: 80vw; height: auto">
             <header class="q-pa-sm bg-primary">

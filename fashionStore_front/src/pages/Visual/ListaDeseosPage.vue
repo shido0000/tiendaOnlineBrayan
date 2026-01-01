@@ -51,9 +51,18 @@
             <!-- Información del producto -->
             <div class="col q-pl-md">
               <div class="text-subtitle1 text-weight-bold">{{ p.nombre }}</div>
-              <div class="text-caption text-grey-7">
-                $ {{ formatPrice(p.precioVenta) }}
-              </div>
+              <div v-if="p.tieneDescuento" class="row items-center q-gutter-sm">
+  <div class="text-caption text-grey-6">
+    <s>$ {{ formatPrice(p.precioVenta) }}</s>
+  </div>
+  <div class="text-caption text-weight-bold text-primary">
+    $ {{ formatPrice(p.precioVentaDescuento) }}
+  </div>
+</div>
+<div v-else class="text-caption text-grey-7">
+  $ {{ formatPrice(p.precioVenta) }}
+</div>
+
             </div>
 
             <!-- Acciones -->

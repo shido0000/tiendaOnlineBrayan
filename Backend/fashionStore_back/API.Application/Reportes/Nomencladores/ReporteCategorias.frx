@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" UseFileCache="true" TextQuality="Regular" ReportInfo.Name="Simple List" ReportInfo.Author="Fast Reports Inc" ReportInfo.Description="Demonstrates a simple list report. To create it:&#13;&#10;- go to &quot;Data&quot; menu and select &quot;Choose Report Data...&quot; item to select a datasource;&#13;&#10;- go to &quot;Report|Configure Bands...&quot; menu to create the band structure;&#13;&#10;- return to the report page, doubleclick the data band to show its editor;&#13;&#10;- choose the datasource;&#13;&#10;- drag data from the Data Dictionary window to the band." ReportInfo.Created="01/17/2008 03:05:57" ReportInfo.Modified="12/31/2025 12:24:14" ReportInfo.CreatorVersion="2020.1.17.0">
+  <Dictionary>
+    <JsonDataSourceConnection Name="Connection" ConnectionString="rijcmlq78kdE03xidOcBpwC6RkU+wpAbI69X1bpUbQ0ZQ37GKf8PA7tM4DZnTYMsdaVz0/0//TUJVzaB4KD3eM3USq9E96KrRqUS35Z12tq6mup8cTjiFRJitgfH3sx1OERFMYasItewrJAb7VEaFrYoVqS5IXTdhVuUpPrKLQueJL+/SosDAR1S3R++tnNCMZq3BOWqC5VoGP/ZCKY7M/Io3pNKW3ByU4emawGtYwe/9HFyFfacuguZgHMTXrcB/MHx2j0RFYlteVS9z5XXVG5qbZtY57V1Hkgq8KRTQMvXXV+EgtyZg8YJ6q9MGVH+8LjknzolLL0ImERHtyZuRCExmekOtKcOFv2OOVceTS1CrKxnP43t63ajAybLDmroxG8YMhkyZEh2UfPeP5Geg84eUIbT6go9TUI+hCMxNntW04ir79/tw04KnaydQMwTS1EjY7PFe5TmCe/jebbpVt+eV13+A==">
+      <JsonTableDataSource Name="JSON" DataType="FastReport.Data.JsonConnection.JsonParser.JsonArray" Enabled="true" TableName="JSON">
+        <Column Name="index" DataType="System.Int32"/>
+        <Column Name="item" DataType="FastReport.JsonBase">
+          <Column Name="Descripcion" DataType="System.String"/>
+          <Column Name="Activo" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Id" DataType="System.String"/>
+        </Column>
+        <Column Name="array" DataType="FastReport.JsonBase"/>
+      </JsonTableDataSource>
+    </JsonDataSourceConnection>
+  </Dictionary>
+  <ReportPage Name="Page1" RawPaperSize="9" Watermark.Font="Arial, 60pt">
+    <PageHeaderBand Name="PageHeader1" Width="718.2" Height="113.4">
+      <TableObject Name="Table1" Top="75.6" Width="724.47" Height="37.8" Border.Lines="Top, Bottom">
+        <TableColumn Name="Column10" Width="255.15"/>
+        <TableColumn Name="Column9" Width="469.32"/>
+        <TableRow Name="Row1" Height="37.8">
+          <TableCell Name="Cell9" Fill.Color="WhiteSmoke" Text="Nombre" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+          <TableCell Name="Cell2" Fill.Color="WhiteSmoke" Text="Descripción" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+        </TableRow>
+      </TableObject>
+      <TextObject Name="Text27" Left="463.05" Top="28.35" Width="66.15" Height="18.9" Text="Página  : " VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
+      <TextObject Name="Text28" Left="529.2" Top="28.35" Width="56.7" Height="18.9" Text="[Page#] / [TotalPages#]" VertAlign="Center" Font="Times New Roman, 11pt"/>
+      <TextObject Name="Text24" Left="463.05" Width="66.15" Height="18.9" Text="Fecha   :" VertAlign="Center" Font="Times New Roman, 11pt, style=Bold"/>
+      <TextObject Name="Text25" Left="529.2" Width="94.5" Height="18.9" Text="[Day([Date])]/[Month([Date])]/[Year([Date])]" VertAlign="Center" Font="Times New Roman, 11pt"/>
+      <TextObject Name="Text26" Left="623.7" Width="94.5" Height="18.9" Text="[FormatDateTime([Date],&quot;hh:mm&quot;)] [IIf(Hour([Date]) &gt;= 12,&quot;pm&quot;, &quot;am&quot;)]" Format="Time" Format.Format="t" VertAlign="Center" Font="Times New Roman, 11pt"/>
+      <TextObject Name="Text2" Left="151.2" Width="311.85" Height="47.25" Text="Categorías" HorzAlign="Center" VertAlign="Center" Font="Times New Roman, 13pt, style=Bold"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="118.73" Width="718.2" Height="28.35" CanGrow="true" DataSource="JSON">
+      <TextObject Name="Text4" Left="255.15" Width="481.95" Height="28.35" CanGrow="true" CanBreak="false" Text="[JSON.item.Descripcion]" VertAlign="Center" Font="Arial, 10pt"/>
+      <TextObject Name="Text29" Width="255.15" Height="28.35" CanGrow="true" CanBreak="false" Text="[JSON.item.Descripcion]" VertAlign="Center" Font="Arial, 10pt"/>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="152.42" Width="718.2"/>
+  </ReportPage>
+</Report>

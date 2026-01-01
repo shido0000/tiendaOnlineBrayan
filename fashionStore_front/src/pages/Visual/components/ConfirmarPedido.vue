@@ -31,13 +31,38 @@
               <q-item-section>
                 <q-item-label>{{ it.nombre || it.descripcion || 'Sin nombre' }}</q-item-label>
                 <q-item-label caption>
-                  Cantidad: {{ $props.desdeElCarrito ? it.cantidad : props.cantidad || 0 }} · Precio: ${{ (it.precioVenta || 0).toFixed(2) }} {{ getItemMonedaCodigo(it) }}
-                </q-item-label>
+  Cantidad: {{ $props.desdeElCarrito ? it.cantidad : props.cantidad || 0 }} ·
+  <span v-if="it.tieneDescuento">
+    <s class="text-grey-6">
+      ${{ (it.precioVenta || 0).toFixed(2) }}
+    </s>
+    <span class="text-weight-bold text-primary">
+      ${{ (it.precioVentaDescuento || 0).toFixed(2) }}
+    </span>
+  </span>
+  <span v-else>
+    ${{ (it.precioVenta || 0).toFixed(2) }}
+  </span>
+  {{ getItemMonedaCodigo(it) }}
+</q-item-label>
+
               </q-item-section>
               <q-item-section side>
-                <div class="text-weight-bold text-primary">
-                  ${{ ((it.precioVenta || 0) * ($props.desdeElCarrito ? it.cantidad : props.cantidad|| 0)).toFixed(2) }} {{ getItemMonedaCodigo(it) }}
-                </div>
+                <div v-if="it.tieneDescuento" class="row items-center q-gutter-sm">
+  <div class="text-subtitle2 text-grey-6">
+    <s>
+      ${{ ((it.precioVenta || 0) * ($props.desdeElCarrito ? it.cantidad : props.cantidad || 0)).toFixed(2) }}
+    </s>
+  </div>
+  <div class="text-weight-bold text-primary">
+    ${{ ((it.precioVentaDescuento || it.precioVenta || 0) * ($props.desdeElCarrito ? it.cantidad : props.cantidad || 0)).toFixed(2) }}
+  </div>
+  {{ getItemMonedaCodigo(it) }}
+</div>
+<div v-else class="text-weight-bold text-primary">
+  ${{ ((it.precioVenta || 0) * ($props.desdeElCarrito ? it.cantidad : props.cantidad || 0)).toFixed(2) }} {{ getItemMonedaCodigo(it) }}
+</div>
+
               </q-item-section>
             </q-item>
           </q-list>
@@ -410,7 +435,7 @@ const mostrarMonedas = computed(() => {
 })
 
 // Calcular totales en cada moneda
-const totalesEnMonedas = computed(() => {
+/*const totalesEnMonedas = computed(() => {
   const totales = {}
 
   const monedasUsadas = obtenerMonedasUsadas()
@@ -450,12 +475,12 @@ const totalesEnMonedas = computed(() => {
     if (monedaMensajeriaObj && monedaMensajeriaObj.id !== monedaBase.id) {
       const tasaMensajeria = monedaMensajeriaObj.tasaCambio || 1
       const tasaBase = monedaBase.tasaCambio || 1
-      totalEnBase += (mensajeriaPrecio.value * tasaBase) / tasaMensajeria
+      totalEnBase += (mensajeriaPrecio.value *tasaMensajeria ) / tasaBase
     } else {
       totalEnBase += mensajeriaPrecio.value
     }
   }
-
+console.log("descuento.value: ",descuento.value)
   // Restar descuento (en moneda base)
   totalEnBase -= descuento.value
 
@@ -465,12 +490,107 @@ const totalesEnMonedas = computed(() => {
     if (moneda) {
       const tasaDestino = moneda.tasaCambio || 1
       const tasaBase = monedaBase.tasaCambio || 1
-      totales[moneda.codigo] = (totalEnBase * tasaDestino) / tasaBase
+
+      console.log("moneda: ",moneda)
+      console.log("totalEnBase: ",totalEnBase)
+      console.log("tasaDestino: ",tasaDestino)
+      console.log("tasaBase: ",tasaBase)
+
+
+      totales[moneda.codigo] = (totalEnBase * tasaBase) /tasaDestino
     }
   })
 
   return totales
 })
+*/
+
+const totalesEnMonedas = computed(() => {
+  const totales = {}
+
+  const monedasUsadas = obtenerMonedasUsadas()
+  if (monedasUsadas.length <= 1) return totales
+
+  // Moneda base (la primera en la lista)
+  const monedaBase = monedaMap.value[monedasUsadas[0]]
+  if (!monedaBase) return totales
+
+  let totalEnBase = 0
+  const tasaBase = monedaBase.tasaCambio || 1
+
+  // Productos
+  items.value.forEach(item => {
+    const monedaId = getMonedaVentaId(item)
+    const monedaItem = monedaMap.value[monedaId]
+   const montoUnitario = item.tieneDescuento
+  ? (item.precioVentaDescuento || item.precioVenta || 0)
+  : (item.precioVenta || 0)
+
+const monto = montoUnitario * (item.cantidad || 0)
+
+
+    if (monedaItem && monedaItem.id !== monedaBase.id) {
+      const tasaItem = monedaItem.tasaCambio || 1
+      // convertir a base
+
+ console.log("tasaItem: ",tasaItem)
+      console.log("monto: ",monto)
+      console.log("tasaBase: ",tasaBase)
+
+      totalEnBase += (monto * tasaBase) / tasaItem
+    } else {
+              console.log("monto: ",monto)
+      console.log("totalEnBase: ",totalEnBase)
+      totalEnBase += monto
+    }
+  })
+
+  // Gestor (ya en moneda base)
+  if (gestorPrecio.value > 0) {
+    totalEnBase += gestorPrecio.value
+  }
+
+  // Mensajería
+  if (mensajeriaPrecio.value > 0) {
+    const mensajeria = itemsMensajeria.value.find(m => m.id === form.value.mensajeriaId)
+    const monedaMensajeriaObj = monedaMap.value[mensajeria?.monedaId]
+    const montoMensajeria = mensajeriaPrecio.value
+
+    if (monedaMensajeriaObj && monedaMensajeriaObj.id !== monedaBase.id) {
+      const tasaMensajeria = monedaMensajeriaObj.tasaCambio || 1
+      // convertir a base
+
+      console.log("montoMensajeria: ",montoMensajeria)
+      console.log("tasaMensajeria: ",tasaMensajeria)
+      console.log("tasaBase: ",tasaBase)
+      console.log("totalEnBase: ",totalEnBase)
+
+
+      totalEnBase += (montoMensajeria * tasaMensajeria) / tasaBase
+    } else {
+      totalEnBase += montoMensajeria
+    }
+  }
+
+  // Descuento (ya en moneda base)
+  if (descuento.value > 0) {
+    totalEnBase -= descuento.value
+  }
+
+  // Convertir a cada moneda
+  monedasUsadas.forEach(monedaId => {
+    const moneda = monedaMap.value[monedaId]
+    if (moneda) {
+      const tasaDestino = moneda.tasaCambio || 1
+      // convertir de base a destino
+      totales[moneda.codigo] = (totalEnBase * tasaBase) / tasaDestino
+    }
+  })
+
+  return totales
+})
+
+
 
 // precios extras
 const gestorPrecio = computed(() => {
@@ -508,7 +628,11 @@ const totalPriceConvertido = computed(() => {
   items.value.forEach(item => {
     const monedaId = getMonedaVentaId(item)
     const monedaItem = monedaMap.value[monedaId]
-    const monto = item.precioVenta * item.cantidad
+const montoUnitario = item.tieneDescuento
+  ? (item.precioVentaDescuento || item.precioVenta || 0)
+  : (item.precioVenta || 0)
+
+const monto = montoUnitario * (item.cantidad || 0)
 
     if (monedaItem && monedaItem.id !== monedaBase.id) {
       const tasaItem = monedaItem.tasaCambio || 1
@@ -543,13 +667,25 @@ const mensajeriaPrecioConvertido = computed(() => {
   if (monedaMensajeriaObj && monedaMensajeriaObj.id !== monedaBase.id) {
     const tasaMensajeria = monedaMensajeriaObj.tasaCambio || 1
     const tasaBase = monedaBase.tasaCambio || 1
-    return (mensajeriaPrecio.value * tasaBase) / tasaMensajeria
+
+    console.log("monedaMensajeriaObj: ",monedaMensajeriaObj)
+  console.log("tasaMensajeria: ",tasaMensajeria)
+
+    return (mensajeriaPrecio.value *tasaMensajeria ) / tasaBase
   }
+
+
+
   return mensajeriaPrecio.value
 })
 
 // total con extras y descuento (usando valores convertidos)
 const totalConExtras = computed(() => {
+    console.log("mensajeriaPrecioConvertido.value: ",mensajeriaPrecioConvertido.value)
+    console.log("totalPriceConvertido.value: ",totalPriceConvertido.value)
+    console.log("descuento.value: ",descuento.value)
+    console.log("gestorPrecioConvertido.value: ",gestorPrecioConvertido.value)
+
   return  totalPriceConvertido.value - descuento.value  + gestorPrecioConvertido.value + mensajeriaPrecioConvertido.value
 })
 
@@ -658,9 +794,9 @@ const payload = JSON.parse(
         // Limpiar localStorage también para mayor seguridad
         localStorage.removeItem('fashion_cart_v1')
 
-        if(!props.desdeElCarrito){
+       // if(!props.desdeElCarrito){
           router.push({ name: 'IndexPage' })
-        }
+        //}
   showDialog.value = false
     }
   })

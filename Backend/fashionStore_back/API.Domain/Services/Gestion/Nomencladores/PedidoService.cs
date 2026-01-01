@@ -186,22 +186,41 @@ namespace API.Domain.Services.Gestion.Nomencladores
             var cantPedidos = await _repositorios.Pedidos.CountAsync();
 
             var primerProducto = generarPedidoDto.Productos.FirstOrDefault();
-            var MonedaVentaId = await _repositorios.ProductoVariantes
+
+            var MonedaVentaId = await _repositorios.Productos
                                             .GetQuery()
                                             .AsNoTracking()
-                                            .Include(e => e.Producto)
                                             .Where(e => e.Id == primerProducto.ProductoId)
-                                            .Select(e => e.Producto.MonedaVentaId)
+                                            .Select(e => e.MonedaVentaId)
                                             .FirstOrDefaultAsync();
 
-            var costoEnvio = generarPedidoDto.MensajeriaId.HasValue
-    ? await _repositorios.Mensajerias
-                        .GetQuery()
-                        .AsNoTracking()
-                        .Where(e => e.Id == generarPedidoDto.MensajeriaId)
-                        .Select(e => e.Precio)
-                        .FirstOrDefaultAsync()
-    : null;
+            var MonedaVentaTasa = await _repositorios.Productos
+                                            .GetQuery()
+                                            .AsNoTracking()
+                                            .Include(e => e.MonedaVenta)
+                                            .Where(e => e.Id == primerProducto.ProductoId)
+                                            .Select(e => e.MonedaVenta.TasaCambio)
+                                            .FirstOrDefaultAsync();
+
+            //var costoEnvio = generarPedidoDto.MensajeriaId.HasValue
+            //                    ? await _repositorios.Mensajerias
+            //                                        .GetQuery()
+            //                                        .AsNoTracking()
+            //                                        .Where(e => e.Id == generarPedidoDto.MensajeriaId)
+            //                                        .Select(e => e.Precio)
+            //                                        .FirstOrDefaultAsync()
+            //                                        : null;
+            var mensajeria = generarPedidoDto.MensajeriaId.HasValue
+                                ? await _repositorios.Mensajerias
+                                                    .GetQuery()
+                                                    .Include(e => e.Moneda)
+                                                    .AsNoTracking()
+                                                    .Where(e => e.Id == generarPedidoDto.MensajeriaId)
+                                                    .Select(e => new { e.Precio, e.Moneda.Id, e.Moneda.TasaCambio })
+                                                    .FirstOrDefaultAsync()
+                                                    : null;
+
+            var costoEnvio = mensajeria != null ? mensajeria.Precio : null;
 
             Guid? cuponId = generarPedidoDto.CuponId;
 
@@ -234,14 +253,23 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 GestorPedidos = new(),
             };
 
+            if (mensajeria.Id != MonedaVentaId)
+            {
+                nuevoPedido.Shipping = nuevoPedido.Shipping / MonedaVentaTasa;
+            }
+
             var listadoDetalles = new List<PedidoDetalle>();
 
             foreach (var producto in generarPedidoDto.Productos)
             {
-                var productoExistente = await _repositorios.ProductoVariantes
-                                       .GetQuery()
-                                       .Include(e => e.Producto)
-                                       .FirstOrDefaultAsync(e => e.Id == producto.ProductoId);
+                //var productoExistente = await _repositorios.ProductoVariantes
+                //                       .GetQuery()
+                //                       .Include(e => e.Producto)
+                //                       .FirstOrDefaultAsync(e => e.Id == producto.ProductoId);
+
+                var productoExistente = await _repositorios.Productos
+                                     .GetQuery()
+                                     .FirstOrDefaultAsync(e => e.Id == producto.ProductoId);
 
                 var descuento = await _DescuentoService.ObtenerDescuentoActivoDelProducto(productoExistente.Id);
 
@@ -249,17 +277,35 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
                 if (descuento != null)
                 {
-                    descuentoAplicado = descuento.EsMontoFijo ? descuento.Valor : productoExistente.Producto.PrecioVenta * (descuento.Valor / 100);
+                    //  descuentoAplicado = descuento.EsMontoFijo ? descuento.Valor : productoExistente.Producto.PrecioVenta * (descuento.Valor / 100);
+                    descuentoAplicado = descuento.EsMontoFijo ? descuento.Valor : productoExistente.PrecioVenta * (descuento.Valor / 100);
                 }
+
+                var esProducto = await _repositorios.Productos.AnyAsync(e => e.Id == producto.ProductoId);
+
+                if (esProducto)
+                {
+                    var product = await _repositorios.Productos
+                                                .GetQuery()
+                                                .Include(e => e.ProductosVariantes)
+                                                .FirstOrDefaultAsync(e => e.Id == producto.ProductoId);
+
+                    var primerProductoVariante = product.ProductosVariantes.FirstOrDefault();
+                    producto.ProductoId = primerProductoVariante.Id;
+                }
+
                 listadoDetalles.Add(new PedidoDetalle()
                 {
                     PedidoId = nuevoPedido.Id,
                     ProductoVarianteId = producto.ProductoId,
+                    // ProductoVarianteId = producto.ProductoId,
                     DescuentoId = descuento != null ? descuento.DescuentoId : null,
                     Cantidad = producto.Cantidad,
-                    PrecioUnitario = productoExistente.Producto.PrecioVenta,
+                    // PrecioUnitario = productoExistente.Producto.PrecioVenta,
+                    PrecioUnitario = productoExistente.PrecioVenta,
                     DescuentoAplicado = descuentoAplicado,
-                    LineTotal = (producto.Cantidad * productoExistente.Producto.PrecioVenta) - (producto.Cantidad * descuentoAplicado),
+                    //  LineTotal = (producto.Cantidad * productoExistente.Producto.PrecioVenta) - (producto.Cantidad * descuentoAplicado),
+                    LineTotal = (producto.Cantidad * productoExistente.PrecioVenta) - (producto.Cantidad * descuentoAplicado),
                     EstadoLinea = EstadoLinea.Pendiente,
                 });
             }
@@ -293,7 +339,8 @@ namespace API.Domain.Services.Gestion.Nomencladores
             // Asignar al pedido
             nuevoPedido.Discount = descuentoDetalles + descuentoPorCupon;
             nuevoPedido.Subtotal = subtotalProductos;
-            nuevoPedido.Total = nuevoPedido.Subtotal + nuevoPedido.Shipping - descuentoPorCupon;
+            //nuevoPedido.Total = nuevoPedido.Subtotal + nuevoPedido.Shipping - descuentoPorCupon;
+            nuevoPedido.Total = nuevoPedido.Subtotal - nuevoPedido.Discount + nuevoPedido.Shipping;
 
             if (generarPedidoDto.GestorId.HasValue)
             {

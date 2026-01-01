@@ -22,11 +22,23 @@ namespace API.Domain.Services.Contabilidad
         /// Estructura: 
         /// - DEBE: Caja/Cuenta Bancaria (Activo)
         /// - HABER: Ingresos por Ventas (Ingresos)
+        /// - DEBE: Gastos de Gestores y Mensajería (si aplican)
+        /// - HABER: Cuentas por Pagar
+        /// Considera conversión de monedas para gastos en diferentes monedas
         /// </summary>
         public async Task<Guid> GenerarAsientoVenta(Venta venta)
         {
             if (venta == null)
                 throw new CustomException() { Status = 400, Message = "La venta no puede ser nula" };
+
+            // Obtener el pedido con sus relaciones
+            var pedido = await _repositorios.Pedidos
+                .GetQuery()
+                .Include(p => p.GestorPedidos)
+                .Include(p => p.Moneda)
+                .Include(p => p.Usuario)
+                .FirstOrDefaultAsync(p => p.Id == venta.PedidoId)
+                ?? throw new CustomException() { Status = 404, Message = "El pedido asociado a la venta no fue encontrado" };
 
             // Obtener las cuentas contables necesarias
             var cuentaCaja = await _repositorios.CuentasContables
@@ -37,18 +49,44 @@ namespace API.Domain.Services.Contabilidad
                 .GetQuery()
                 .FirstOrDefaultAsync(c => c.EsActivo && c.EsDeMovimiento && c.Codigo.StartsWith("4")); // Ingresos por Ventas
 
+            var cuentaGastos = await _repositorios.CuentasContables
+                .GetQuery()
+                .FirstOrDefaultAsync(c => c.EsActivo && c.EsDeMovimiento && c.Codigo.StartsWith("5")); // Gastos Operativos
+
             if (cuentaCaja == null)
                 throw new CustomException() { Status = 400, Message = "No se encontró la cuenta de Caja/Bancos (1.1.x) configurada" };
 
             if (cuentaIngresos == null)
                 throw new CustomException() { Status = 400, Message = "No se encontró la cuenta de Ingresos por Ventas (4.x.x) configurada" };
 
+            // Obtener moneda del pedido
+            var monedaPedido = pedido.Moneda;
+            if (monedaPedido == null)
+            {
+                monedaPedido = await _repositorios.Monedas
+                    .GetQuery()
+                    .FirstOrDefaultAsync(m => m.Id == pedido.MonedaId);
+
+                if (monedaPedido == null)
+                    throw new CustomException() { Status = 400, Message = "No se encontró la moneda del pedido configurada" };
+            }
+
+            // Calcular total de gastos (gestores + mensajería) anticipadamente para ajustar ingresos
+            decimal totalGastosGestores = 0m;
+            if (pedido.GestorPedidos != null && pedido.GestorPedidos.Count > 0)
+            {
+                totalGastosGestores = pedido.GestorPedidos
+                    .Where(g => g.PrecioAdicional.HasValue && g.PrecioAdicional.Value > 0)
+                    .Sum(g => g.PrecioAdicional ?? 0m);
+            }
+            decimal totalGastos = totalGastosGestores + (pedido.Shipping > 0 ? pedido.Shipping : 0m);
+
             // Crear el asiento contable
             var asiento = new AsientoContable
             {
                 Id = Guid.NewGuid(),
                 Fecha = venta.FechaConfirmacion,
-                Descripcion = $"Venta confirmada - Pedido {venta.Pedido?.Codigo.ToString() ?? "N/A"} - Cliente: {venta.UsuarioVendedor?.NombreCompleto ?? "N/A"}",
+                Descripcion = $"Venta confirmada - Pedido {venta.Pedido?.Codigo.ToString() ?? "N/A"} - Cliente: {pedido.Usuario.NombreCompleto ?? "N/A"} - Moneda: {monedaPedido.Codigo}",
                 ReferenciaId = venta.Id,
                 TipoReferencia = "Venta",
                 Movimientos = new List<MovimientoContable>()
@@ -61,21 +99,66 @@ namespace API.Domain.Services.Contabilidad
                 AsientoContableId = asiento.Id,
                 CuentaContableId = cuentaCaja.Id,
                 Debe = venta.TotalFinal,
-                Haber = 0m
+                Haber = 0m,
+                MonedaId = monedaPedido.Id
             };
 
-            // MOVIMIENTO 2: HABER - Ingresos por Ventas (aumenta ingresos)
+            // Determinar monto neto de ingresos = venta - gastos
+            var montoIngresosNetos = venta.TotalFinal - totalGastos;
+            if (montoIngresosNetos < 0) montoIngresosNetos = 0m;
+
+            // MOVIMIENTO 2: HABER - Ingresos por Ventas (aumenta ingresos) — solo el neto
             var movimientoIngresos = new MovimientoContable
             {
                 Id = Guid.NewGuid(),
                 AsientoContableId = asiento.Id,
                 CuentaContableId = cuentaIngresos.Id,
                 Debe = 0m,
-                Haber = venta.TotalFinal
+                Haber = montoIngresosNetos,
+                MonedaId = monedaPedido.Id
             };
 
             asiento.Movimientos.Add(movimientoCaja);
             asiento.Movimientos.Add(movimientoIngresos);
+
+            // Si hay gastos, registrar un movimiento agregado por el total de gastos y disminuir caja
+            if (totalGastos > 0)
+            {
+                if (cuentaGastos == null)
+                {
+                    cuentaGastos = await _repositorios.CuentasContables
+                        .GetQuery()
+                        .FirstOrDefaultAsync(c => c.EsActivo && c.EsDeMovimiento && c.Codigo.StartsWith("5"));
+                }
+
+                if (cuentaGastos == null)
+                    throw new CustomException() { Status = 400, Message = "No se encontró la cuenta de Gastos Operativos (5.x.x) configurada" };
+
+                // MOVIMIENTO: DEBE - Gastos Totales (gestores + mensajería)
+                var movimientoGastoTotal = new MovimientoContable
+                {
+                    Id = Guid.NewGuid(),
+                    AsientoContableId = asiento.Id,
+                    CuentaContableId = cuentaGastos.Id,
+                    Debe = totalGastos,
+                    Haber = 0m,
+                    MonedaId = monedaPedido.Id
+                };
+
+                // MOVIMIENTO: HABER - Caja (disminuye por el total pagado a gastos)
+                var movimientoPagoCajaTotal = new MovimientoContable
+                {
+                    Id = Guid.NewGuid(),
+                    AsientoContableId = asiento.Id,
+                    CuentaContableId = cuentaCaja.Id,
+                    Debe = 0m,
+                    Haber = totalGastos,
+                    MonedaId = monedaPedido.Id
+                };
+
+                asiento.Movimientos.Add(movimientoGastoTotal);
+                asiento.Movimientos.Add(movimientoPagoCajaTotal);
+            }
 
             // Guardar en la base de datos
             await _repositorios.AsientosContables.AddAsync(asiento);
@@ -96,9 +179,22 @@ namespace API.Domain.Services.Contabilidad
             var venta = await _repositorios.Ventas
                 .GetQuery()
                 .Include(v => v.Pedido)
+                .ThenInclude(p => p.Moneda)
                 .Include(v => v.UsuarioVendedor)
                 .FirstOrDefaultAsync(v => v.Id == ventaId)
                 ?? throw new CustomException() { Status = 404, Message = "La venta no fue encontrada" };
+
+            // Obtener la moneda del pedido
+            var monedaPedido = venta.Pedido?.Moneda;
+            if (monedaPedido == null && venta.Pedido != null)
+            {
+                monedaPedido = await _repositorios.Monedas
+                    .GetQuery()
+                    .FirstOrDefaultAsync(m => m.Id == venta.Pedido.MonedaId);
+            }
+
+            if (monedaPedido == null)
+                throw new CustomException() { Status = 400, Message = "No se encontró la moneda del pedido para la devolución" };
 
             // Obtener las cuentas contables necesarias
             var cuentaCaja = await _repositorios.CuentasContables
@@ -117,7 +213,7 @@ namespace API.Domain.Services.Contabilidad
             {
                 Id = Guid.NewGuid(),
                 Fecha = DateTime.UtcNow,
-                Descripcion = $"Devolución de venta - Pedido {venta.Pedido?.Codigo.ToString() ?? "N/A"} - Cliente: {venta.UsuarioVendedor?.NombreCompleto ?? "N/A"}",
+                Descripcion = $"Devolución de venta - Pedido {venta.Pedido?.Codigo.ToString() ?? "N/A"} - Cliente: {venta.UsuarioVendedor?.NombreCompleto ?? "N/A"} - Moneda: {monedaPedido.Codigo}",
                 ReferenciaId = ventaId,
                 TipoReferencia = "Devolucion",
                 Movimientos = new List<MovimientoContable>()
@@ -130,7 +226,8 @@ namespace API.Domain.Services.Contabilidad
                 AsientoContableId = asiento.Id,
                 CuentaContableId = cuentaIngresos.Id,
                 Debe = venta.TotalFinal,
-                Haber = 0m
+                Haber = 0m,
+                MonedaId = monedaPedido.Id
             };
 
             // MOVIMIENTO 2: HABER - Caja (disminuye con crédito)
@@ -140,7 +237,8 @@ namespace API.Domain.Services.Contabilidad
                 AsientoContableId = asiento.Id,
                 CuentaContableId = cuentaCaja.Id,
                 Debe = 0m,
-                Haber = venta.TotalFinal
+                Haber = venta.TotalFinal,
+                MonedaId = monedaPedido.Id
             };
 
             asiento.Movimientos.Add(movimientoIngresos);

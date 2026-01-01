@@ -53,6 +53,7 @@ namespace API.Data.IUnitOfWorks
         public IMensajeria Mensajerias { get; }
         public IOtraVarianteProductoVariante OtraVarianteProductoVariantes { get; }
         public IBannerPromocion BannerPromociones { get; }
+        public IInformacionGeneral InformacionesGenerales { get; }
 
 
         // CONTABILIDAD 
@@ -102,6 +103,7 @@ namespace API.Data.IUnitOfWorks
             Mensajerias = new MensajeriaRepository(context);
             OtraVarianteProductoVariantes = new OtraVarianteProductoVarianteRepository(context);
             BannerPromociones = new BannerPromocionRepository(context);
+            InformacionesGenerales = new InformacionGeneralRepository(context);
 
             // CONTABILIDAD
             CuentasContables = new CuentaContableRepository(context);
