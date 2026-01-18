@@ -49,12 +49,20 @@ namespace API.Domain.Services.Dashboard
         {
             var productos = await _repositorios.VentasDetalles
                 .GetQuery()
-                .Include(e => e.ProductoVariante)
-                    .ThenInclude(e => e.Producto)
-                .GroupBy(d => d.ProductoVariante)
+                .Include(d => d.ProductoVariante)
+                    .ThenInclude(pv => pv.Producto)
+                .GroupBy(d => new
+                {
+                    d.ProductoVarianteId,
+                    Codigo = d.ProductoVariante.Producto.Codigo,
+                    Nombre = d.ProductoVariante.Producto.Descripcion
+                })
                 .Select(g => new TopProductoDto
                 {
-                    Nombre = g.Key.Producto.Codigo ?? "-", // asumiendo que ProductoVariante tiene Nombre
+                    // Usa Nombre descriptivo si lo tienes, o el Código como fallback
+                    Nombre = !string.IsNullOrEmpty(g.Key.Nombre)
+                                ? g.Key.Nombre
+                                : (g.Key.Codigo ?? "-"),
                     CantidadVendida = g.Sum(x => x.Cantidad)
                 })
                 .OrderByDescending(x => x.CantidadVendida)
@@ -63,6 +71,7 @@ namespace API.Domain.Services.Dashboard
 
             return productos;
         }
+
 
         // Ventas y pedidos de hoy
         public async Task<(decimal ventasHoy, int pedidosHoy)> GetVentasPedidosHoyAsync()
@@ -142,17 +151,22 @@ namespace API.Domain.Services.Dashboard
 
             var top = await _repositorios.VentasDetalles
                 .GetQuery()
-                .Include(e => e.Venta)
-                .Include(e => e.ProductoVariante)
-                    .ThenInclude(e => e.Producto)
+                .Include(d => d.Venta)
+                .Include(d => d.ProductoVariante)
+                    .ThenInclude(pv => pv.Producto)
                 .Where(d => d.Venta.FechaConfirmacion.Date == hoy)
-                .GroupBy(d => d.ProductoVariante)
-                .Select(g => new { Nombre = g.Key.Producto.Codigo, Cantidad = g.Sum(x => x.Cantidad) })
+                .GroupBy(d => new { d.ProductoVarianteId, d.ProductoVariante.Producto.Codigo })
+                .Select(g => new
+                {
+                    Nombre = g.Key.Codigo ?? "-",
+                    Cantidad = g.Sum(x => x.Cantidad)
+                })
                 .OrderByDescending(x => x.Cantidad)
                 .FirstOrDefaultAsync();
 
             return top == null ? ("", 0) : (top.Nombre, top.Cantidad);
         }
+
 
         // Clientes recurrentes vs nuevos semana
         public async Task<(int recurrentes, int nuevosSemana)> GetClientesRecurrentesAsync()

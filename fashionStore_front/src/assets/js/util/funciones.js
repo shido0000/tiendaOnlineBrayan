@@ -50,6 +50,8 @@ const loadGet = async (endpoint) => {
 };
 
 
+
+
 const loadGetDatosInicio = async (endpoint) => {
     return await apiDatosInicio
         .get(endpoint)
@@ -335,19 +337,17 @@ const saveDataParaObjetosConFotos = async (endpoint, data, load, close, dialogLo
 
 
 // Funcion para guardar y editar sin cerrar Modal
-const saveDataSinCerrar = async (endpoint, objeto, load, dialogLoad) => {
+const saveDataSinCerrar = async (endpoint, objeto, load) => {
     let respuesta = {
         resultado: null,
         mensajeError: null,
     };
-    dialogLoad.value = true;
     if (objeto.id) {
         return await api
             .put(`/${endpoint}/${objeto.id}`, objeto)
             .then(async (response) => {
                 respuesta.resultado = response;
                 await load();
-
                 Success("El elemento ha sido modificado correctamente");
                 return respuesta;
             })
@@ -356,19 +356,14 @@ const saveDataSinCerrar = async (endpoint, objeto, load, dialogLoad) => {
                     ? (respuesta.mensajeError =
                         error?.response?.data?.errorMessage)
                     : (respuesta.mensajeError = error);
-                // await load();
-                // await close();
-
                 return respuesta;
             })
-            .finally((dialogLoad.value = false));
     } else {
         return await api
             .post(`/${endpoint}`, objeto)
             .then(async (response) => {
                 respuesta.resultado = response;
                 await load();
-
                 dialogLoad.value = false;
                 Success.call(this, "El elemento ha sido creado correctamente");
                 return respuesta;
@@ -383,7 +378,6 @@ const saveDataSinCerrar = async (endpoint, objeto, load, dialogLoad) => {
                 dialogLoad.value = false;
                 return respuesta;
             })
-            .finally((dialogLoad.value = false));
     }
 };
 
@@ -1602,9 +1596,25 @@ const UploadFile = async (file, url) => {
  * @param {string} endpoint - Url del método
  * @param {Object} params - Valores de la paginación
  **/
-const loadGetPaginado = async (endpoint, objeto = {}) => {
+const loadGetPaginado = async (endpoint, params = {}) => {
     try {
-        const response = await api.get(`/${endpoint}`, { params: objeto });
+        const response = await api.get(`/${endpoint}`, {
+            params: {
+                cantidadIgnorar: params.cantidadIgnorar || 0,
+                cantidadMostrar: params.cantidadMostrar || 10,
+                secuenciaOrdenamiento: params.secuenciaOrdenamiento,
+                textoBuscar: params.textoBuscar,
+                filtros: params.filtros,
+            },
+        });
+        // Verifica estructura de respuesta
+        if (
+            !response.data?.result?.elementos ||
+            !response.data?.result?.cantidad
+        ) {
+            throw new Error("Estructura de respuesta inválida del servidor");
+        }
+
         return {
             elementos: Array.isArray(response.data.result.elementos)
                 ? response.data.result.elementos
@@ -1612,7 +1622,7 @@ const loadGetPaginado = async (endpoint, objeto = {}) => {
             total: Number(response.data.result.cantidad) || 0,
         };
     } catch (error) {
-        Error.call(this, error);
+        // console.error('Error en loadGetPaginados:', error)
         return {
             elementos: [],
             total: 0,

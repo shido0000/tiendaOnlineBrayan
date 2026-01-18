@@ -33,14 +33,14 @@
         dense
         debounce="500"
       />
-      <q-input
+     <!-- <q-input
         outlined
         v-model="filtro.tipo"
         label="Tipo de referencia..."
         class="col-3"
         dense
         debounce="500"
-      />
+      />-->
       <q-input
         outlined
         v-model="filtro.fechaInicio"
@@ -232,7 +232,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { loadGet } from 'src/assets/js/util/funciones'
+import { loadGet, loadGetPaginado } from 'src/assets/js/util/funciones'
 import { Error } from 'src/assets/js/util/notify'
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
 
@@ -335,8 +335,8 @@ const cargarAsientos = async () => {
   cargando.value = true
   try {
     const params = {
-      pageNumber: paginacion.page,
-      pageSize: paginacion.rowsPerPage,
+     // pageNumber: paginacion.page,
+    //  pageSize: paginacion.rowsPerPage,
     }
 
     if (filtro.descripcion) {
@@ -352,9 +352,9 @@ const cargarAsientos = async () => {
       params.fechaFin = filtro.fechaFin
     }
 
-    const response = await loadGet('AsientoContable/ObtenerListadoPaginado', params) ?? {}
+    const response = await loadGet(`AsientoContable/ObtenerListadoPaginado?fechaInicio=${filtro.fechaInicio}&fechaFin=${filtro.fechaFin}&textoBuscar=${filtro.descripcion}`) ?? {}
     asientos.value = response || []
-    paginacion.rowsNumber = response.totalCount || 0
+    paginacion.rowsNumber = response.cantidad || 0
   } catch (error) {
     Error('Error al cargar los asientos contables')
     console.error(error)
@@ -365,9 +365,9 @@ const cargarAsientos = async () => {
   }
 }
 
-const aplicarFiltros = () => {
+const aplicarFiltros = async () => {
   paginacion.page = 1
-  cargarAsientos()
+  await cargarAsientos()
 }
 
 const verDetalles = (asiento) => {

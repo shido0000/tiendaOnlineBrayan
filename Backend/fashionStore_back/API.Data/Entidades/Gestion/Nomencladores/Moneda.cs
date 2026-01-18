@@ -1,4 +1,5 @@
-﻿using API.Data.Entidades.Seguridad;
+﻿using API.Data.Entidades.Contabilidad;
+using API.Data.Entidades.Seguridad;
 using API.Data.IUnitOfWorks.Interfaces.Gestion.Nomencladores;
 using System;
 using System.Collections.Generic;
@@ -18,5 +19,6 @@ namespace API.Data.Entidades.Gestion.Nomencladores
         public ICollection<Producto> ProductosCosto { get; set; } = new List<Producto>();
         public ICollection<Producto> ProductosVentas { get; set; } = new List<Producto>();
         public ICollection<Mensajeria> Mensajerias { get; set; } = new List<Mensajeria>();
+        public ICollection<MovimientoContable> MovimientoContables { get; set; } = new List<MovimientoContable>();
     }
 }

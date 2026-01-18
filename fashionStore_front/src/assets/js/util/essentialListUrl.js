@@ -19,6 +19,11 @@ export const essentialListUrl = [
         title: 'NOMENCLADORES',
         link: 'NomenclatorsCard'
     },
+    {
+        title: 'Crear Información',
+        link: 'CrearInformacion'
+    },
+
 
     /*  {
           title: "OPERACIONES",

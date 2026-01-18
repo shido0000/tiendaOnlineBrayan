@@ -46,7 +46,9 @@ namespace API.Application.Controllers.Gestion.Nomencladores
             return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento,
                 propiedadesIncluidas: query => query.Include(e => e.ProductoCategorias)
                                                     .Include(e => e.MonedaCosto)
-                                                    .Include(e => e.MonedaVenta),
+                                                    .Include(e => e.MonedaVenta)
+                                                    .Include(e => e.ProductoDescuentos)
+                                                        .ThenInclude(e => e.Descuento),
                 filtros.ToArray());
         }
 

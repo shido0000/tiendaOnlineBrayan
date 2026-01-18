@@ -14,5 +14,6 @@ public class MovimientoContableConfiguracionDB
         modelBuilder.Entity<MovimientoContable>().Property(e => e.CuentaContableId).IsRequired();
         modelBuilder.Entity<MovimientoContable>().Property(e => e.Debe).IsRequired();
         modelBuilder.Entity<MovimientoContable>().Property(e => e.Haber).IsRequired();
+        modelBuilder.Entity<MovimientoContable>().Property(e => e.MonedaId).IsRequired();
     }
 }

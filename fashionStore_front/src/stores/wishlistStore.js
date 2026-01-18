@@ -92,6 +92,8 @@ function add(product) {
 
     const toAdd = {
         id,
+        tieneDescuento: product.tieneDescuento || false,
+        precioVentaDescuento: product.precioVentaDescuento || product.precioVenta,
         nombre: product.nombre || product.descripcion || '',
         precioVenta: product.precioVenta ?? product.precio ?? 0,
         foto: foto,

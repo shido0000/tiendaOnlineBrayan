@@ -300,6 +300,8 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
         public async Task<ProductoEspecificoDto> ObtenerProductoEspecifico(Guid id)
         {
+            DateTime fechaHoy = DateTime.Now;
+
             var producto = await _repositorios.Productos
                             .GetQuery()
                             .AsNoTracking()
@@ -312,8 +314,27 @@ namespace API.Domain.Services.Gestion.Nomencladores
                             .Include(e => e.ProductosVariantes)
                                 .ThenInclude(e => e.OtraVarianteProductoVariantes)
                                      .ThenInclude(e => e.OtraVariante)
+                            .Include(e => e.ProductoDescuentos)
+                                .ThenInclude(e => e.Descuento)
                             .FirstOrDefaultAsync(e => e.Id == id)
                             ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Producto no encontrado." };
+
+            var descuentoActivo = producto.ProductoDescuentos.FirstOrDefault(pd => pd.Descuento.EsActivo && pd.Descuento.FechaInicio.Date <= fechaHoy.Date && pd.Descuento.FechaFin.Date >= fechaHoy.Date);
+            decimal precioVentaDescuento = producto.PrecioVenta;
+            if (descuentoActivo != null)
+            {
+                var d = descuentoActivo.Descuento;
+                if (d.MontoFijo.HasValue && d.MontoFijo.Value > 0)
+                {
+                    precioVentaDescuento -= d.MontoFijo.Value;
+                }
+                else if (d.Porcentaje.HasValue && d.Porcentaje.Value > 0)
+                {
+                    precioVentaDescuento -= (precioVentaDescuento * d.Porcentaje.Value / 100);
+                }
+                if (precioVentaDescuento < 0)
+                    precioVentaDescuento = 0;
+            }
 
             var productoDevolver = new ProductoEspecificoDto()
             {
@@ -324,13 +345,19 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 SKU = producto.SKU,
                 PrecioCosto = producto.PrecioCosto,
                 PrecioVenta = producto.PrecioVenta,
-                
+
                 MonedaCostoId = producto.MonedaCostoId,
                 MonedaVentaId = producto.MonedaVentaId,
                 StockTotal = producto.StockTotal,
                 CategoriasIds = producto.ProductoCategorias.Select(e => e.CategoriaId).ToList(),
                 ProductoVariantes = new(),
                 CategoriasDescripcion = string.Join(", ", producto.ProductoCategorias.Select(e => e.Categoria.Nombre)),
+                TieneDescuento = producto.ProductoDescuentos.Any(pd =>
+                            pd.Descuento.EsActivo &&
+                            pd.Descuento.FechaInicio.Date <= fechaHoy.Date &&
+                            pd.Descuento.FechaFin.Date >= fechaHoy.Date),
+
+                PrecioVentaDescuento = precioVentaDescuento
             };
 
             foreach (var variant in producto.ProductosVariantes)

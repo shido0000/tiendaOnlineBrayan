@@ -51,6 +51,7 @@ namespace API.Data.DbContexts
         public DbSet<Mensajeria> Mensajerias { get; set; }
         public DbSet<OtraVarianteProductoVariante> OtraVarianteProductoVariantes { get; set; }
         public DbSet<BannerPromocion> BannerPromocionales { get; set; }
+        public DbSet<InformacionGeneral> InformacionesGenerales { get; set; }
 
 
 
@@ -102,6 +103,7 @@ namespace API.Data.DbContexts
             MensajeriaConfiguracionDB.SetEntityBuilder(modelBuilder);
             OtraVarianteProductoVarianteConfiguracionDB.SetEntityBuilder(modelBuilder);
             BannerPromocionConfiguracionDB.SetEntityBuilder(modelBuilder);
+            InformacionGeneralConfiguracionDB.SetEntityBuilder(modelBuilder);
 
 
             // CONTABILIDAD

@@ -1,4 +1,5 @@
 ﻿using API.Data.Entidades.Seguridad;
+using API.Data.Entidades.Gestion.Nomencladores;
 
 namespace API.Data.Entidades.Contabilidad
 {
@@ -10,6 +11,9 @@ namespace API.Data.Entidades.Contabilidad
         public CuentaContable Cuenta { get; set; } = null!;
         public decimal Debe { get; set; }
         public decimal Haber { get; set; }
-
+        
+        // Moneda en la que se realiza el movimiento
+        public Guid MonedaId { get; set; }
+        public Moneda Moneda { get; set; } = null!;
     }
 }

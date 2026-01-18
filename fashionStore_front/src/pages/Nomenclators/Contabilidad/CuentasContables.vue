@@ -23,13 +23,13 @@
 
       <div class="row q-mb-lg">
         <div class="col-12">
-          <q-btn
+         <!-- <q-btn
             color="primary"
             icon="add"
             label="Nueva Cuenta"
             @click="abrirDialogoCrear()"
             class="q-mr-md"
-          />
+          />-->
           <q-input
             outlined
             v-model="filter"
@@ -75,7 +75,7 @@
               >
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
-              <q-btn
+              <!--<q-btn
                 flat
                 dense
                 round
@@ -85,7 +85,7 @@
                 @click="confirmarEliminar(prop.node)"
               >
                 <q-tooltip>Eliminar</q-tooltip>
-              </q-btn>
+              </q-btn>-->
             </div>
           </template>
         </q-tree>
@@ -107,6 +107,7 @@
           <q-card-section class="q-pt-md">
             <q-form ref="myForm" @submit="guardarCuenta">
               <q-input
+              readonly
                 v-model="formulario.codigo"
                 label="Código *"
                 outlined
@@ -117,6 +118,7 @@
               />
 
               <q-input
+              readonly
                 v-model="formulario.nombre"
                 label="Nombre *"
                 outlined
@@ -127,6 +129,7 @@
               />
 
               <q-select
+              readonly
                 v-model="formulario.cuentaPadreId"
                 :options="cuentasPadreDisponibles"
                 outlined
@@ -141,12 +144,14 @@
               />
 
               <q-toggle
+              disable
                 v-model="formulario.esDeMovimiento"
                 label="Permite asientos contables"
                 class="q-mb-md"
               />
 
               <q-toggle
+              disable
                 v-model="formulario.esActivo"
                 label="Activo"
                 class="q-mb-lg"

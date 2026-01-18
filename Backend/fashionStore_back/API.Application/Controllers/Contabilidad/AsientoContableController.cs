@@ -3,9 +3,9 @@ using API.Data.Entidades.Contabilidad;
 using API.Domain.Interfaces.Contabilidad;
 using API.Domain.Validators.Contabilidad;
 using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using Microsoft.AspNetCore.Mvc;
 
 namespace API.Application.Controllers.Contabilidad
 {
@@ -26,8 +26,16 @@ namespace API.Application.Controllers.Contabilidad
             //agregando filtros
             List<Expression<Func<AsientoContable, bool>>> filtros = new();
             if (!string.IsNullOrEmpty(inputDto.TextoBuscar))
-                filtros.Add(Categoria => Categoria.Descripcion.Contains(inputDto.TextoBuscar));
+                filtros.Add(asiento => asiento.Descripcion.Contains(inputDto.TextoBuscar));
 
+            if (inputDto.FechaInicio.HasValue)
+                filtros.Add(asiento => asiento.Fecha.Date >= inputDto.FechaInicio.Value.Date);
+
+            if (inputDto.FechaFin.HasValue)
+                filtros.Add(asiento => asiento.Fecha.Date <= inputDto.FechaFin.Value.Date);
+
+            if (inputDto.Cuenta.HasValue)
+                filtros.Add(asiento => asiento.Movimientos.Any(e => e.CuentaContableId == inputDto.Cuenta.Value));
 
             return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento, propiedadesIncluidas: query => query.Include(e => e.Movimientos).ThenInclude(e => e.Cuenta), filtros.ToArray());
         }

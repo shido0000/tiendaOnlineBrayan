@@ -5,5 +5,7 @@
         public string MonedaCostoCodigo { get; set; } = string.Empty;
         public string MonedaVentaCodigo { get; set; } = string.Empty;
         public string Categorias { get; set; } = string.Empty;
+        public bool TieneDescuento { get; set; }
+        public decimal PrecioVentaDescuento { get; set; }
     }
 }

@@ -51,7 +51,7 @@
             @update:model-value="load()"
           />
 
-          <q-btn
+        <!--  <q-btn
             outline
             class="bg-white q-ml-sm"
             style="width: 20px"
@@ -62,7 +62,7 @@
             <q-tooltip class="bg-primary" :offset="[10, 10]">
               Imprimir
             </q-tooltip>
-          </q-btn>
+          </q-btn>-->
 
 
         </template>
@@ -209,11 +209,22 @@
                 </q-td>
               </template>
 
-              <template v-slot:body-cell-precioUnitario="props">
-                <q-td :props="props" class="text-center">
-                  {{ formatearNumero(props.row.precioUnitario) }}
-                </q-td>
-              </template>
+     <template v-slot:body-cell-precioUnitario="props">
+  <q-td :props="props" class="text-center">
+    <div v-if="props.row.tieneDescuento" class="row items-center justify-center q-gutter-sm">
+      <span class="text-caption text-grey-6">
+        <s>{{ formatearNumero(props.row.precioUnitarioOriginal) }}</s>
+      </span>
+      <span class="text-weight-bold text-primary">
+        {{ formatearNumero(props.row.precioVentaDescuento) }}
+      </span>
+    </div>
+    <div v-else>
+      {{ formatearNumero(props.row.precioUnitario) }}
+    </div>
+  </q-td>
+</template>
+
 
               <template v-slot:body-cell-cantidad="props">
                 <q-td :props="props" class="text-center">
@@ -251,13 +262,26 @@
                 </q-td>
               </template>
 
-              <template v-slot:body-cell-subtotal="props">
-                <q-td :props="props" class="text-center">
-                  <span class="text-weight-bold">
-                    {{ formatearNumero(props.row.cantidad * props.row.precioUnitario) }}
-                  </span>
-                </q-td>
-              </template>
+             <template v-slot:body-cell-subtotal="props">
+  <q-td :props="props" class="text-center">
+    <div v-if="props.row.descuentoAplicado > 0" class="row items-center justify-center q-gutter-sm">
+      <!-- Subtotal original tachado -->
+      <span class="text-subtitle2 text-grey-6">
+        <s>{{ formatearNumero((props.row.precioUnitario || 0) * (props.row.cantidad || 0)) }}</s>
+      </span>
+      <!-- Subtotal con descuento -->
+      <span class="text-weight-bold text-primary">
+        {{ formatearNumero(props.row.lineTotal || ((props.row.total || 0) * (props.row.cantidad || 0))) }}
+      </span>
+    </div>
+    <div v-else>
+      <span class="text-weight-bold">
+        {{ formatearNumero((props.row.precioUnitario || 0) * (props.row.cantidad || 0)) }}
+      </span>
+    </div>
+  </q-td>
+</template>
+
 
               <template v-slot:body-cell-acciones="props">
                 <q-td :props="props">
@@ -541,19 +565,26 @@ const abrirDialogoEditarPedido = async (id, soloVer) => {
 
     if (pedidoTemp.detalles && Array.isArray(pedidoTemp.detalles)) {
       lineasPedidoEditando.value = pedidoTemp.detalles.map(detalle => ({
-        id: detalle.id,
-        productoVarianteId: detalle.productoVarianteObtenidoDto?.id || '',
-        nombreProducto: detalle.productoVarianteObtenidoDto?.nombreProducto || detalle.productoVarianteObtenidoDto?.descripcion || '',
-        sku: detalle.productoVarianteObtenidoDto?.sku || '',
-        codigo: detalle.productoVarianteObtenidoDto?.codigo || '',
-        talla: detalle.productoVarianteObtenidoDto?.talla || '',
-        color: detalle.productoVarianteObtenidoDto?.color || '-',
-        precioUnitario: detalle.precioUnitario || 0,
-        cantidad: detalle.cantidad || 1,
-        cantidadInicial: detalle.cantidad || 1,
-        descuentoAplicado: detalle.descuentoAplicado || 0,
-        estadoLinea: detalle.estadoLinea || 'Pendiente'
-      }))
+  id: detalle.id,
+  productoVarianteId: detalle.productoVarianteObtenidoDto?.id || '',
+  nombreProducto: detalle.productoVarianteObtenidoDto?.nombreProducto || detalle.productoVarianteObtenidoDto?.descripcion || '',
+  sku: detalle.productoVarianteObtenidoDto?.sku || '',
+  codigo: detalle.productoVarianteObtenidoDto?.codigo || '',
+  talla: detalle.productoVarianteObtenidoDto?.talla || '',
+  color: detalle.productoVarianteObtenidoDto?.color || '-',
+  precioUnitario: detalle.precioUnitario || 0,              // precio original
+  precioUnitarioOriginal: detalle.precioUnitario || 0,      // 👈 guardamos el original
+  precioVentaDescuento: detalle.descuentoAplicado > 0
+    ? (detalle.lineTotal / (detalle.cantidad || 1))
+    : detalle.precioUnitario || 0,                          // 👈 unitario con descuento
+  cantidad: detalle.cantidad || 1,
+  cantidadInicial: detalle.cantidad || 1,
+  descuentoAplicado: detalle.descuentoAplicado || 0,
+  lineTotal: detalle.lineTotal || 0,                        // 👈 guardamos el total con descuento
+  estadoLinea: detalle.estadoLinea || 'Pendiente',
+  tieneDescuento: (detalle.descuentoAplicado || 0) > 0
+}))
+
     } else {
       lineasPedidoEditando.value = []
     }
@@ -566,6 +597,9 @@ const abrirDialogoEditarPedido = async (id, soloVer) => {
     dialogLoad.value = false
   }
 }
+
+
+
 
 const confirmarPedido = async () => {
   try {

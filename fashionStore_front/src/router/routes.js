@@ -1,3 +1,5 @@
+import InformacionPage from 'src/pages/extra/InformacionPage.vue'
+
 const routes = [
     {
         path: '/register',
@@ -137,7 +139,12 @@ const routes = [
                 name: 'Contabilidad',
                 component: () => import('src/pages/Nomenclators/Contabilidad/ContabilidadPage.vue')
             },
-
+            { path: '/informacion', name: 'Informacion', component: InformacionPage },
+            {
+                path: 'CrearInformacion',
+                name: 'CrearInformacion',
+                component: () => import('src/pages/extra/CrearInformacionPage.vue')
+            },
         ]
     },
 

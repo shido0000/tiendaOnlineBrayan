@@ -18,5 +18,7 @@ namespace API.Data.Dto
         public List<Guid> CategoriasIds { get; set; } = new();
         public string CategoriasDescripcion { get; set; } = "-";
         public List<ProductoEspecificoVarianteDto> ProductoVariantes { get; set; } = new();
+        public bool TieneDescuento { get; set; }
+        public decimal PrecioVentaDescuento { get; set; }
     }
 }

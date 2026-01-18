@@ -196,28 +196,57 @@
 
 
     <!-- Footer -->
-    <div class="footer q-pt-xl q-pb-md bg-purple-2 text-center">
-      <div class="q-mb-md">
-        <div>Inicio</div>
-        <div>Sobre Nosotros</div>
-        <div>Política de Privacidad</div>
-        <div>Términos y Condiciones</div>
-        <div>Política de Devoluciones y Cambios</div>
-        <div>Colabora con Nosotros</div>
-      </div>
-      <div class="q-mb-md text-caption">
-        Dirección: 20 de mayo 534 apto 14 / marta abreu y línea de ferrocarril , Habana - 10400, Habana, Cuba<br>
-        Horario: Lunes a Sábado 10:00 am - 6:00 pm<br>
-        Teléfono: <a href="tel:+5351564397" class="text-purple-8">+5351564397</a>
-      </div>
-      <div class="q-mb-md">
-        <q-btn flat round icon="telegram" color="purple-7" />
-        <q-btn flat round icon="facebook" color="purple-7" />
-        <q-btn flat round icon="whatsapp" color="purple-7" />
-        <q-btn flat round icon="instagram" color="purple-7" />
-      </div>
-      <div class="text-caption">Copyright © 2025. Todos los derechos reservados.</div>
-    </div>
+<div class="footer q-pt-xl q-pb-md bg-primary text-black">
+  <!-- Links -->
+  <div class="footer-links q-mb-lg">
+    <router-link to="/" class="footer-link">Inicio</router-link>
+    <router-link to="/informacion#sobre-nosotros" class="footer-link">Sobre Nosotros</router-link>
+    <router-link to="/informacion#privacidad" class="footer-link">Política de Privacidad</router-link>
+    <router-link to="/informacion#terminos" class="footer-link">Términos y Condiciones</router-link>
+    <router-link to="/informacion#devoluciones" class="footer-link">Devoluciones y Cambios</router-link>
+    <router-link to="/informacion#colabora" class="footer-link">Colabora con Nosotros</router-link>
+  </div>
+
+  <!-- Contacto -->
+<div class="footer-contact q-mb-lg text-caption flex flex-center column">
+  <!-- Dirección -->
+  <div class="row items-center q-mb-sm justify-center">
+    <q-icon name="place" size="sm" color="black" class="q-mr-sm" />
+    <span class="text-weight-bold q-mr-sm">Dirección:</span>
+    <span class="text-body2">{{ info.direccionTienda }}</span>
+  </div>
+
+  <!-- Horario -->
+  <div class="row items-center q-mb-sm justify-center">
+    <q-icon name="schedule" size="sm" color="black" class="q-mr-sm" />
+    <span class="text-weight-bold q-mr-sm">Horario:</span>
+    <span class="text-body2">{{ info.horarioTienda }}</span>
+  </div>
+
+  <!-- Teléfono -->
+  <div class="row items-center q-mb-sm justify-center">
+    <q-icon name="phone" size="sm" color="black" class="q-mr-sm" />
+    <span class="text-weight-bold q-mr-sm">Teléfono:</span>
+    <a :href="`tel:${info.telefonoTienda}`" class="footer-link">
+      {{ info.telefonoTienda }}
+    </a>
+  </div>
+</div>
+
+
+  <!-- Redes sociales -->
+  <div class="footer-social q-mb-lg">
+  <q-btn flat round :icon="'telegram'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceTelegram)"/>
+  <q-btn flat round :icon="'mdi-facebook'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceFacebook)"/>
+  <q-btn flat round :icon="'mdi-whatsapp'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceWhatsapp)"/>
+  <q-btn flat round :icon="'mdi-instagram'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceInstagram)"/>
+</div>
+
+
+  <!-- Copyright -->
+  <div class="text-caption">© 2025. Todos los derechos reservados.</div>
+</div>
+
 
       <DialogLoad :dialogLoad="dialogLoad" />
     </div>
@@ -238,6 +267,17 @@ import TopBar from 'src/pages/Visual/components/TopBar.vue'
 
 const categoriaSlide = ref(0)
 const bannerSlide = ref(0)
+
+const items = ref([])
+const infoInicial = {
+  sobreNosotros: '',
+  privacidad: '',
+  terminos: '',
+  devoluciones: '',
+  colabora: ''
+}
+const info = reactive({ ...infoInicial })
+
 // Amazon-like banner slides (image + headline + subtitle + CTA)
 const bannerSlides = [
   {
@@ -542,6 +582,9 @@ onMounted(async () => {
       }
     }
   }
+  items.value = await loadGet('InformacionGeneral/ObtenerListadoPaginado') ?? []
+  Object.assign(info, items.value[0])
+
   dialogLoad.value = false
 })
 
@@ -665,6 +708,10 @@ function chunkCategorias(array, size) {
   }
   return result
 }
+
+const abrirEnlace = (url) => {
+    window.open(url, '_blank') // abre en nueva pestaña
+ }
 </script>
 
 <style lang="scss" scoped>
@@ -846,6 +893,6 @@ function chunkCategorias(array, size) {
   .slide-item .q-img, .slide-item-cat .q-img { height: 140px; }
 }
 
-
+.footer { text-align: center; } .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem; } .footer-link { color: #000000; font-weight: 500; text-decoration: none; transition: color 0.3s ease; } .footer-link:hover { color: #ffeb3b; /* amarillo acento */ } .footer-contact { max-width: 700px; margin: 0 auto; line-height: 1.6; } .footer-social { display: flex; justify-content: center; gap: 0.8rem; } .footer-social-btn { transition: transform 0.2s ease; } .footer-social-btn:hover { transform: scale(1.2); }
 </style>
 
