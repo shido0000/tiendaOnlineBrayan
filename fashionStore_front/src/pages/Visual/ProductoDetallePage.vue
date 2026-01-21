@@ -405,7 +405,6 @@ async function cargarProducto(id) {
         categoriasIds:producto.value?.categoriasIds,
     }
     relatedProducts.value = (await saveDataPronosticoEnviarObjeto(`Producto/ObtenerProductosRelacionados`,productoRelacionadoDto,dialogLoad)).resultado
-    console.log(" relatedProducts.value : ", relatedProducts.value )
 
   } catch (e) {
     console.warn('Error cargando producto', e)
@@ -424,8 +423,6 @@ onMounted(async() => {
  }
 
  await cargarProducto(route.params.id)
-console.log('Producto recibido en detalle:', producto)
- console.log("PP: ",producto.value)
 })
 
 watch(() => route.params.id, (nuevoId) => {
@@ -600,14 +597,6 @@ function getMaxDisponible() {
   const enCarrito = getProductoEnCarrito()
   const disponible = stock - enCarrito
 
-  console.log('[ProductoDetalle] getMaxDisponible:', {
-    stock,
-    enCarrito,
-    disponible,
-    cartItems: cart.items.length,
-    productId: producto.value?.id
-  })
-
   return disponible > 0 ? disponible : 0
 }
 
@@ -627,11 +616,6 @@ function onAddToCart() {
 
   const maxDisp = getMaxDisponible()
 
-  console.log('[ProductoDetalle] onAddToCart called:', {
-    cantidad: cantidad.value,
-    maxDisponible: maxDisp,
-    canAdd: maxDisp > 0 && cantidad.value <= maxDisp
-  })
 
   // Validar que hay disponibilidad
   if (maxDisp <= 0) {
@@ -641,7 +625,6 @@ function onAddToCart() {
 
   // Validar que la cantidad no exceda
   if (cantidad.value > maxDisp) {
-    console.warn('[ProductoDetalle] Cantidad excede máximo disponible')
     cantidad.value = maxDisp
     return
   }
@@ -660,7 +643,6 @@ function onAddToCart() {
     }
   }
 
-  console.log('[ProductoDetalle] Agregando al carrito:', { cantidad: cantidad.value, productId: payload.id, varianteId: payload.varianteId })
   cart.addItem(payload, cantidad.value)
 }
 
@@ -684,7 +666,6 @@ function getProductoImageRelacionados(prod) {
   // Log entire producto structure for debugging
 
   // First try direct fields
-  console.log("prod: ",prod)
   let candidate = prod.productosVariantes[0].fotos
 
   // If the product has an array of fotos, prefer the first valid entry
@@ -719,11 +700,12 @@ function getProductoImageRelacionados(prod) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .producto-detalle {
   max-width: 1200px;
   margin: 0 auto;
   margin-top: 32px;
+  padding: 16px;
 }
 
 .main-row {
@@ -733,7 +715,7 @@ function getProductoImageRelacionados(prod) {
 .left-col .q-carousel,
 .left-col .q-img {
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .right-col {
@@ -741,14 +723,6 @@ function getProductoImageRelacionados(prod) {
   flex-direction: column;
   gap: 16px;
   justify-content: center;
-}
-
-/* Ensure image left / details right layout and vertical centering on desktop */
-@media (min-width: 992px) {
-  .main-row { align-items: stretch; }
-  .left-col, .right-col { min-height: 520px; }
-  .right-col { justify-content: center; }
-  .left-col .q-carousel, .left-col .q-img { height: 100% !important; }
 }
 
 .product-header {
@@ -771,6 +745,7 @@ function getProductoImageRelacionados(prod) {
 .actions-row {
   margin-top: 12px;
 }
+
 .actions-row q-btn {
   min-width: 150px;
 }
@@ -790,6 +765,7 @@ function getProductoImageRelacionados(prod) {
   flex: 0 0 240px;
   cursor: pointer;
 }
+
 .rel-card-inner {
   display: flex;
   flex-direction: column;
@@ -817,10 +793,9 @@ function getProductoImageRelacionados(prod) {
   color: #333;
 }
 
-
 .rel-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .rel-card .q-card {
@@ -834,7 +809,6 @@ function getProductoImageRelacionados(prod) {
   white-space: nowrap;
 }
 
-/* círculo de color */
 .color-circle {
   width: 20px;
   height: 20px;
@@ -842,13 +816,126 @@ function getProductoImageRelacionados(prod) {
   border: 1px solid #ccc;
 }
 
-@media (max-width: 768px) {
-  .left-col .q-img,
-  .left-col .q-carousel {
-    height: 320px !important;
+.text-strike {
+  text-decoration: line-through;
+}
+
+/* Media Queries para responsividad */
+@media (max-width: 599px) {
+  .producto-detalle {
+    margin-top: 16px;
+    padding: 12px;
+  }
+
+  .main-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .left-col .q-carousel,
+  .left-col .q-img {
+    height: 280px !important;
+  }
+
+  .right-col {
+    padding: 0;
+    justify-content: flex-start;
+  }
+
+  .text-h5 {
+    font-size: 18px !important;
+  }
+
+  .text-subtitle1 {
+    font-size: 14px !important;
+  }
+
+  .text-caption {
+    font-size: 12px !important;
+  }
+
+  .actions-row {
+    flex-direction: column;
+  }
+
+  .actions-row q-btn {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .related-row {
+    gap: 12px;
+  }
+
+  .rel-card {
+    flex: 0 0 160px;
+  }
+
+  :deep(.q-field) {
+    font-size: 14px;
   }
 }
 
-.text-strike { text-decoration: line-through; }
+@media (max-width: 1023px) and (min-width: 600px) {
+  .producto-detalle {
+    padding: 16px;
+  }
 
+  .main-row {
+    align-items: stretch;
+    gap: 24px;
+  }
+
+  .left-col .q-carousel,
+  .left-col .q-img {
+    height: 400px !important;
+  }
+
+  .right-col {
+    min-height: 400px;
+    justify-content: center;
+  }
+
+  .related-row {
+    gap: 16px;
+  }
+
+  .rel-card {
+    flex: 0 0 180px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-row {
+    align-items: stretch;
+  }
+
+  .left-col,
+  .right-col {
+    min-height: 520px;
+  }
+
+  .right-col {
+    justify-content: center;
+  }
+
+  .left-col .q-carousel,
+  .left-col .q-img {
+    height: 100% !important;
+  }
+}
+
+@media (min-width: 1366px) {
+  .producto-detalle {
+    padding: 24px;
+  }
+
+  .related-row {
+    gap: 24px;
+  }
+
+  .rel-card {
+    flex: 0 0 240px;
+  }
+}
 </style>

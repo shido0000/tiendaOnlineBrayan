@@ -2,9 +2,9 @@
   <div>
     <TopBar :categories="categories" />
 
-    <div class="q-pa-lg bg-grey-1 row">
+    <div class="q-pa-lg bg-grey-1 row filters-products-container">
       <!-- Sidebar filters -->
-      <div class="col-12 col-md-3 q-pr-md">
+      <div class="col-12 col-md-3 q-pr-md filters-sidebar">
         <q-card class="q-pa-md">
           <div class="text-h6 q-mb-md">Filtros</div>
 
@@ -30,7 +30,7 @@
 
           <div class="q-mb-md">
             <q-checkbox v-model="filters.novedades" label="Novedades" dense />
-            <q-checkbox v-model="filters.rebajas" label="Rebajas" dense />
+            <q-checkbox class="q-ml-sm" v-model="filters.rebajas" label="Rebajas" dense />
           </div>
 
           <div class="row justify-end q-mt-md">
@@ -41,7 +41,7 @@
       </div>
 
       <!-- Products grid -->
-      <div class="col-12 col-md-9">
+      <div class="col-12 col-md-9 products-section">
         <div class="row items-center q-mb-sm">
           <div class="col">
             <div class="text-h6">Productos</div>
@@ -526,7 +526,6 @@ function normalizarProductoParaCarrito(producto, fotoPreferida = null) {
     slide: 1
   }))
 
-console.log("variants: ",variants)
 
   // Mapear fotos del producto principal
   let fotos = (producto.fotos || []).map(f => {
@@ -767,10 +766,132 @@ function getProductoImagePreferVariant(prod) {
   }
 </script>
 
-<style scoped>
-.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.clickable-card { cursor: pointer }
-.product-img { min-height: 160px; display: block }
-.product-img .q-img__image { object-fit: cover; width: 100%; height: 100% }
-.text-strike { text-decoration: line-through; }
+<style scoped lang="scss">
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clickable-card {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+.product-img {
+  min-height: 160px;
+  display: block;
+}
+
+.product-img .q-img__image {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.text-strike {
+  text-decoration: line-through;
+}
+
+.filters-products-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.filters-sidebar {
+  display: block;
+}
+
+.products-section {
+  display: block;
+}
+
+/* Media Queries para responsividad */
+@media (max-width: 599px) {
+  .filters-sidebar {
+    margin-bottom: 20px;
+  }
+
+  .filters-products-container {
+    flex-direction: column;
+  }
+
+  :deep(.q-field) {
+    font-size: 14px;
+  }
+
+  :deep(.col-12) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .col-12.col-md-3 {
+    padding-right: 0 !important;
+  }
+
+  .col-12.col-md-9 {
+    margin-bottom: 20px;
+  }
+
+  .product-img {
+    min-height: 120px;
+  }
+
+  .text-h6 {
+    font-size: 18px !important;
+  }
+
+  .text-subtitle2 {
+    font-size: 13px !important;
+  }
+
+  .text-caption {
+    font-size: 11px !important;
+  }
+
+  .row.q-col-gutter-md {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+
+  .row.q-col-gutter-md > [class*="col-"] {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 600px) {
+  .filters-sidebar {
+    padding-right: 12px !important;
+  }
+
+  .col-12.col-md-3 {
+    flex: 0 0 35%;
+    max-width: 35%;
+  }
+
+  .col-12.col-md-9 {
+    flex: 0 0 65%;
+    max-width: 65%;
+  }
+
+  .product-img {
+    min-height: 140px;
+  }
+}
+
+@media (min-width: 1366px) {
+  .filters-products-container {
+    padding: 24px;
+  }
+
+  .product-img {
+    min-height: 200px;
+  }
+}
 </style>

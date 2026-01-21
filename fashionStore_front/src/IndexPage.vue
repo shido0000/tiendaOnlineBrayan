@@ -7,12 +7,11 @@
     <q-carousel
       v-model="bannerSlide"
       animated
-      arrows
       navigation
       navigation-position="bottom"
       infinite
       class="banner-carousel"
-      height="66vh"
+      :height="getBannerHeight()"
     >
       <q-carousel-slide
         v-for="(slide, idx) in bannerSlides"
@@ -25,21 +24,27 @@
           <div class="banner-content">
             <h2 class="banner-title">{{ slide.title }}</h2>
             <p class="banner-subtitle">{{ slide.subtitle }}</p>
-            <q-btn color="primary" unelevated @click="$router.push(slide.ctaLink)">{{ slide.ctaText }}</q-btn>
+            <q-btn class="q-mt-md" color="primary" unelevated @click="$router.push(slide.ctaLink)">{{ slide.ctaText }}</q-btn>
           </div>
         </div>
       </q-carousel-slide>
     </q-carousel>
 
 <!-- Novedades (Amazon-like horizontal) -->
-<section class="q-px-lg q-py-md amazon-section">
+<section class="q-px-lg q-py-md amazon-section responsive-section">
   <div class="row items-center q-mb-md">
     <div class="col">
       <div class="text-h6 text-weight-bold">Novedades</div>
     </div>
     <div class="col-auto">
-      <q-btn flat label="Ver todo" @click="$router.push('/productos?novedades=1')" />
-    </div>
+  <q-btn
+    flat
+    label="Ver todo"
+    style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);"
+    @click="$router.push('/productos?novedades=1')"
+  />
+</div>
+
   </div>
   <q-carousel
     v-model="novedadesSlide"
@@ -49,13 +54,13 @@
       navigation-position="bottom"
       infinite
       class="banner-carousel"
-      height="66vh"
+      :height="getNovedadesHeight()"
     >
     <q-carousel-slide v-for="(chunk, sidx) in novedadesSlides" :key="'nov-slide-'+sidx" :name="sidx" class="strip-slide">
       <div class="strip-slide-inner">
         <div v-for="p in chunk" :key="'amazon-nov-'+p.id" class="slide-item">
           <q-card flat bordered class="shadow-1 clickable-card" @click="goToProduct(p.id)">
-            <q-img :src="getFotoUrl(getProductoImage(p))" ratio="4/3" style="object-fit: cover" @load="debugImg && debugResolveFoto(getProductoImage(p))" @error="debugImg && console.warn('[IndexPage] q-img error loading product', getProductoImage(p))">
+            <q-img :src="getFotoUrl(getProductoImage(p))" ratio="4/3" style="object-fit: cover" @load="debugImg && debugResolveFoto(getProductoImage(p))" @error="debugImg ">
               <template v-slot:after>
                 <div class="card-badge">Nuevo</div>
               </template>
@@ -80,13 +85,13 @@
 </section>
 
 <!-- Catálogo por Categorías (Amazon-like tiles) -->
-<section class="q-px-lg q-py-xl">
+<section class="q-px-lg q-py-xl responsive-section">
   <div class="row items-center q-mb-md">
     <div class="col">
-      <div class="text-h6 text-weight-bold">Catálogo por Categorías</div>
+      <div class="text-h6 text-weight-bold">Categorías</div>
     </div>
     <div class="col-auto">
-      <q-btn flat label="Ver categorías" @click="$router.push('/categorias')" />
+      <q-btn style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" flat label="Ver todo" @click="$router.push('/categorias')" />
     </div>
   </div>
 
@@ -98,7 +103,7 @@
       navigation-position="bottom"
       infinite
       class="banner-carousel"
-      height="66vh"
+      :height="getCategoriesHeight()"
     >
       <q-carousel-slide v-for="(chunk, sidx) in categoriasSlides" :key="'cat-slide-'+sidx" :name="sidx">
         <div class="strip-slide-inner strip-cats">
@@ -114,40 +119,13 @@
 </section>
 
 <!-- Rebajas (Amazon-like deals) -->
-<section class="q-px-lg q-py-xl bg-rebajas">
+<section class="q-px-lg q-py-md amazon-section responsive-section">
   <div class="row items-center q-mb-md">
     <div class="col">
       <div class="text-h6 text-weight-bold">Rebajas</div>
     </div>
     <div class="col-auto">
-      <q-btn flat label="Ver ofertas" @click="$router.push('/productos?rebajas=1')" />
-    </div>
-  </div>
-
-  <div class="amazon-row">
-    <div v-for="p in rebajas.slice(0,8)" :key="'rebaja-'+p.id" class="amazon-card">
-      <q-card flat bordered class="shadow-1 clickable-card" @click="goToProduct(p.id)">
-  <q-img :src="getFotoUrl(getProductoImage(p))" ratio="4/3" style="object-fit: cover" @load="debugImg && debugResolveFoto(getProductoImage(p))" @error="debugImg && console.warn('[IndexPage] q-img error loading product', getProductoImage(p))">
-          <template v-slot:after>
-            <div class="card-badge badge-sale">-{{ p.descuento || p.porcentajeDescuento || 10 }}%</div>
-          </template>
-        </q-img>
-        <q-card-section>
-          <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
-          <div class="row items-center">
-            <div class="text-subtitle1 text-weight-bold q-mr-sm">$ {{ p.precioVenta != null ? Number(p.precioVenta).toLocaleString('es-ES',{ minimumFractionDigits:2 }) : '0.00' }}</div>
-            <div class="text-caption text-grey-6"><s>$ {{ p.precioOriginal ? Number(p.precioOriginal).toLocaleString('es-ES',{ minimumFractionDigits:2 }) : '' }}</s></div>
-          </div>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" color="accent" @click.stop="() => wishlist.toggle(p)">
-            <q-tooltip>{{ wishlist.isFavorito(p.id) ? 'Quitar de favoritos' : 'Agregar a favoritos' }}</q-tooltip>
-          </q-btn>
-          <q-btn dense round flat icon="add_shopping_cart" color="accent" @click.stop="addToCart(p)">
-            <q-tooltip>Añadir al carrito</q-tooltip>
-          </q-btn>
-        </q-card-actions>
-      </q-card>
+      <q-btn style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" flat label="Ver todo" @click="$router.push('/productos?rebajas=1')" />
     </div>
   </div>
 
@@ -159,9 +137,9 @@
       navigation-position="bottom"
       infinite
       class="banner-carousel"
-      height="66vh"
+      :height="getNovedadesHeight()"
     >
-    <q-carousel-slide v-for="(chunk, sidx) in rebajasSlides" :key="'reb-slide-'+sidx" :name="sidx">
+    <q-carousel-slide v-for="(chunk, sidx) in rebajasSlides" :key="'reb-slide-'+sidx" :name="sidx" class="strip-slide">
       <div class="strip-slide-inner">
         <div v-for="p in chunk" :key="'rebaja-'+p.id" class="slide-item">
           <q-card flat bordered class="shadow-1 clickable-card" @click="goToProduct(p.id)">
@@ -172,9 +150,18 @@
             </q-img>
             <q-card-section>
               <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
-              <div class="row items-center">
-                <div class="text-subtitle1 text-weight-bold q-mr-sm">$ {{ p.precioVenta != null ? Number(p.precioVenta).toLocaleString('es-ES',{ minimumFractionDigits:2 }) : '0.00' }}</div>
-                <div class="text-caption text-grey-6"><s>$ {{ p.precioOriginal ? Number(p.precioOriginal).toLocaleString('es-ES',{ minimumFractionDigits:2 }) : '' }}</s></div>
+              <div v-if="p.tieneDescuento" class="row items-center">
+                <!-- Precio original tachado -->
+                <div class="text-subtitle1 text-grey-6 q-mr-sm">
+                  <s>$ {{ formatPrice(p.precioVenta) }}</s>
+                </div>
+                <!-- Precio con descuento -->
+                <div class="text-subtitle1 text-weight-bold text-primary">
+                  $ {{ formatPrice(p.precioVentaDescuento) }}
+                </div>
+              </div>
+              <div v-else class="text-subtitle1 text-weight-bold">
+                $ {{ formatPrice(p.precioVenta) }}
               </div>
             </q-card-section>
             <q-card-actions align="right">
@@ -257,6 +244,7 @@
 
 <script setup>
 import { onMounted, reactive, ref, computed, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import { loadGet, loadGetDatosInicio, getFotoFromVarianteWithFallback } from './assets/js/util/funciones'
 import DialogLoad from './components/DialogBoxes/DialogLoad.vue'
 import { apiFotosBaseUrl } from './boot/axios'
@@ -264,6 +252,8 @@ import { EventBus } from './assets/js/util/eventBus'
 import useCart from './stores/cartStore'
 import { useWishlist } from './stores/wishlistStore'
 import TopBar from 'src/pages/Visual/components/TopBar.vue'
+
+const $q = useQuasar()
 
 const categoriaSlide = ref(0)
 const bannerSlide = ref(0)
@@ -288,14 +278,14 @@ const bannerSlides = [
     ctaLink: '/productos'
   },
   {
-    image: '/img/MarcaZun-02.png',
+    image: '/img/nuevasColecciones.webp',
     title: 'Nuevas Colecciones',
     subtitle: 'Descubre las novedades de la temporada.',
     ctaText: 'Ver colección',
     ctaLink: '/catalogo'
   },
   {
-    image: '/img/ZUN_fta_negative.png',
+    image: '/img/rebajas.jpg',
     title: 'Promociones Exclusivas',
     subtitle: 'Aprovecha descuentos por tiempo limitado.',
     ctaText: 'Aprovechar',
@@ -338,7 +328,25 @@ function getProductoStock(p) {
   return stock
 }
 
-const novedadesSlides = computed(() => chunkCategorias(((objeto.productosNovedades || []).filter(p => getProductoStock(p) > 0).slice(0, 20)), itemsPerSlideProducts))
+//const novedadesSlides = computed(() => chunkCategorias(((objeto.productosNovedades || []).filter(p => getProductoStock(p) > 0).slice(0, 20)), itemsPerSlideProducts))
+
+// En tu data o computed, modifica la función que crea los slides
+
+const novedadesSlides = computed(() => {
+    const productosPorSlide = 4
+  if (!objeto.productosNovedades || objeto.productosNovedades.length === 0) {
+    return []
+  }
+
+  const chunks = []
+  for (let i = 0; i < objeto.productosNovedades.length; i += productosPorSlide) {
+    const chunk = objeto.productosNovedades.slice(i, i + productosPorSlide)
+    chunks.push(chunk)
+  }
+  console.log("chunks: ",chunks)
+
+  return chunks
+})
 const rebajasSlides = computed(() => chunkCategorias(((rebajas.value || []).filter(p => getProductoStock(p) > 0).slice(0, 20)), itemsPerSlideProducts))
 const categoriasSlides = computed(() => chunkCategorias((objeto.categoriasProductos || []), itemsPerSlideCategories))
 
@@ -425,7 +433,6 @@ function addToCart(product) {
     // Normalizar el producto antes de agregarlo
     const productoNormalizado = normalizarProductoParaCarrito(product)
     cart.addItem(productoNormalizado, 1)
-    if (debugImg) console.log('[IndexPage] added to cart', product && (product.id || product.productoId))
   } catch (e) {
     console.warn('[IndexPage] addToCart error', e)
   }
@@ -518,10 +525,8 @@ onMounted(async () => {
   dialogLoad.value = true
   let elementosInicio = await loadGetDatosInicio('ObtenerDatosInicio')
   // diagnostic dump to understand backend payload shape
-  if (debugImg) console.log('[IndexPage] ObtenerDatosInicio payload:', elementosInicio)
 
   if (!elementosInicio) {
-    console.warn('[IndexPage] ObtenerDatosInicio returned empty or failed', elementosInicio)
     objeto.productosNovedades = []
     objeto.categoriasProductos = []
   } else {
@@ -533,7 +538,6 @@ onMounted(async () => {
       // try to guess where products might be: look for objects that have precioVenta or descripcion
       const guessProducts = elementosInicio.filter(e => e && (e.precioVenta !== undefined || e.descripcion || e.nombre))
       if (guessProducts.length) {
-        console.log('[IndexPage] guessed productosNovedades from array response, count:', guessProducts.length)
         objeto.productosNovedades = guessProducts
       }
     }
@@ -545,7 +549,6 @@ onMounted(async () => {
 
     objeto.categoriasProductos = elementosInicio?.categoriasProductos ?? elementosInicio?.categorias ?? elementosInicio?.data?.categorias ?? elementosInicio?.result?.categoriasProductos ?? []
 
-    if (debugImg) console.log('[IndexPage] mapped productosNovedades length:', (objeto.productosNovedades || []).length, 'categoriasProductos length:', (objeto.categoriasProductos || []).length)
 
     // Enriquecer novedades con datos completos para obtener fotos desde productoVariantes
     if (objeto.productosNovedades && objeto.productosNovedades.length > 0) {
@@ -562,21 +565,16 @@ onMounted(async () => {
               // Mezclar con datos originales, manteniendo IDs y precio
               const merged = { ...prod, ...productoCompleto }
               novedadesEnriquecidas.push(merged)
-              if (debugImg) console.log('[IndexPage] loaded product:', merged.id, 'has productoVariantes:', !!merged.productoVariantes)
             } else {
               novedadesEnriquecidas.push(prod)
             }
           } catch (err) {
-            if (debugImg) console.warn('[IndexPage] failed to load complete product data for id:', prod.id, 'error:', err.message)
             novedadesEnriquecidas.push(prod)
           }
         }
 
         objeto.productosNovedades = novedadesEnriquecidas
-        if (debugImg) {
-          console.log('[IndexPage] novedades enriquecidas:', objeto.productosNovedades.length)
-          console.log('[IndexPage] first product data:', objeto.productosNovedades[0])
-        }
+
       } catch (err) {
         console.warn('[IndexPage] error enriching novedades:', err)
       }
@@ -590,7 +588,6 @@ onMounted(async () => {
 
 // log categories when they arrive to help debug missing images
 watch(() => objeto.categoriasProductos, (val) => {
-  if (debugImg) console.log('[IndexPage] categoriasProductos loaded:', val)
 }, { immediate: true })
 
 // quick runtime test: try loading images via Image() to get onload/onerror events
@@ -614,7 +611,6 @@ watch(() => objeto.categoriasProductos.length, (len) => {
     const cat = cats[i]
     const candidate = getCategoriaImage(cat)
     const resolved = getFotoUrl(candidate)
-    console.log('[IndexPage] testing image', { id: cat.id, candidate, resolved })
     testImageLoad(resolved)
   }
 }, { immediate: true })
@@ -644,7 +640,6 @@ function debugResolveFoto(foto) {
   if (!debugImg) return
   try {
     const resolved = getFotoUrl(foto)
-    console.log('[IndexPage] getFotoUrl input:', foto, '=>', resolved)
   } catch (e) {
     console.warn('[IndexPage] getFotoUrl error for', foto, e)
   }
@@ -655,7 +650,6 @@ function debugResolveFoto(foto) {
 function getCategoriaImage(cat) {
   if (!cat) return null
   const candidate = cat.fotoUrl || cat.imagen || cat.imagenUrl || cat.url || cat.image || cat.picture || null
-  if (debugImg) console.log('[IndexPage] getCategoriaImage:', { id: cat.id, candidate })
   return candidate
 }
 
@@ -696,7 +690,6 @@ function getProductoImage(prod) {
     candidate = prod.imagenPrincipal
   }
 
-  if (debugImg) console.log('[IndexPage] getProductoImage:', { id: prod.id, candidate, hasVariantes: !!prod.productoVariantes })
   return candidate
 }
 
@@ -709,6 +702,45 @@ function chunkCategorias(array, size) {
   return result
 }
 
+// Función para calcular precio con descuento
+function calculateDiscountedPrice(product) {
+  if (!product || product.precioVenta == null) return '0.00'
+
+  const precio = Number(product.precioVenta)
+  const descuento = product.descuento || product.porcentajeDescuento || 10
+  const precioConDescuento = precio * (1 - descuento / 100)
+
+  return precioConDescuento.toLocaleString('es-ES', { minimumFractionDigits: 2 })
+}
+
+// Función para formatear precio (igual a ProductosPage)
+function formatPrice(v) {
+  if (v == null) return '0.00'
+  return Number(v).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+// Funciones para calcular alturas responsivas
+function getBannerHeight() {
+  if ($q.screen.xs) return '50vh'
+  if ($q.screen.sm) return '55vh'
+  if ($q.screen.md) return '60vh'
+  return '66vh'
+}
+
+function getNovedadesHeight() {
+  if ($q.screen.xs) return '45vh'
+  if ($q.screen.sm) return '50vh'
+  if ($q.screen.md) return '55vh'
+  return '60vh'
+}
+
+function getCategoriesHeight() {
+  if ($q.screen.xs) return '50vh'
+  if ($q.screen.sm) return '55vh'
+  if ($q.screen.md) return '60vh'
+  return '66vh'
+}
+
 const abrirEnlace = (url) => {
     window.open(url, '_blank') // abre en nueva pestaña
  }
@@ -717,18 +749,19 @@ const abrirEnlace = (url) => {
 <style lang="scss" scoped>
 .banner-slide { padding: 0 !important; }
 .banner-bg {
-  height: 66vh;
+  min-height: 50vh;
   width: 100%;
   background-size: cover;
   background-position: center center;
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
 }
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(90deg, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.70) 40%, rgba(0,0,0,0.7) 100%);
 }
 .banner-content {
   position: relative;
@@ -742,42 +775,175 @@ const abrirEnlace = (url) => {
   font-size: 2.2rem;
   margin: 0 0 12px 0;
   font-weight: 700;
+  line-height: 1.2;
 }
 .banner-subtitle {
   font-size: 1.05rem;
   margin: 0 0 18px 0;
-  color: rgba(255,255,255,0.9);
+  color: #fff;
+  line-height: 1.4;
 }
 .banner-content .q-btn {
-  background: #ffd54f; /* amazon-like yellow */
+  background: #ffd54f;
   color: #111;
+  font-weight: 600;
 }
 
 /* Amazon-like section styles */
-.amazon-row { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; }
-.amazon-card { flex: 0 0 220px; width: 220px; }
-.card-badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.amazon-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  padding-bottom: 8px;
+}
+.amazon-card { width: 100%; }
+.card-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 2;
+}
 .badge-sale { background: #e53935 !important; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cat-strip { display: flex; gap: 12px; overflow-x: auto; }
 .cat-tile { width: 200px; cursor: pointer; }
-.cat-card-bg { width: 100%; height: 120px; background-size: cover; background-position: center center; position: relative; display:flex; align-items:flex-end; border-radius:6px; overflow:hidden; }
-.cat-card-bg .q-card__section { background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 100%); color: #fff; }
-.cat-card-overlay { position:absolute; inset:0; }
-.cat-tile-label { text-align: center; padding: 8px 6px; font-weight: 600; z-index:2; }
-.bg-rebajas { background: linear-gradient(180deg, #fff, #fff); }
+.cat-card-bg {
+  width: 100%;
+  min-height: 120px;
+  background-size: cover;
+  background-position: center center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.cat-card-bg .q-card__section {
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 100%);
+  color: #fff;
+  width: 100%;
+}
+.cat-card-overlay { position: absolute; inset: 0; }
+.cat-tile-label { text-align: center; padding: 8px 6px; font-weight: 600; z-index: 2; }
 
-@media (max-width: 768px) {
-  .banner-bg { height: 50vh; }
-  .banner-content { max-width: 90%; margin-left: 5%; padding: 16px; }
-  .banner-title { font-size: 1.4rem; }
-  .banner-subtitle { font-size: 0.95rem; }
+/* Extra small devices (xs) */
+@media (max-width: 599px) {
+  .banner-bg {
+    min-height: 50vh;
+    justify-content: flex-start;
+  }
+  .banner-content {
+    max-width: 100%;
+    margin-left: 0;
+    padding: 12px 16px;
+  }
+  .banner-title {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
+  .banner-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+  .banner-content .q-btn {
+    font-size: 0.85rem;
+    padding: 8px 16px;
+  }
+  .amazon-row {
+    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .amazon-card { width: 100%; }
+  .card-badge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
 }
 
+/* Small devices (sm) */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .banner-bg { min-height: 55vh; }
+  .banner-content {
+    max-width: 90%;
+    margin-left: 5%;
+    padding: 18px 24px;
+  }
+  .banner-title {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+  }
+  .banner-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+  .amazon-row {
+    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+/* Medium devices (md) */
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .banner-bg { min-height: 60vh; }
+  .amazon-row {
+    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+/* Large devices (lg+) */
+@media (min-width: 1366px) {
+  .banner-bg { min-height: 66vh; }
+  .amazon-row {
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+/* Responsive sections */
+.responsive-section {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
+}
+
+@media (min-width: 600px) {
+  .responsive-section {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    padding-top: 24px !important;
+    padding-bottom: 24px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-section {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+  }
+}
+
+@media (min-width: 1366px) {
+  .responsive-section {
+    padding-left: 48px !important;
+    padding-right: 48px !important;
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
+  }
+}
 </style>
 
 <style lang="scss" scoped>
 @import './css/quasar.variables.scss';
+
 /* Carousel control colors using app primary */
 .banner-carousel ::v-deep .q-carousel__control,
 .banner-carousel ::v-deep .q-carousel__control .q-icon {
@@ -803,7 +969,7 @@ const abrirEnlace = (url) => {
 .strip-carousel {
   background: transparent;
 }
-.strip-slide { padding: 12px 20px; }
+.strip-slide { padding: 0px 10px; }
 .strip-carousel ::v-deep .q-carousel__control { background: rgba(0,0,0,0.08) !important; }
 
 /* mirror banner controls & navigation so strips look like hero */
@@ -836,63 +1002,226 @@ const abrirEnlace = (url) => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-  /* padding left/right to keep items away from carousel controls; padding-top to lower items */
-  padding: 32px 72px 16px;
+  padding: 32px 0px 16px;
   box-sizing: border-box;
-  /* center items vertically in the slide area */
   align-items: center;
+  min-height: 100%;
 }
-.strip-cats { padding-top: 8px; padding-bottom: 8px; }
-.slide-item { flex: 0 0 280px; max-width: 280px; }
-.slide-item-cat { flex: 0 0 240px; max-width: 240px; }
+.strip-cats {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.slide-item {
+  flex: 0 0 280px;
+  max-width: 280px;
+}
+.slide-item-cat {
+  flex: 0 0 240px;
+  max-width: 240px;
+}
 
-/* 5-per-view layout for wide screens */
+/* Extra small devices (xs) */
+@media (max-width: 599px) {
+  .strip-slide-inner {
+    padding: 16px 12px;
+    gap: 12px;
+  }
+  .slide-item {
+    flex: 0 0 calc(50% - 6px);
+    max-width: calc(50% - 6px);
+    min-height: auto;
+  }
+  .slide-item-cat {
+    flex: 0 0 calc(50% - 6px);
+    max-width: calc(50% - 6px);
+  }
+  .slide-item .q-card,
+  .slide-item-cat .q-card {
+    height: auto;
+    min-height: 280px;
+  }
+  .slide-item .q-img,
+  .slide-item-cat .q-img {
+    height: 140px;
+    min-height: 120px;
+  }
+  .slide-item-cat .cat-card-bg {
+    height: 150px;
+  }
+  .strip-carousel ::v-deep .q-carousel__control {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .strip-carousel ::v-deep .q-carousel__control .q-icon {
+    font-size: 16px !important;
+  }
+}
+
+/* Small devices (sm) */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .strip-slide-inner {
+    padding: 20px 24px;
+    gap: 16px;
+  }
+  .slide-item {
+    flex: 0 0 calc(33.333% - 11px);
+    max-width: calc(33.333% - 11px);
+  }
+  .slide-item-cat {
+    flex: 0 0 calc(40% - 10px);
+    max-width: calc(40% - 10px);
+  }
+  .slide-item .q-card,
+  .slide-item-cat .q-card {
+    height: auto;
+    min-height: 320px;
+  }
+  .slide-item .q-img,
+  .slide-item-cat .q-img {
+    height: 160px;
+  }
+  .slide-item-cat .cat-card-bg {
+    height: 160px;
+  }
+}
+
+/* Medium devices (md) */
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .strip-slide-inner {
+    padding: 24px 32px;
+    gap: 18px;
+  }
+  .slide-item {
+    flex: 0 0 calc(25% - 14px);
+    max-width: calc(25% - 14px);
+  }
+  .slide-item-cat {
+    flex: 0 0 calc(33.333% - 12px);
+    max-width: calc(33.333% - 12px);
+  }
+  .slide-item .q-card,
+  .slide-item-cat .q-card {
+    height: auto;
+    min-height: 340px;
+  }
+  .slide-item .q-img,
+  .slide-item-cat .q-img {
+    height: 200px;
+  }
+  .slide-item-cat .cat-card-bg {
+    height: 180px;
+  }
+}
+
+/* Large devices (lg+) */
 @media (min-width: 1366px) {
-  .strip-slide-inner { padding: 32px 72px 16px; }
-  .slide-item { flex: 0 0 calc((100% - 224px)/5); max-width: calc((100% - 224px)/5); }
-  .slide-item-cat { flex: 0 0 calc((100% - 224px)/5); max-width: calc((100% - 224px)/5); }
+  .strip-slide-inner {
+    padding: 32px 72px 16px;
+  }
+  .slide-item {
+    flex: 0 0 calc((100% - 224px)/5);
+    max-width: calc((100% - 224px)/5);
+  }
+  .slide-item-cat {
+    flex: 0 0 calc((100% - 224px)/5);
+    max-width: calc((100% - 224px)/5);
+  }
+  .slide-item .q-card,
+  .slide-item-cat .q-card {
+    display: flex;
+    flex-direction: column;
+    height: 380px;
+  }
+  .slide-item .q-img,
+  .slide-item-cat .q-img {
+    height: 220px;
+    min-height: 180px;
+  }
+  .slide-item-cat .cat-card-bg {
+    height: 200px;
+  }
 }
 
-/* increase card heights and ensure content fills card */
-.slide-item .q-card, .slide-item-cat .q-card {
-  display: flex;
-  flex-direction: column;
-  height: 380px; /* larger card */
-}
-
-.clickable-card { cursor: pointer; }
-.slide-item .q-img, .slide-item-cat .q-img {
-  height: 220px;
-  min-height: 180px;
-  object-fit: cover;
-}
 .slide-item .q-card-section { flex: 1 1 auto; }
-.slide-item-cat .cat-card-bg { height: 200px; }
+.clickable-card { cursor: pointer; }
 
-@media (max-width: 1024px) {
-  .strip-slide-inner { padding: 0 56px; }
-  .slide-item { flex: 0 0 220px; max-width: 220px; }
-  .slide-item-cat { flex: 0 0 180px; max-width: 180px; }
-  .slide-item .q-card, .slide-item-cat .q-card { height: 340px; }
-  .slide-item .q-img { height: 200px; }
-  .slide-item-cat .cat-card-bg { height: 160px; }
+/* Footer responsive */
+.footer {
+  text-align: center;
+  padding-left: 16px;
+  padding-right: 16px;
+  box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
-  .strip-slide-inner { padding: 0 36px; }
-  .slide-item { flex: 0 0 48%; max-width: 48%; }
-  .slide-item-cat { flex: 0 0 46%; max-width: 46%; }
-  .slide-item .q-card, .slide-item-cat .q-card { height: auto; }
-  .slide-item .q-img, .slide-item-cat .q-img { height: 160px; }
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
 }
 
-@media (max-width: 480px) {
-  .strip-slide-inner { padding: 0 20px; }
-  .slide-item { flex: 0 0 100%; max-width: 100%; }
-  .slide-item-cat { flex: 0 0 48%; max-width: 48%; }
-  .slide-item .q-img, .slide-item-cat .q-img { height: 140px; }
+.footer-link {
+  color: #000000;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  font-size: 0.9rem;
 }
 
-.footer { text-align: center; } .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem; } .footer-link { color: #000000; font-weight: 500; text-decoration: none; transition: color 0.3s ease; } .footer-link:hover { color: #ffeb3b; /* amarillo acento */ } .footer-contact { max-width: 700px; margin: 0 auto; line-height: 1.6; } .footer-social { display: flex; justify-content: center; gap: 0.8rem; } .footer-social-btn { transition: transform 0.2s ease; } .footer-social-btn:hover { transform: scale(1.2); }
+.footer-link:hover {
+  color: #ffeb3b;
+}
+
+.footer-contact {
+  max-width: 700px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+  font-size: 0.85rem;
+}
+
+.footer-social {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.footer-social-btn {
+  transition: transform 0.2s ease;
+}
+
+.footer-social-btn:hover {
+  transform: scale(1.2);
+}
+
+/* Extra small footer adjustments */
+@media (max-width: 599px) {
+  .footer-links {
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .footer-link {
+    font-size: 0.8rem;
+  }
+  .footer-contact {
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .footer-social-btn {
+    transform: scale(0.9);
+  }
+}
+
+/* Small footer adjustments */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .footer-links {
+    gap: 0.9rem;
+  }
+  .footer-link {
+    font-size: 0.85rem;
+  }
+}
 </style>
 

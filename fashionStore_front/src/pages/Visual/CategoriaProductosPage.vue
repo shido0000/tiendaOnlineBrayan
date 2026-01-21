@@ -153,23 +153,13 @@ async function cargarDatosCategoria(id) {
       try {
         const prodId = p.id || p.productoId || p.productId || p._id
         if (prodId) {
-          if (debugImg) console.log('[CategoriaProductos] preloading variants for product', prodId)
           const detailed = await loadGetHastaData(`Producto/ObtenerProductoEspecifico/${prodId}`)
-          if (debugImg) {
-            console.log('[CategoriaProductos] got detailed product for', prodId)
-            console.log('[CategoriaProductos] detailed object keys:', Object.keys(detailed || {}))
-            console.log('[CategoriaProductos] detailed.productosVariantes:', detailed?.productosVariantes)
-            console.log('[CategoriaProductos] detailed.productoVariantes:', detailed?.productoVariantes)
-          }
 
           // Fusionar variantes del producto detallado al producto del listado
           // Probar ambas claves (productosVariantes y productoVariantes)
           const variantes = detailed?.productosVariantes || detailed?.productoVariantes
           if (detailed && variantes) {
             p.productosVariantes = variantes
-            if (debugImg) console.log('[CategoriaProductos] merged productosVariantes:', variantes.length, 'variants')
-          } else if (debugImg) {
-            console.log('[CategoriaProductos] NO VARIANTES FOUND - p.productosVariantes exists?', !!p.productosVariantes)
           }
         }
       } catch (e) {
@@ -178,9 +168,6 @@ async function cargarDatosCategoria(id) {
     }))
 
     productos.value = productosConStock.map(p => ({ ...p, slide: 0 }))
-    if (debugImg) console.log('[CategoriaProductos] mapped productos count:', productos.value.length)
-console.log(" productos.value : ", productos.value)
-
     // cargar categorías para el TopBar
     try {
       const inicio = await loadGetDatosInicio('ObtenerDatosInicio')
@@ -224,16 +211,9 @@ function getFotoUrl(foto) {
 function getFotoUrlFromFoto(foto, producto = null) {
   if (!foto) return '/img/sin-foto.jpg'
 
-  if (debugImg) {
-    console.log('[getFotoUrlFromFoto] foto object:', foto)
-    console.log('[getFotoUrlFromFoto] foto keys:', typeof foto === 'object' ? Object.keys(foto) : 'not object')
-    console.log('[getFotoUrlFromFoto] foto.fotos:', foto?.fotos, 'is array?', Array.isArray(foto?.fotos), 'length:', foto?.fotos?.length)
-  }
-
   // Si es un objeto con propiedad fotos (array de variante)
   if (foto.fotos && Array.isArray(foto.fotos) && foto.fotos.length > 0) {
     const fotoObj = foto.fotos[0]
-    if (debugImg) console.log('[getFotoUrlFromFoto] Found fotos array, using first:', fotoObj)
     if (typeof fotoObj === 'object') {
       return getFotoUrl(fotoObj.url || fotoObj.imagen || fotoObj.path)
     }
@@ -242,10 +222,8 @@ function getFotoUrlFromFoto(foto, producto = null) {
 
   // Si la variante no tiene fotos, buscar heredadas de hermanas
   if (foto.fotos && Array.isArray(foto.fotos) && foto.fotos.length === 0 && producto) {
-    if (debugImg) console.log('[getFotoUrlFromFoto] Variante sin fotos, buscando heredadas...')
     const fotoHeredada = getFotoFromVarianteWithFallback(foto, producto)
     if (fotoHeredada) {
-      if (debugImg) console.log('[getFotoUrlFromFoto] ✅ Encontró foto heredada:', fotoHeredada)
       return getFotoUrl(fotoHeredada)
     }
   }
@@ -253,13 +231,11 @@ function getFotoUrlFromFoto(foto, producto = null) {
   // Si es un objeto con propiedad url
   if (typeof foto === 'object') {
     const candidate = foto?.url || foto?.img || foto?.path || foto?.imagen || foto?.foto || null
-    if (debugImg && candidate) console.log('[getFotoUrlFromFoto] Found direct property:', candidate)
     if (candidate) return getFotoUrl(candidate)
   }
 
   // Si es un string directo
   if (typeof foto === 'string') {
-    if (debugImg) console.log('[getFotoUrlFromFoto] String foto:', foto)
     return getFotoUrl(foto)
   }
 
@@ -301,8 +277,6 @@ async function goToProduct(productOrId) {
 // Normalizar producto antes de agregarlo al carrito/wishlist
 function normalizarProductoParaCarrito(producto, fotoPreferida = null) {
   if (!producto) return producto
-
-  console.log('[CategoriaProductos] normalizarProductoParaCarrito producto:', producto)
 
   // Normalizar variantes exactamente como en ProductoDetallePage
   const variants = (producto.productoVariantes || producto.variants || []).map(v => ({
@@ -401,7 +375,6 @@ function getProductoImage(prod) {
   if (!prod) return null
 
   let candidate = tryFields(prod, ['fotoUrl', 'foto', 'imagen', 'imagenUrl', 'url', 'image', 'picture', 'imagenPrincipal', 'imagen_principal', 'fotoPrincipal'])
-  console.log('[CategoriaProductos] getProductoImage paso 1 (campos directos):', { productId: prod.id, candidate })
 
   // arrays of photos
   if ((!candidate || candidate === '') && Array.isArray(prod.fotos) && prod.fotos.length > 0) {
@@ -411,38 +384,31 @@ function getProductoImage(prod) {
       const nested = tryFields(first, Object.keys(first))
       if (nested) { candidate = nested; break }
     }
-    console.log('[CategoriaProductos] getProductoImage paso 2 (array fotos):', { productId: prod.id, candidate })
   }
 
   // prefer image from productosVariantes (API uses Spanish naming)
   if ((!candidate || candidate === '') && Array.isArray(prod.productosVariantes) && prod.productosVariantes.length) {
-    console.log('[CategoriaProductos] getProductoImage paso 3: verificando productosVariantes...', { productId: prod.id, variantes: prod.productosVariantes.length })
     const pv = prod.productosVariantes[0]
     if (pv) {
       if (Array.isArray(pv.fotos) && pv.fotos.length) {
         const f0 = pv.fotos[0]
         if (typeof f0 === 'string' && f0.trim() !== '') candidate = f0
         else if (f0 && typeof f0 === 'object') candidate = f0.url || f0.img || f0.path || candidate
-        console.log('[CategoriaProductos] getProductoImage paso 3a (variante con fotos):', { productId: prod.id, candidate })
       }
       // Si la variante no tiene fotos, busca en otras variantes del mismo producto
       if (!candidate || candidate === '') {
-        console.log('[CategoriaProductos] getProductoImage paso 3b: llamando getFotoFromVarianteWithFallback...')
         const fotoHeredada = getFotoFromVarianteWithFallback(pv, prod)
         if (fotoHeredada) {
-          console.log('[CategoriaProductos] getProductoImage paso 3b: foto heredada encontrada:', fotoHeredada)
           candidate = fotoHeredada
         }
       }
       if ((!candidate || candidate === '') && typeof pv === 'object') {
         const vCandidate = tryFields(pv, ['fotoUrl', 'foto', 'imagen', 'imagenUrl', 'url', 'image', 'picture'])
         if (vCandidate) candidate = vCandidate
-        console.log('[CategoriaProductos] getProductoImage paso 3c (campos variante):', { productId: prod.id, candidate })
       }
     }
   }
 
-  if (debugImg) console.log('[CategoriaProductos] resolved image candidate for product', prod.id ?? prod.productoId ?? prod._id ?? null, '->', candidate)
   return candidate || null
 }
 
@@ -468,7 +434,62 @@ function getProductoImagePreferVariant(prod) {
     }
   }
 
-  if (debugImg) console.log('[CategoriaProductos] getProductoImagePreferVariant returning null for product', prod.id)
   return null
 }
 </script>
+<style scoped lang="scss">
+/* Media Queries para responsividad */
+@media (max-width: 599px) {
+  .text-h6 {
+    font-size: 16px !important;
+  }
+
+  :deep(.q-carousel) {
+    height: 140px !important;
+  }
+
+  :deep(.q-card) {
+    padding: 8px !important;
+  }
+
+  .text-subtitle1 {
+    font-size: 14px !important;
+  }
+
+  .text-caption {
+    font-size: 12px !important;
+  }
+
+  .row.q-col-gutter-md {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+
+  .row.q-col-gutter-md > [class*="col-"] {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 600px) {
+  :deep(.q-carousel) {
+    height: 160px !important;
+  }
+
+  .col-12.col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+@media (min-width: 1366px) {
+  .col-12.col-sm-6.col-md-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+
+  :deep(.q-carousel) {
+    height: 200px !important;
+  }
+}
+</style>

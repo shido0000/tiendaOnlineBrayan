@@ -300,7 +300,6 @@ const objeto = reactive({ ...objetoInicial })
 // 1- Funcion para pasar parametros en el Adicionar SaveData
 const Guardar = () => {
   const url = objeto.id ? 'Moneda/Actualizar' : 'Moneda/Crear'
-  console.log(objeto)
 
   objeto.tasaCambio= objeto.tasaCambio
       ? parseFloat(

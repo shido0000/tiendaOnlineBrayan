@@ -77,7 +77,7 @@
                 <q-input
                   class="col-xs-12 col-md-12 q-pa-sm"
                   :disable="!!objeto.id"
-                  label="Código *"
+                  label="Nombre *"
                   v-model="objeto.nombre"
                   color="primary"
                   counter
@@ -85,11 +85,11 @@
                   lazy-rules
                   :rules="[
                     (val) =>
-                      (val && val.length > 0) || 'Debe insertar un Código',
+                      (val && val.length > 0) || 'Debe insertar un Nombre',
                     (val) =>
                       (items.length > 0
-                        ? !isValorRepetido(val, 'codigo', objeto, items)
-                        : true) || 'Ya existe un codigo con ese valor',
+                        ? !isValorRepetido(val, 'nombre', objeto, items)
+                        : true) || 'Ya existe un nombre con ese valor',
                   ]"
                 />
 
@@ -335,3 +335,65 @@ function getFotoUrl(foto) {
 }
 
 </script>
+<style scoped lang="scss">
+/* Media Queries para responsividad - Nomencladores */
+@media (max-width: 599px) {
+  :deep(.q-table) {
+    font-size: 12px;
+  }
+
+  :deep(.q-table__card) {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  :deep(.q-th) {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  :deep(.q-td) {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  :deep(.q-input) {
+    font-size: 14px;
+  }
+
+  :deep(.q-dialog__inner) {
+    padding: 10px;
+  }
+
+  :deep(.q-field__control) {
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 600px) {
+  :deep(.q-table) {
+    font-size: 13px;
+  }
+
+  :deep(.q-th) {
+    padding: 12px 6px;
+  }
+
+  :deep(.q-td) {
+    padding: 12px 6px;
+  }
+}
+
+@media (min-width: 1366px) {
+  :deep(.q-table) {
+    font-size: 14px;
+  }
+
+  :deep(.q-th) {
+    padding: 16px 8px;
+  }
+
+  :deep(.q-td) {
+    padding: 16px 8px;
+  }
+}
+</style>

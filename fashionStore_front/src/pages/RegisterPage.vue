@@ -193,10 +193,12 @@ onMounted(async () => {
     $bry-white 0%,
     $primary 100%
   );
+  padding: 20px;
 }
 
 .login-card {
-  width: 350px;
+  width: 100%;
+  max-width: 350px;
   padding: 40px 32px 32px 32px;
   border-radius: 32px;
   background: rgba(255, 255, 255, 0.08);
@@ -212,5 +214,34 @@ onMounted(async () => {
   color: $bry-white;
   font-weight: bold;
   letter-spacing: 2px;
+}
+
+/* Media Queries para responsividad */
+@media (max-width: 599px) {
+  .login-card {
+    padding: 30px 20px 20px 20px;
+    width: 90%;
+  }
+
+  :deep(.q-field) {
+    font-size: 14px;
+  }
+
+  :deep(.q-input__control) {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 600px) {
+  .login-card {
+    padding: 35px 28px 28px 28px;
+    width: 85%;
+  }
+}
+
+@media (min-width: 1366px) {
+  .login-card {
+    width: 400px;
+  }
 }
 </style>

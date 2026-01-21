@@ -20,7 +20,7 @@ export const essentialListUrl = [
         link: 'NomenclatorsCard'
     },
     {
-        title: 'Crear Información',
+        title: 'CREAR INFORMACIÓN',
         link: 'CrearInformacion'
     },
 

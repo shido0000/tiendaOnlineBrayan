@@ -124,7 +124,6 @@ export async function ejemploCrearAsientoDevolucion(
 
         // Validar y crear
         const equilibrio = AsientoContableHelper.validarEquilibrio(asiento.movimientos);
-        console.log('Estado del asiento:', equilibrio);
 
         return await ContabilidadAPI.crearAsiento(asiento);
     } catch (error) {
@@ -145,16 +144,9 @@ export async function ejemploConsultarAsientos() {
             fechaFin: '2025-01-31',
         });
 
-        console.log(`Total de asientos: ${resultado.totalCount}`);
 
         // Procesar cada asiento
         resultado.items.forEach(asiento => {
-            console.log(`
-        Fecha: ${ContabilidadFormato.formatearFecha(asiento.fecha)}
-        Descripción: ${asiento.descripcion}
-        Tipo: ${asiento.tipoReferencia}
-      `);
-
             // Agrupar movimientos por cuenta
             const movimientosPorCuenta = AsientoContableHelper.agruparPorCuenta(
                 asiento.movimientos

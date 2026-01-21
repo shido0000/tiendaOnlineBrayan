@@ -202,19 +202,21 @@ function formatPrice(v) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .wishlist-page {
   max-width: 1100px;
   margin: 0 auto;
-  margin-top: 32px; /* separación del TopBar */
+  margin-top: 32px;
+  padding: 16px;
 }
 
 .wishlist-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 .wishlist-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .wishlist-img {
@@ -222,10 +224,67 @@ function formatPrice(v) {
   height: 80px;
   object-fit: cover;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease;
 }
+
 .wishlist-img:hover {
   transform: scale(1.05);
+}
+
+/* Media Queries para responsividad */
+@media (max-width: 599px) {
+  .wishlist-page {
+    margin-top: 16px;
+    padding: 12px;
+  }
+
+  .q-card {
+    flex-direction: column !important;
+  }
+
+  .wishlist-img {
+    width: 80px;
+    height: 60px;
+    margin-bottom: 10px;
+  }
+
+  .text-h5 {
+    font-size: 18px !important;
+  }
+
+  .text-subtitle1 {
+    font-size: 14px !important;
+  }
+
+  .text-caption {
+    font-size: 12px !important;
+  }
+
+  :deep(.q-field) {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 600px) {
+  .wishlist-page {
+    padding: 16px;
+  }
+
+  .wishlist-img {
+    width: 90px;
+    height: 70px;
+  }
+}
+
+@media (min-width: 1366px) {
+  .wishlist-page {
+    padding: 24px;
+  }
+
+  .wishlist-img {
+    width: 120px;
+    height: 90px;
+  }
 }
 </style>

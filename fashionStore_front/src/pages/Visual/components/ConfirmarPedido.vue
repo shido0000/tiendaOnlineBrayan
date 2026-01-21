@@ -243,7 +243,6 @@ const dialogLoad = ref(false)
 const router = useRouter()
 const cart = useCart()
 
-console.log("props.productoItem: ",props.productoItem)
 const showDialog = ref(false)
 
 // Items como ref para que se actualice con watch
@@ -305,7 +304,6 @@ function actualizarItems() {
 
   // Filtrar null y items sin id
   items.value = (sourceItems || []).filter(item => item && item.id)
-  console.log('Items actualizados:', items.value)
 }
 
 // Watch para detectar cambios en las props y el carrito
@@ -401,7 +399,6 @@ function obtenerMonedasUsadas() {
     if (mensajeria?.monedaId) monedasSet.add(mensajeria.monedaId)
   }
 
-  console.log('Monedas usadas:', Array.from(monedasSet))
   return Array.from(monedasSet)
 }
 
@@ -434,76 +431,6 @@ const mostrarMonedas = computed(() => {
   return `(${Array.from(monedasSet).join(', ')})`
 })
 
-// Calcular totales en cada moneda
-/*const totalesEnMonedas = computed(() => {
-  const totales = {}
-
-  const monedasUsadas = obtenerMonedasUsadas()
-  if (monedasUsadas.length <= 1) return totales
-
-  // Encontrar la moneda base (primera con tasa de cambio)
-  const monedaBase = monedaMap.value[monedasUsadas[0]]
-  if (!monedaBase) return totales
-
-  // Calcular el monto total en la moneda base
-  let totalEnBase = 0
-
-  // Sumar productos
-  items.value.forEach(item => {
-    const monedaId = getMonedaVentaId(item)
-    const monedaItem = monedaMap.value[monedaId]
-    const monto = item.precioVenta * item.cantidad
-
-    if (monedaItem && monedaItem.id !== monedaBase.id) {
-      // Convertir a moneda base: (monto en monedaItem * tasaBase) / tasaItem
-      const tasaItem = monedaItem.tasaCambio || 1
-      const tasaBase = monedaBase.tasaCambio || 1
-      totalEnBase += (monto * tasaBase) / tasaItem
-    } else {
-      totalEnBase += monto
-    }
-  })  // Sumar gestor (siempre en moneda base, sin conversión)
-  if (gestorPrecio.value > 0) {
-    totalEnBase += gestorPrecio.value
-  }
-
-  // Sumar mensajería
-  if (mensajeriaPrecio.value > 0) {
-    const mensajeria = itemsMensajeria.value.find(m => m.id === form.value.mensajeriaId)
-    const monedaMensajeriaObj = monedaMap.value[mensajeria?.monedaId]
-
-    if (monedaMensajeriaObj && monedaMensajeriaObj.id !== monedaBase.id) {
-      const tasaMensajeria = monedaMensajeriaObj.tasaCambio || 1
-      const tasaBase = monedaBase.tasaCambio || 1
-      totalEnBase += (mensajeriaPrecio.value *tasaMensajeria ) / tasaBase
-    } else {
-      totalEnBase += mensajeriaPrecio.value
-    }
-  }
-console.log("descuento.value: ",descuento.value)
-  // Restar descuento (en moneda base)
-  totalEnBase -= descuento.value
-
-  // Convertir a cada moneda
-  monedasUsadas.forEach(monedaId => {
-    const moneda = monedaMap.value[monedaId]
-    if (moneda) {
-      const tasaDestino = moneda.tasaCambio || 1
-      const tasaBase = monedaBase.tasaCambio || 1
-
-      console.log("moneda: ",moneda)
-      console.log("totalEnBase: ",totalEnBase)
-      console.log("tasaDestino: ",tasaDestino)
-      console.log("tasaBase: ",tasaBase)
-
-
-      totales[moneda.codigo] = (totalEnBase * tasaBase) /tasaDestino
-    }
-  })
-
-  return totales
-})
-*/
 
 const totalesEnMonedas = computed(() => {
   const totales = {}
@@ -533,14 +460,9 @@ const monto = montoUnitario * (item.cantidad || 0)
       const tasaItem = monedaItem.tasaCambio || 1
       // convertir a base
 
- console.log("tasaItem: ",tasaItem)
-      console.log("monto: ",monto)
-      console.log("tasaBase: ",tasaBase)
 
       totalEnBase += (monto * tasaBase) / tasaItem
     } else {
-              console.log("monto: ",monto)
-      console.log("totalEnBase: ",totalEnBase)
       totalEnBase += monto
     }
   })
@@ -559,13 +481,6 @@ const monto = montoUnitario * (item.cantidad || 0)
     if (monedaMensajeriaObj && monedaMensajeriaObj.id !== monedaBase.id) {
       const tasaMensajeria = monedaMensajeriaObj.tasaCambio || 1
       // convertir a base
-
-      console.log("montoMensajeria: ",montoMensajeria)
-      console.log("tasaMensajeria: ",tasaMensajeria)
-      console.log("tasaBase: ",tasaBase)
-      console.log("totalEnBase: ",totalEnBase)
-
-
       totalEnBase += (montoMensajeria * tasaMensajeria) / tasaBase
     } else {
       totalEnBase += montoMensajeria
@@ -668,8 +583,6 @@ const mensajeriaPrecioConvertido = computed(() => {
     const tasaMensajeria = monedaMensajeriaObj.tasaCambio || 1
     const tasaBase = monedaBase.tasaCambio || 1
 
-    console.log("monedaMensajeriaObj: ",monedaMensajeriaObj)
-  console.log("tasaMensajeria: ",tasaMensajeria)
 
     return (mensajeriaPrecio.value *tasaMensajeria ) / tasaBase
   }
@@ -681,10 +594,6 @@ const mensajeriaPrecioConvertido = computed(() => {
 
 // total con extras y descuento (usando valores convertidos)
 const totalConExtras = computed(() => {
-    console.log("mensajeriaPrecioConvertido.value: ",mensajeriaPrecioConvertido.value)
-    console.log("totalPriceConvertido.value: ",totalPriceConvertido.value)
-    console.log("descuento.value: ",descuento.value)
-    console.log("gestorPrecioConvertido.value: ",gestorPrecioConvertido.value)
 
   return  totalPriceConvertido.value - descuento.value  + gestorPrecioConvertido.value + mensajeriaPrecioConvertido.value
 })
@@ -760,7 +669,6 @@ const payload = JSON.parse(
   }
   // Construir lista de productos para el DTO
   let productoLista = []
-  console.log('items.value: ',items.value)
   items.value.forEach(element => {
     // Usar varianteId si está disponible (cuando viene de props), si no usar el id del producto
     let productoId = element.varianteId || element.id

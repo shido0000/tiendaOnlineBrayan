@@ -105,13 +105,69 @@ function goToCategory(id) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .categoria-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
 }
 
 .categoria-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Media Queries para responsividad */
+@media (max-width: 599px) {
+  :deep(.q-page) {
+    padding: 12px;
+  }
+
+  .text-h5 {
+    font-size: 18px !important;
+  }
+
+  .text-h6 {
+    font-size: 16px !important;
+  }
+
+  .text-caption {
+    font-size: 12px !important;
+  }
+
+  .q-icon {
+    font-size: 48px !important;
+  }
+
+  .row.q-col-gutter-md {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+
+  .row.q-col-gutter-md > [class*="col-"] {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 600px) {
+  .col-12.col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  .text-h6 {
+    font-size: 18px !important;
+  }
+}
+
+@media (min-width: 1366px) {
+  :deep(.q-page) {
+    padding: 24px;
+  }
+
+  .col-12.col-lg-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
 }
 </style>

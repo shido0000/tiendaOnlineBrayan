@@ -423,9 +423,6 @@ const cargarDatosFiltros = async () => {
     if (filtro.fechaFin) params.fechaFin = filtro.fechaFin
     if (filtro.cuenta) params.cuenta = filtro.cuenta
 
-    console.log("filtro.fechaInicio: ",params.fechaInicio)
-    console.log("filtro.fechaFin: ",params.fechaFin)
-    console.log("filtro.cuenta: ",params.cuenta)
 
     const response = await loadGetPaginado('AsientoContable/ObtenerListadoPaginado', params) ?? {}
     asientos.value = response.elementos || []

@@ -107,7 +107,6 @@ function addItem(product, qty = 1) {
         if (!foto && (product.imagen || product.fotoUrl)) {
             foto = product.imagen || product.fotoUrl
         }
-        console.log("product.tieneDescuento: ", product.tieneDescuento)
         const toAdd = {
             id, // ID consistente (variante o producto)
             tieneDescuento: product.tieneDescuento || false,

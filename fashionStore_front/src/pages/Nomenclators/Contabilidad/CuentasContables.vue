@@ -341,7 +341,6 @@ const close = async () => {
 }
 
 const seleccionarCuenta = (cuenta) => {
-  console.log('Cuenta seleccionada:', cuenta)
 }
 
 // Ciclo de vida
