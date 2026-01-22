@@ -185,53 +185,61 @@ namespace API.Domain.Services.Gestion.Nomencladores
         {
             var cantPedidos = await _repositorios.Pedidos.CountAsync();
 
-            var primerProducto = generarPedidoDto.Productos.FirstOrDefault();
+            var primerProductoVarianteId = generarPedidoDto.Productos.FirstOrDefault()?.ProductoId;
 
-            var MonedaVentaId = await _repositorios.Productos
-                                            .GetQuery()
-                                            .AsNoTracking()
-                                            .Where(e => e.Id == primerProducto.ProductoId)
-                                            .Select(e => e.MonedaVentaId)
-                                            .FirstOrDefaultAsync();
+            // 🔹 Obtener producto y moneda desde la variante
+            var productoVariante = new ProductoVariante();
+            var productoVarianteOpcion1 = await _repositorios.ProductoVariantes
+                .GetQuery()
+                .AsNoTracking()
+                .Include(v => v.Producto)
+                    .ThenInclude(p => p.MonedaVenta)
+                .FirstOrDefaultAsync(v => v.Id == primerProductoVarianteId);
 
-            var MonedaVentaTasa = await _repositorios.Productos
-                                            .GetQuery()
-                                            .AsNoTracking()
-                                            .Include(e => e.MonedaVenta)
-                                            .Where(e => e.Id == primerProducto.ProductoId)
-                                            .Select(e => e.MonedaVenta.TasaCambio)
-                                            .FirstOrDefaultAsync();
+            if (productoVarianteOpcion1 == null)
+            {
+                var producto = await _repositorios.Productos
+                .GetQuery()
+                .AsNoTracking()
+                .Include(e => e.ProductosVariantes)
+                .Include(e=>e.MonedaVenta)
+                .FirstOrDefaultAsync(v => v.Id == primerProductoVarianteId);
 
-            //var costoEnvio = generarPedidoDto.MensajeriaId.HasValue
-            //                    ? await _repositorios.Mensajerias
-            //                                        .GetQuery()
-            //                                        .AsNoTracking()
-            //                                        .Where(e => e.Id == generarPedidoDto.MensajeriaId)
-            //                                        .Select(e => e.Precio)
-            //                                        .FirstOrDefaultAsync()
-            //                                        : null;
+                productoVariante= producto.ProductosVariantes.FirstOrDefault();
+            }
+            else {
+                productoVariante = productoVarianteOpcion1;
+            }
+
+            if (productoVariante == null)
+                throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "La variante de producto no existe." };
+
+            var MonedaVentaId = productoVariante.Producto.MonedaVentaId;
+            var MonedaVentaTasa = productoVariante.Producto.MonedaVenta.TasaCambio;
+
+            // 🔹 Obtener mensajería con moneda
             var mensajeria = generarPedidoDto.MensajeriaId.HasValue
-                                ? await _repositorios.Mensajerias
-                                                    .GetQuery()
-                                                    .Include(e => e.Moneda)
-                                                    .AsNoTracking()
-                                                    .Where(e => e.Id == generarPedidoDto.MensajeriaId)
-                                                    .Select(e => new { e.Precio, e.Moneda.Id, e.Moneda.TasaCambio })
-                                                    .FirstOrDefaultAsync()
-                                                    : null;
+                ? await _repositorios.Mensajerias
+                    .GetQuery()
+                    .Include(e => e.Moneda)
+                    .AsNoTracking()
+                    .Where(e => e.Id == generarPedidoDto.MensajeriaId)
+                    .Select(e => new { e.Precio, MonedaId = e.Moneda.Id, e.Moneda.TasaCambio })
+                    .FirstOrDefaultAsync()
+                : null;
 
-            var costoEnvio = mensajeria != null ? mensajeria.Precio : null;
+            var costoEnvio = mensajeria?.Precio ?? 0m;
 
+            // 🔹 Cupón
             Guid? cuponId = generarPedidoDto.CuponId;
-
-            var descuentoCupon = !cuponId.HasValue
-                ? null
-                : await _repositorios.Cupones
+            var descuentoCupon = cuponId.HasValue
+                ? await _repositorios.Cupones
                     .GetQuery()
                     .AsNoTracking()
                     .Where(e => e.Id == cuponId.Value)
                     .Select(e => new { e.MontoFijo, e.Porcentaje })
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync()
+                : null;
 
             var decuentoPorCupon = 0m;
             var esPorciento = false;
@@ -244,7 +252,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 CuponId = generarPedidoDto.CuponId,
                 Estado = EstadoPedido.Pendiente,
                 Subtotal = 0m,
-                Shipping = costoEnvio.HasValue ? (decimal)costoEnvio : 0m,
+                Shipping = costoEnvio,
                 Discount = 0m,
                 Total = 0m,
                 Direccion = generarPedidoDto.Direccion,
@@ -253,95 +261,95 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 GestorPedidos = new(),
             };
 
-            if (mensajeria.Id != MonedaVentaId)
+            // 🔹 Ajuste de moneda si mensajería está en otra moneda
+            if (mensajeria != null && mensajeria.MonedaId != MonedaVentaId)
             {
+                if (MonedaVentaTasa <= 0)
+                    throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "La tasa de cambio debe ser mayor que 0." };
+
                 nuevoPedido.Shipping = nuevoPedido.Shipping / MonedaVentaTasa;
             }
 
             var listadoDetalles = new List<PedidoDetalle>();
 
-            foreach (var producto in generarPedidoDto.Productos)
+            foreach (var productoDto in generarPedidoDto.Productos)
             {
-                //var productoExistente = await _repositorios.ProductoVariantes
-                //                       .GetQuery()
-                //                       .Include(e => e.Producto)
-                //                       .FirstOrDefaultAsync(e => e.Id == producto.ProductoId);
+                var variante = new ProductoVariante();
 
-                var productoExistente = await _repositorios.Productos
-                                     .GetQuery()
-                                     .FirstOrDefaultAsync(e => e.Id == producto.ProductoId);
 
-                var descuento = await _DescuentoService.ObtenerDescuentoActivoDelProducto(productoExistente.Id);
+                var varianteOpcion1 = await _repositorios.ProductoVariantes
+                    .GetQuery()
+                    .Include(v => v.Producto)
+                    .FirstOrDefaultAsync(v => v.Id == productoDto.ProductoId);
+                 
 
-                var descuentoAplicado = 0m;
-
-                if (descuento != null)
+                if (varianteOpcion1 == null)
                 {
-                    //  descuentoAplicado = descuento.EsMontoFijo ? descuento.Valor : productoExistente.Producto.PrecioVenta * (descuento.Valor / 100);
-                    descuentoAplicado = descuento.EsMontoFijo ? descuento.Valor : productoExistente.PrecioVenta * (descuento.Valor / 100);
+                    var producto1 = await _repositorios.Productos
+                    .GetQuery()
+                    .AsNoTracking()
+                    .Include(e => e.ProductosVariantes)
+                    .Include(e => e.MonedaVenta)
+                    .FirstOrDefaultAsync(v => v.Id == primerProductoVarianteId);
+
+                    variante = producto1.ProductosVariantes.FirstOrDefault();
+                }
+                else
+                {
+                    variante = varianteOpcion1;
                 }
 
-                var esProducto = await _repositorios.Productos.AnyAsync(e => e.Id == producto.ProductoId);
 
-                if (esProducto)
-                {
-                    var product = await _repositorios.Productos
-                                                .GetQuery()
-                                                .Include(e => e.ProductosVariantes)
-                                                .FirstOrDefaultAsync(e => e.Id == producto.ProductoId);
+                if (variante == null)
+                    throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "La variante de producto no existe." };
 
-                    var primerProductoVariante = product.ProductosVariantes.FirstOrDefault();
-                    producto.ProductoId = primerProductoVariante.Id;
-                }
+                var producto = variante.Producto;
+
+                var descuento = await _DescuentoService.ObtenerDescuentoActivoDelProducto(producto.Id);
+
+                var descuentoAplicado = descuento != null
+                    ? (descuento.EsMontoFijo ? descuento.Valor : producto.PrecioVenta * (descuento.Valor / 100))
+                    : 0m;
 
                 listadoDetalles.Add(new PedidoDetalle()
                 {
                     PedidoId = nuevoPedido.Id,
-                    ProductoVarianteId = producto.ProductoId,
-                    // ProductoVarianteId = producto.ProductoId,
-                    DescuentoId = descuento != null ? descuento.DescuentoId : null,
-                    Cantidad = producto.Cantidad,
-                    // PrecioUnitario = productoExistente.Producto.PrecioVenta,
-                    PrecioUnitario = productoExistente.PrecioVenta,
+                    ProductoVarianteId = variante.Id,
+                    DescuentoId = descuento?.DescuentoId,
+                    Cantidad = productoDto.Cantidad,
+                    PrecioUnitario = producto.PrecioVenta,
                     DescuentoAplicado = descuentoAplicado,
-                    //  LineTotal = (producto.Cantidad * productoExistente.Producto.PrecioVenta) - (producto.Cantidad * descuentoAplicado),
-                    LineTotal = (producto.Cantidad * productoExistente.PrecioVenta) - (producto.Cantidad * descuentoAplicado),
+                    LineTotal = (productoDto.Cantidad * producto.PrecioVenta) - (productoDto.Cantidad * descuentoAplicado),
                     EstadoLinea = EstadoLinea.Pendiente,
                 });
             }
 
+            // 🔹 Descuento por cupón
             if (descuentoCupon != null)
             {
                 decuentoPorCupon = descuentoCupon.MontoFijo.HasValue && descuentoCupon.MontoFijo != 0
-                                                ? descuentoCupon.MontoFijo.Value
-                                                : descuentoCupon.Porcentaje.HasValue && descuentoCupon.Porcentaje != 0
-                                                ? descuentoCupon.Porcentaje.Value
-                                                : 0m;
+                    ? descuentoCupon.MontoFijo.Value
+                    : descuentoCupon.Porcentaje.HasValue && descuentoCupon.Porcentaje != 0
+                        ? descuentoCupon.Porcentaje.Value
+                        : 0m;
 
                 esPorciento = descuentoCupon.MontoFijo.HasValue && descuentoCupon.MontoFijo != 0
-                                                ? false
-                                                : descuentoCupon.Porcentaje.HasValue && descuentoCupon.Porcentaje != 0
-                                                ? true
-                                                : false;
+                    ? false
+                    : descuentoCupon.Porcentaje.HasValue && descuentoCupon.Porcentaje != 0;
             }
 
-            // Calcular descuentos por detalle
+            // 🔹 Calcular totales
             var descuentoDetalles = listadoDetalles.Sum(e => e.Cantidad * e.DescuentoAplicado);
-
-            // Calcular subtotal de los productos
             var subtotalProductos = listadoDetalles.Sum(e => e.Cantidad * e.PrecioUnitario);
-
-            // Calcular descuento por cupón
             var descuentoPorCupon = !esPorciento
                 ? decuentoPorCupon
                 : subtotalProductos * decuentoPorCupon / 100m;
 
-            // Asignar al pedido
             nuevoPedido.Discount = descuentoDetalles + descuentoPorCupon;
             nuevoPedido.Subtotal = subtotalProductos;
-            //nuevoPedido.Total = nuevoPedido.Subtotal + nuevoPedido.Shipping - descuentoPorCupon;
             nuevoPedido.Total = nuevoPedido.Subtotal - nuevoPedido.Discount + nuevoPedido.Shipping;
 
+            // 🔹 Gestor
             if (generarPedidoDto.GestorId.HasValue)
             {
                 var nuevoGestorPedido = new GestorPedido()
@@ -353,19 +361,15 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 };
                 await _repositorios.GestorPedidos.AddAsync(nuevoGestorPedido);
 
-                nuevoPedido.Total = nuevoPedido.Subtotal
-                    + nuevoPedido.Shipping
-                    - descuentoPorCupon
-                    + (decimal)nuevoGestorPedido.PrecioAdicional.Value;
+                nuevoPedido.Total += (decimal)nuevoGestorPedido.PrecioAdicional.Value;
             }
 
+            // 🔹 Guardar
             await _repositorios.Pedidos.AddAsync(nuevoPedido);
             await _repositorios.PedidosDetalles.AddRangeAsync(listadoDetalles);
             await _repositorios.SaveChangesAsync();
 
-            // Notificar al vendedor en tiempo real
-            //await _hubContext.Clients.Group("vendedores").SendAsync("PedidoGenerado", nuevoPedido.Id);
-            // 🔴 Notificar solo a vendedores
+            // 🔹 Notificar
             await _hubContext.Clients.Group("vendedores")
                 .SendAsync("PedidoGenerado", new
                 {
@@ -374,6 +378,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     Cliente = generarPedidoDto.Direccion,
                     Fecha = DateTime.UtcNow
                 });
+
             return nuevoPedido.Id;
         }
 

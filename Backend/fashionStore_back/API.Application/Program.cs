@@ -47,6 +47,12 @@ var app = builder.Build();
 // Archivos estáticos
 app.UseStaticFiles();
 
+//app.UseCors(builder =>
+//    builder.AllowAnyOrigin()
+//           .AllowAnyMethod()
+//           .AllowAnyHeader());
+
+
 // SignalR
 app.MapHub<PedidosHub>("/pedidosHub");
 
