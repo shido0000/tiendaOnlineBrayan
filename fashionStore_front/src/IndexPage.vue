@@ -204,10 +204,10 @@
 
   <!-- Redes sociales -->
   <div class="footer-social q-mb-lg">
-  <q-btn flat round :icon="'telegram'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceTelegram)"/>
-  <q-btn flat round :icon="'mdi-facebook'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceFacebook)"/>
-  <q-btn flat round :icon="'mdi-whatsapp'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceWhatsapp)"/>
-  <q-btn flat round :icon="'mdi-instagram'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceInstagram)"/>
+  <q-btn flat round :icon="'telegram'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceTelegram,2)"/>
+  <q-btn flat round :icon="'mdi-facebook'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceFacebook,4)"/>
+  <q-btn flat round :icon="'mdi-whatsapp'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceWhatsapp,1)"/>
+  <q-btn flat round :icon="'mdi-instagram'" color="black" class="footer-social-btn" @click="abrirEnlace(info.enlaceInstagram,3)"/>
 </div>
 
 
@@ -238,7 +238,6 @@ const $q = useQuasar()
 
 const categoriaSlide = ref(0)
 const bannerSlide = ref(0)
-
 const items = ref([])
 const infoInicial = {
   sobreNosotros: '',
@@ -354,6 +353,7 @@ function performSearch() {
 
 // navigation helper used by dropdowns
 import { useRouter } from 'vue-router'
+import { useInicio } from './assets/js/util/useInicio'
 const router = useRouter()
 function navigateToCategory(categoryId) {
   if (!categoryId) return
@@ -497,7 +497,8 @@ const categoriaOptions = computed(() => {
 
 onMounted(async () => {
   dialogLoad.value = true
-  let elementosInicio = await loadGetDatosInicio('ObtenerDatosInicio')
+
+   let elementosInicio = await loadGetDatosInicio('ObtenerDatosInicio')
   // diagnostic dump to understand backend payload shape
 
   if (!elementosInicio) {
@@ -713,8 +714,27 @@ function getCategoriesHeight() {
   return '38vh'
 }
 
-const abrirEnlace = (url) => {
-    window.open(url, '_blank') // abre en nueva pestaña
+const abrirEnlace = (url, red) => {
+    /*
+    1-Whatsapp
+    2-Telegram
+    3-Instagram
+    4-Facebook
+    */
+    let nuevaUrl=''
+    if(red===1){
+        nuevaUrl='https://wa.me/'+url
+    }
+    else if(red===2){
+        nuevaUrl='https://t.me/'+url
+    }
+    else if(red===3){
+        nuevaUrl='https://www.instagram.com/'+url
+    }
+    else if(red===4){
+        nuevaUrl='https://www.facebook.com/'+url
+    }
+    window.open(nuevaUrl, '_blank') // abre en nueva pestaña
  }
 </script>
 

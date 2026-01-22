@@ -103,7 +103,7 @@
       <q-input
         v-model="info.enlaceTelegram"
         type="textarea"
-        label="Enlace de Telegram"
+        label="Enlace de Telegram (usuario)"
         autogrow
         outlined
         maxlength="150"
@@ -114,7 +114,7 @@
       <q-input
         v-model="info.enlaceFacebook"
         type="textarea"
-        label="Enlace de Facebook"
+        label="Enlace de Facebook (usuario)"
         autogrow
         outlined
         maxlength="150"
@@ -125,7 +125,7 @@
       <q-input
         v-model="info.enlaceWhatsapp"
         type="textarea"
-        label="Enlace de Whatsapp"
+        label="Enlace de Whatsapp (teléfono)"
         autogrow
         outlined
         maxlength="150"
@@ -136,7 +136,7 @@
       <q-input
         v-model="info.enlaceInstagram"
         type="textarea"
-        label="Enlace de Instagram"
+        label="Enlace de Instagram (usuario)"
         autogrow
         outlined
         maxlength="150"

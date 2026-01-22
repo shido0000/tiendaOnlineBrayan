@@ -10,17 +10,20 @@ import { reactive } from 'vue'
 // for each client)
 const api = axios.create({
     baseURL: 'https://localhost:6005/api',
+    //baseURL: 'https://10.212.95.197:6005/api',
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     withCredentials: true, // Se incluirán las cookies en todas las peticiones.
 })
 
 const apiDatosInicio = axios.create({
     baseURL: 'https://localhost:6005/',
+    // baseURL: 'https://10.212.95.197:6005/',
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 })
 
 
 const apiFotosBaseUrl = 'https://localhost:6005';
+//const apiFotosBaseUrl = 'https://10.212.95.197:6005';
 const apiFotos = axios.create({
     baseURL: apiFotosBaseUrl + '/',
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }

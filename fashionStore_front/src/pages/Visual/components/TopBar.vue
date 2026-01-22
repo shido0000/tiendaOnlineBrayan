@@ -105,7 +105,7 @@
           </q-menu>
         </q-btn>
         <a @click.prevent="goHome" style="cursor:pointer">
-          <img src="/public/img/Logotipo.png" alt="Logo" class="topbar-logo"/>
+          <img src="/img/Logotipo.png" alt="Logo" class="topbar-logo"/>
         </a>
       </div>
 
@@ -182,22 +182,27 @@ const selectedCatId = ref(null)
 const router = useRouter()
 const emit = defineEmits(['update:searchCategory', 'update:leftDrawer'])
 
+
+
 const categories = ref([])
 
 onMounted(async () => {
   try {
-    const inicio = await loadGetDatosInicio('ObtenerDatosInicio')
+     inicio.value  = await loadGetDatosInicio('ObtenerDatosInicio')
     categories.value =
-      inicio?.categoriasProductos ??
-      inicio?.categorias ??
-      inicio?.data?.categorias ??
-      inicio?.result?.categoriasProductos ??
+      inicio?.value.categoriasProductos ??
+      inicio?.value.categorias ??
+      inicio?.value.data?.categorias ??
+      inicio?.value.result?.categoriasProductos ??
       []
   } catch (e) {
     console.warn('Error cargando categorías', e)
     categories.value = []
+    inicio.value = []
   }
 })
+
+
 
 const normalizedCategories = computed(() => {
   const arr = categories.value || []

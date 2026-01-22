@@ -42,7 +42,8 @@ module.exports = configure(function (ctx) {
         // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
         build: {
             env: {
-                API_URL: ctx.dev ? "https://localhost:6005/api" : "/api",
+                // API_URL: ctx.dev ? "https://localhost:6005/api" : "/api",
+                API_URL: ctx.dev ? "https://10.212.95.197:6005/api" : "/api",
             },
 
             distDir: "../Backend/fashionStore_back/API.Application/wwwroot",
