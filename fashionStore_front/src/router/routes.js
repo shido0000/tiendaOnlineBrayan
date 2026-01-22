@@ -46,6 +46,8 @@ const routes = [
         name: 'Carrito',
         component: () => import('src/pages/Visual/CarritoPage.vue')
     },
+    { path: '/informacion', name: 'Informacion', component: InformacionPage },
+
     {
         path: '/',
         component: () => import('layouts/MainLayout.vue'),
@@ -99,11 +101,7 @@ const routes = [
                 name: 'Cupon',
                 component: () => import('src/pages/Nomenclators/Cupon.vue')
             },
-            {
-                path: 'Inventario',
-                name: 'Inventario',
-                component: () => import('src/pages/Nomenclators/Inventario.vue')
-            },
+
             {
                 path: 'Usuario',
                 name: 'Usuario',
@@ -139,7 +137,6 @@ const routes = [
                 name: 'Contabilidad',
                 component: () => import('src/pages/Nomenclators/Contabilidad/ContabilidadPage.vue')
             },
-            { path: '/informacion', name: 'Informacion', component: InformacionPage },
             {
                 path: 'CrearInformacion',
                 name: 'CrearInformacion',

@@ -22,36 +22,36 @@
           class="col-12 col-sm-6 col-md-4 col-lg-3"
         >
           <q-card
-            class="q-pa-md shadow-2 cursor-pointer full-height categoria-card"
+            class="q-pa-md shadow-2 cursor-pointer full-height categoria-card cat-card-bg"
+            :style="{ backgroundImage: 'url(' + getFotoUrl(getCategoriaImage(categoria)) + ')' }"
             @click="goToCategory(categoria.id)"
           >
-            <!-- Icono de categoría -->
-            <div class="text-center q-mb-md">
-              <q-icon
-                name="category"
-                size="64px"
-                color="primary"
-              />
-            </div>
+            <!-- Overlay oscuro -->
+            <div class="cat-card-overlay"></div>
 
-            <!-- Nombre categoría -->
-            <div class="text-center">
-              <div class="text-h6 text-weight-bold q-mb-xs">
-                {{ categoria.nombre }}
+            <!-- Contenido sobre la imagen -->
+            <div class="categoria-card-content">
+              <!-- Nombre categoría -->
+              <div class="text-center">
+                <div class="text-h6 text-weight-bold q-mb-xs text-white">
+                  {{ categoria.nombre }}
+                </div>
+                <div class="text-caption text-white-70">
+                  {{ categoria.descripcion || 'Sin descripción' }}
+                </div>
               </div>
-              <div class="text-caption text-grey-6">
-                {{ categoria.descripcion || 'Sin descripción' }}
-              </div>
-            </div>
 
-            <!-- Botón ver productos -->
-            <div class="text-center q-mt-md">
-              <q-btn
-                flat
-                label="Ver productos"
-                color="primary"
-                size="sm"
-              />
+              <!-- Botón ver productos -->
+              <div class="text-center q-mt-md">
+                <q-btn
+
+                  label="Ver productos"
+                  color="primary"
+                  size="sm"
+                  text-color="black"
+                    class="border-primary "
+                />
+              </div>
             </div>
           </q-card>
         </div>
@@ -65,6 +65,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import TopBar from 'src/pages/Visual/components/TopBar.vue'
 import { loadGetDatosInicio, loadGet } from 'src/assets/js/util/funciones'
+import { apiFotosBaseUrl } from 'src/boot/axios'
 
 const router = useRouter()
 const categorias = ref([])
@@ -97,6 +98,24 @@ onMounted(async () => {
   }
 })
 
+function getFotoUrl(foto) {
+  if (!foto) return '/img/sin-foto.jpg'
+  let candidate = foto
+  if (typeof foto === 'object') {
+    candidate = foto?.url || foto?.img || foto?.path || foto?.imagen || foto?.foto || null
+  }
+  if (!candidate) return '/img/sin-foto.jpg'
+  if (typeof candidate !== 'string') candidate = String(candidate)
+  if (/^https?:\/\//.test(candidate)) return candidate
+  return apiFotosBaseUrl + (candidate.startsWith('/') ? candidate : '/' + candidate)
+}
+
+function getCategoriaImage(cat) {
+  if (!cat) return null
+  const candidate = cat.fotoUrl || cat.imagen || cat.imagenUrl || cat.url || cat.image || cat.picture || null
+  return candidate
+}
+
 function goToCategory(id) {
   if (!id) return
   router.push({ name: 'CategoriaProductos', params: { id } }).catch(() =>
@@ -108,7 +127,40 @@ function goToCategory(id) {
 <style scoped lang="scss">
 .categoria-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 280px;
+  background-size: cover;
+  background-position: center center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  overflow: hidden;
+}
+
+.cat-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.7) 100%);
+}
+
+.categoria-card-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+}
+
+.text-white-70 {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.categoria-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
   height: 100%;
+
 }
 
 .categoria-card:hover {
@@ -118,12 +170,12 @@ function goToCategory(id) {
 
 /* Media Queries para responsividad */
 @media (max-width: 599px) {
-  :deep(.q-page) {
-    padding: 12px;
+  .categoria-card {
+    min-height: 220px;
   }
 
-  .text-h5 {
-    font-size: 18px !important;
+  .categoria-card-content {
+    padding: 16px;
   }
 
   .text-h6 {
@@ -132,10 +184,6 @@ function goToCategory(id) {
 
   .text-caption {
     font-size: 12px !important;
-  }
-
-  .q-icon {
-    font-size: 48px !important;
   }
 
   .row.q-col-gutter-md {
@@ -149,7 +197,17 @@ function goToCategory(id) {
   }
 }
 
+.border-primary {
+  border: 1px solid #C7B5FF; /* color primary de Quasar */
+  border-radius: 14px;        /* opcional */
+}
+
+
 @media (max-width: 1023px) and (min-width: 600px) {
+  .categoria-card {
+    min-height: 250px;
+  }
+
   .col-12.col-sm-6 {
     flex: 0 0 50%;
     max-width: 50%;
@@ -160,14 +218,9 @@ function goToCategory(id) {
   }
 }
 
-@media (min-width: 1366px) {
-  :deep(.q-page) {
-    padding: 24px;
-  }
-
-  .col-12.col-lg-3 {
-    flex: 0 0 25%;
-    max-width: 25%;
+@media (min-width: 1024px) {
+  .categoria-card {
+    min-height: 280px;
   }
 }
 </style>

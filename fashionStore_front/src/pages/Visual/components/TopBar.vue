@@ -1,5 +1,5 @@
 <template>
-  <div class="topbar-container">
+  <div class="topbar-container ">
     <header class="visual-topbar bg-white shadow-1">
     <div class="header-grid">
       <div class="left-col">
@@ -109,65 +109,13 @@
         </a>
       </div>
 
-      <div class="center-col">
         <div class="search-pill">
-        <!--  <q-btn-dropdown
-            color="transparent"
-            text-color="primary"
-            flat
-            class="category-btn fixed-cat-btn"
-            :dense="true"
-          >
-            <template #label>
-              <div class="cat-label">
-                <span class="cat-label-text">
-                  {{ selectedCatId == null ? 'Categorías' : (normalizedCategories.find(c => c.id === selectedCatId)?.nombre || 'Categorías') }}
-                </span>
-              </div>
-            </template>
-
-            <q-list>
-              <q-item clickable v-close-popup @click="selectSearchCategory(null)">
-                <q-item-section>
-                  <q-item-label>Todos</q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <template v-if="normalizedCategories && normalizedCategories.length">
-                <q-item
-                  v-for="(cat, index) in normalizedCategories"
-                  :key="'cat-header-'+(cat.id ?? cat.nombre ?? cat._uid ?? index)"
-                  clickable
-                  v-close-popup
-                  @click="selectSearchCategory(cat)"
-                >
-                  <q-item-section>
-                    <q-item-label>{{ cat.nombre }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-
-              <template v-else>
-                <q-item disabled>
-                  <q-item-section>
-                    <q-item-label>No hay categorías</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-list>
-          </q-btn-dropdown>
-
-          <div class="divider" />-->
-
-          <div class="search-input-wrap">
-            <q-input v-model="q" dense placeholder="Buscar..." borderless class="search-input" @keyup.enter="search">
+            <q-input v-model="q" dense placeholder="Buscar..." borderless   @keyup.enter="search">
               <template #append>
-                <q-btn flat round icon="search" color="primary" class="search-icon" @click="search" />
+                <q-btn flat round icon="search" color="primary"   @click="search" />
               </template>
             </q-input>
-          </div>
         </div>
-      </div>
 
       <div class="right-col desktop-actions">
         <WishlistButton />
@@ -177,12 +125,12 @@
     </div>
 
     <!-- secondary nav (left-aligned) -->
-    <div class="topbar-nav">
-      <div class="row items-center">
-        <div class="col row items-center nav-items-container ">
-          <q-btn-dropdown color="transparent" text-color="black" flat class="category-btn" :dense="true">
+    <div class="topbar-nav ">
+      <div class="row items-center ">
+        <div class="col row items-center nav-items-container q-pb-xs">
+          <q-btn-dropdown style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" color="transparent" text-color="black" flat class="category-btn" :dense="true">
             <template #label>
-              <div class="cat-label"><span class="cat-label-text">Categorías</span></div>
+              <div class="cat-label"><span class="cat-label-text q-pl-sm">Categorías</span></div>
             </template>
             <q-list>
               <q-item clickable v-close-popup @click="() => router.push({ name: 'Categorias' })">
@@ -211,7 +159,7 @@
             </q-list>
           </q-btn-dropdown>
 
-          <q-btn   flat style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" label="Novedades" class="nav-btn" @click="() => router.push({ name: 'Productos', query: { novedades: 1 } })" />
+          <q-btn   flat style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" label="Novedades" class="nav-btn " @click="() => router.push({ name: 'Productos', query: { novedades: 1 } })" />
           <q-btn   flat style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" label="Rebajas" class="nav-btn" @click="() => router.push({ name: 'Productos', query: { rebajas: 1 } })" />
         </div>
       </div>
@@ -377,8 +325,6 @@ function closeMobileMenu(callback) {
 }
 
 .search-pill {
-  display: flex;
-  align-items: center;
   gap: 8px;
   background: #fff;
   border-radius: 999px;
@@ -386,6 +332,7 @@ function closeMobileMenu(callback) {
   height: 48px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
   box-sizing: border-box;
+  border: 1px solid #C7B5FF;
 }
 
 .category-btn {
@@ -423,12 +370,12 @@ function closeMobileMenu(callback) {
   align-items: center;
   gap: 8px;
   flex: 1 1 auto;
-  min-width: 0;
+  min-width: 200px;
 }
 
 .search-input {
   flex: 1 1 auto;
-  min-width: 0;
+  min-width: 150px;
 }
 
 .search-icon {
@@ -487,13 +434,27 @@ function closeMobileMenu(callback) {
   }
 
   .header-grid {
-    gap: 8px;
+    gap: 4px;
   }
 
   .search-pill {
     height: 40px;
-    padding: 4px 8px;
-    gap: 6px;
+    padding: 0.5px 12px;
+    gap: 2px;
+  }
+
+  .search-input-wrap {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .search-input {
+    font-size: 0.8rem;
+    columns: auto;
+  }
+
+  .search-icon {
+    flex-shrink: 0;
   }
 
   .fixed-cat-btn {
@@ -511,16 +472,13 @@ function closeMobileMenu(callback) {
     height: 24px;
   }
 
-  .search-input {
-    font-size: 0.8rem;
-  }
-
   .mobile-menu-btn {
     display: inline-flex;
   }
 
   .right-col {
     gap: 6px;
+    flex-shrink: 0;
   }
 
   .desktop-actions {
@@ -558,7 +516,7 @@ function closeMobileMenu(callback) {
 
   .search-pill {
     height: 44px;
-    padding: 5px 10px;
+    padding: 2px 15px;
   }
 
   .fixed-cat-btn {
@@ -612,7 +570,7 @@ function closeMobileMenu(callback) {
 
   .search-pill {
     height: 46px;
-    padding: 6px 12px;
+    padding: 2px 15px;
   }
 
   .fixed-cat-btn {
@@ -662,7 +620,7 @@ function closeMobileMenu(callback) {
 
   .search-pill {
     height: 48px;
-    padding: 6px 12px;
+    padding: 2px 12px;
   }
 
   .fixed-cat-btn {

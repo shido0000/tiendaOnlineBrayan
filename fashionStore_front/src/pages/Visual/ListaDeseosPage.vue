@@ -37,7 +37,7 @@
         <div v-for="p in items" :key="p.id" class="q-mb-md">
           <q-card bordered class="shadow-2 rounded-borders q-pa-sm row items-center wishlist-card">
             <!-- Imagen del producto -->
-            <div class="col-auto">
+            <div class="wishlist-img-container col-auto">
               <q-img
                 :src="obtenerFotoDelItem(p)"
                 class="wishlist-img"
@@ -66,37 +66,39 @@
             </div>
 
             <!-- Acciones -->
-            <div class="col-auto">
-              <q-btn
-                dense
-                flat
-                round
-                icon="remove_shopping_cart"
-                color="negative"
-                @click="removeItem(p.id)"
-              />
-               <q-tooltip>Remover producto</q-tooltip>
-            </div>
-            <div class="col-auto">
-              <q-btn
-               dense round flat icon="add_shopping_cart" color="primary"
-
-                @click="addToCartFromWish(p)"
-
-              />
- <q-tooltip>Agregar producto</q-tooltip>
+            <div class="wishlist-actions-container">
+              <div class="col-auto">
+                <q-btn
+                  dense
+                  flat
+                  round
+                  icon="remove_shopping_cart"
+                  color="negative"
+                  @click="removeItem(p.id)"
+                />
+                 <q-tooltip>Remover producto</q-tooltip>
               </div>
               <div class="col-auto">
                 <q-btn
-                flat
-                round
-                dense
-                icon="open_in_new"
-                @click="goToProduct(p.id)"
-              >
-                <q-tooltip>Ver producto</q-tooltip>
-              </q-btn>
-              </div>
+                 dense round flat icon="add_shopping_cart" color="primary"
+
+                  @click="addToCartFromWish(p)"
+
+                />
+      <q-tooltip>Agregar producto</q-tooltip>
+                </div>
+                <div class="col-auto">
+                  <q-btn
+                  flat
+                  round
+                  dense
+                  icon="open_in_new"
+                  @click="goToProduct(p.id)"
+                >
+                  <q-tooltip>Ver producto</q-tooltip>
+                </q-btn>
+                </div>
+            </div>
 
 
           </q-card>
@@ -232,8 +234,30 @@ function formatPrice(v) {
   transform: scale(1.05);
 }
 
+.wishlist-actions-container {
+  display: flex;
+  gap: 8px;
+}
+
 /* Media Queries para responsividad */
 @media (max-width: 599px) {
+  .wishlist-actions-container {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+    justify-content: center !important;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    
+  }
+
+  .wishlist-img-container {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
   .wishlist-page {
     margin-top: 16px;
     padding: 12px;
@@ -244,8 +268,8 @@ function formatPrice(v) {
   }
 
   .wishlist-img {
-    width: 80px;
-    height: 60px;
+    width: 100% !important;
+    height: 200px;
     margin-bottom: 10px;
   }
 

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <TopBar/>
+    <TopBar :categories="[]" />
 
     <div class="q-pa-lg bg-grey-1 carrito-page">
       <div class="row items-center q-mb-lg">
@@ -32,11 +32,11 @@
 
       <!-- Lista de productos -->
       <div v-else>
-        <div class="q-mb-md">
+
           <div v-for="it in items" :key="it.id" class="q-mb-md">
-            <q-card bordered class="q-pa-sm row items-center shadow-2 rounded-borders">
+            <q-card bordered class="q-pa-sm row items-center shadow-2 rounded-borders carrito-card">
               <!-- Imagen -->
-              <div class="col-auto">
+            <div class="carrito-img-container col-auto">
                 <q-img
                   :src="obtenerFotoDelItem(it)"
                   class="carrito-img"
@@ -44,12 +44,12 @@
               </div>
 
               <!-- Info producto -->
-              <div class="col q-pl-md">
-                <div class="text-subtitle1 text-weight-bold">{{ it.nombre }}</div>
+              <div class="col q-ml-md">
+                <div class="text-subtitle1 q-ml-md text-weight-bold">{{ it.nombre }}</div>
                <!-- Precio unitario -->
  <!-- Precio unitario -->
 <!-- Precio unitario -->
-<div v-if="it.tieneDescuento" class="row items-center q-gutter-sm">
+<div v-if="it.tieneDescuento" class="q-ml-mdrow items-center q-gutter-sm">
   <!-- Precio original tachado -->
   <div class="text-caption text-grey-6">
     <s>
@@ -61,7 +61,7 @@
     ${{ (it.precioVentaDescuento || 0).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
   </div>
 </div>
-<div v-else class="text-caption text-grey-6">
+<div v-else class="text-caption text-grey-6 q-ml-md">
   Precio unitario: ${{ (it.precioVenta || 0).toLocaleString('es-ES',{ minimumFractionDigits:2 }) }}
 </div>
 
@@ -89,35 +89,37 @@
   </div>
 </div>
 
-<!-- Cantidad -->
-             <div class="col-auto flex items-end ">
-  <q-input
-    type="number"
-    dense
-    outlined
-    v-model.number="it.cantidad"
-    @change="onQtyChange(it)"
-    style="width:90px; margin-top: 20px;"
-    :min="1"
-    :max="getMaxStock(it)"
-    :rules="[
-      val => val >= 1 || 'La cantidad mínima es 1',
-      val => val <= getMaxStock(it) || `La cantidad máxima disponible es ${getMaxStock(it)}`
-    ]"
-  >
-    <q-tooltip>Cantidad máxima: {{ getMaxStock(it) }}</q-tooltip>
-  </q-input>
-              </div>
+<!-- Cantidad y Botón eliminar -->
+              <div class="carrito-actions-container col-auto">
+                <div class="flex items-center">
+                  <q-input
+                    type="number"
+                    dense
+                    outlined
+                    v-model.number="it.cantidad"
+                    @change="onQtyChange(it)"
+                    style="width:90px; margin-top: 20px;"
+                    :min="1"
+                    :max="getMaxStock(it)"
+                    :rules="[
+                      val => val >= 1 || 'La cantidad mínima es 1',
+                      val => val <= getMaxStock(it) || `La cantidad máxima disponible es ${getMaxStock(it)}`
+                    ]"
+                  >
+                    <q-tooltip>Cantidad máxima: {{ getMaxStock(it) }}</q-tooltip>
+                  </q-input>
+                </div>
 
-              <!-- Botón eliminar -->
-              <div class="col-auto">
-                <q-btn round dense flat color="negative" icon="delete" @click="remove(it.id)">
-                  <q-tooltip>Eliminar</q-tooltip>
-                </q-btn>
+                <!-- Botón eliminar -->
+                <div class="flex items-center">
+                  <q-btn round dense flat color="negative" icon="delete" @click="remove(it.id)">
+                    <q-tooltip>Eliminar</q-tooltip>
+                  </q-btn>
+                </div>
               </div>
             </q-card>
           </div>
-        </div>
+
 
         <!-- Total -->
         <q-separator spaced />
@@ -282,6 +284,9 @@ function onQtyChange(item) {
   margin-top: 32px;
   padding-top: 16px;
 }
+.carrito-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
 .carrito-img {
   width: 100px;
@@ -296,6 +301,20 @@ function onQtyChange(item) {
   transform: scale(1.05);
 }
 
+.carrito-img-container {
+  width: 100px;
+  height: 80px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.carrito-actions-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+
 .carrito-total {
   background: #f9fafb;
   padding: 16px;
@@ -308,6 +327,22 @@ function onQtyChange(item) {
 
 /* Media Queries para responsividad */
 @media (max-width: 599px) {
+  .carrito-actions-container {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+    justify-content: center !important;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+
+  }
+
+  .carrito-img-container {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
   .carrito-page {
     padding: 12px;
     margin-top: 16px;
@@ -318,8 +353,8 @@ function onQtyChange(item) {
   }
 
   .carrito-img {
-    width: 80px;
-    height: 60px;
+       width: 100% !important;
+    height: 200px;
     margin-bottom: 10px;
   }
 
@@ -348,9 +383,7 @@ function onQtyChange(item) {
     font-size: 11px !important;
   }
 
-  :deep(.q-input) {
-    max-width: 70px;
-  }
+
 }
 
 @media (max-width: 1023px) and (min-width: 600px) {

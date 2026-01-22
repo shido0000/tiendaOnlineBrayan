@@ -92,6 +92,7 @@
           dense
           round
           flat
+          color="primary"
           :icon="wishlist.isFavorito(producto.id) ? 'favorite' : 'favorite_border'"
           @click.stop="() => wishlist.toggle(normalizarProductoParaCarrito(producto, getProductoImagePreferVariant(producto) || getProductoImage(producto)))"
         />
@@ -99,7 +100,7 @@
           flat
           round
           icon="shopping_cart"
-          color="purple-4"
+          color="primary"
           @click.stop="() => cart.addItem(normalizarProductoParaCarrito(producto, getProductoImagePreferVariant(producto) || getProductoImage(producto)),1)"
         />
       </q-card-actions>
@@ -370,7 +371,7 @@ function tryFields(obj, fieldNames) {
   }
   return null
 }
-
+/*
 function getProductoImage(prod) {
   if (!prod) return null
 
@@ -410,7 +411,7 @@ function getProductoImage(prod) {
   }
 
   return candidate || null
-}
+}*/
 
 function getProductoImagePreferVariant(prod) {
   if (!prod) return null
@@ -492,4 +493,5 @@ function getProductoImagePreferVariant(prod) {
     height: 200px !important;
   }
 }
+
 </style>

@@ -1,77 +1,75 @@
 <template>
-  <q-page class="row bg-grey-1">
-    <!-- Menú lateral -->
-    <aside class="col-3 q-pa-md bg-white shadow-2">
-      <div class="text-h6 text-weight-bold q-mb-md text-primary">Información</div>
-      <q-list bordered separator>
-        <q-item clickable v-ripple @click="scrollTo('sobre-nosotros')">
-          <q-item-section avatar><q-icon name="business" color="primary" /></q-item-section>
-          <q-item-section>Sobre Nosotros</q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="scrollTo('privacidad')">
-          <q-item-section avatar><q-icon name="lock" color="primary" /></q-item-section>
-          <q-item-section>Política de Privacidad</q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="scrollTo('terminos')">
-          <q-item-section avatar><q-icon name="gavel" color="primary" /></q-item-section>
-          <q-item-section>Términos y Condiciones</q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="scrollTo('devoluciones')">
-          <q-item-section avatar><q-icon name="autorenew" color="primary" /></q-item-section>
-          <q-item-section>Devoluciones y Cambios</q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="scrollTo('colabora')">
-          <q-item-section avatar><q-icon name="group" color="primary" /></q-item-section>
-          <q-item-section>Colabora con Nosotros</q-item-section>
-        </q-item>
-      </q-list>
-    </aside>
+  <div>
+    <!-- Topbar opcional para que se vea bien -->
+    <TopBar :categories="[]" />
+ <q-list   bordered class="rounded-borders col-12" >
+      <q-expansion-item
+        icon="business"
+        label="Sobre Nosotros"
+        group="somegroup"
+      >
+        <q-card class="bg-grey-1">
+          <q-card-section>
+          {{ info.sobreNosotros }}
+          </q-card-section>
+        </q-card>
+      </q-expansion-item>
 
-    <!-- Contenido principal -->
-    <main class="col-9 q-pa-lg">
-      <q-card flat bordered class="q-mb-xl section-card" id="sobre-nosotros">
-        <q-card-section>
-          <div class="text-h5 text-primary text-weight-bold q-mb-sm">Sobre Nosotros</div>
-          <div class="text-body1">{{ info.sobreNosotros }}</div>
-        </q-card-section>
-      </q-card>
+      <q-expansion-item
+        icon="lock"
+        label="Política de Privacidad"
+        group="somegroup"
+      >
+        <q-card class="bg-grey-1">
+          <q-card-section>
+          {{ info.privacidad }}
+          </q-card-section>
+        </q-card>
+      </q-expansion-item>
 
-      <q-card flat bordered class="q-mb-xl section-card" id="privacidad">
-        <q-card-section>
-          <div class="text-h5 text-primary text-weight-bold q-mb-sm">Política de Privacidad</div>
-          <div class="text-body1">{{ info.privacidad }}</div>
-        </q-card-section>
-      </q-card>
+      <q-expansion-item
+        icon="gavel"
+        label="Términos y Condiciones"
+        group="somegroup"
+      >
+        <q-card class="bg-grey-1">
+          <q-card-section>
+           {{ info.terminos }}
+          </q-card-section>
+        </q-card>
+      </q-expansion-item>
+      <q-expansion-item
+        icon="autorenew"
+        label="Devoluciones y Cambios"
+        group="somegroup"
+      >
+        <q-card class="bg-grey-1">
+          <q-card-section>
+          {{ info.devoluciones }}
+          </q-card-section>
+        </q-card>
+      </q-expansion-item>
+      <q-expansion-item
+        icon="group"
+        label="Colabora con Nosotros"
+        group="somegroup"
+      >
+        <q-card class="bg-grey-1">
+          <q-card-section>
+           {{ info.colabora }}
+          </q-card-section>
+        </q-card>
+      </q-expansion-item>
+    </q-list>
 
-      <q-card flat bordered class="q-mb-xl section-card" id="terminos">
-        <q-card-section>
-          <div class="text-h5 text-primary text-weight-bold q-mb-sm">Términos y Condiciones</div>
-          <div class="text-body1">{{ info.terminos }}</div>
-        </q-card-section>
-      </q-card>
-
-      <q-card flat bordered class="q-mb-xl section-card" id="devoluciones">
-        <q-card-section>
-          <div class="text-h5 text-primary text-weight-bold q-mb-sm">Política de Devoluciones y Cambios</div>
-          <div class="text-body1">{{ info.devoluciones }}</div>
-        </q-card-section>
-      </q-card>
-
-      <q-card flat bordered class="q-mb-xl section-card" id="colabora">
-        <q-card-section>
-          <div class="text-h5 text-primary text-weight-bold q-mb-sm">Colabora con Nosotros</div>
-          <div class="text-body1">{{ info.colabora }}</div>
-        </q-card-section>
-      </q-card>
-    </main>
-  </q-page>
-
-  <DialogLoad :dialogLoad="dialogLoad" />
+    <DialogLoad :dialogLoad="dialogLoad" />
+  </div>
 </template>
 
 <script setup>
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
+import TopBar from 'src/pages/Visual/components/TopBar.vue'
 import { loadGet } from 'src/assets/js/util/funciones'
 
 const dialogLoad = ref(false)
@@ -101,19 +99,155 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+
+
+.info-sidebar {
+  width: 25%;
+  padding: 24px;
+  overflow-y: auto;
+  border-right: 1px solid #eee;
+  position: sticky;
+  top: 140px;
+  height: calc(100vh - 140px);
+  box-sizing: border-box;
+}
+
+.info-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
 .section-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  max-width: 900px;
 }
+
 .section-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 20px rgba(0,0,0,0.12);
 }
-aside {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  border-right: 1px solid #eee;
+
+/* Extra small devices (xs) - 0px to 599px */
+@media (max-width: 599px) {
+  .info-container {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .info-sidebar {
+    width: 100%;
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+    padding: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .info-main {
+    padding: 12px;
+  }
+
+  .text-h5 {
+    font-size: 18px !important;
+  }
+
+  .text-h6 {
+    font-size: 16px !important;
+  }
+
+  .text-body1 {
+    font-size: 14px !important;
+    line-height: 1.5;
+  }
+
+  :deep(.q-item) {
+    padding: 8px 12px;
+  }
+
+  :deep(.q-item__section--avatar) {
+    min-width: 32px;
+  }
+
+  :deep(.q-icon) {
+    font-size: 20px;
+  }
 }
+
+/* Small devices (sm) - 600px to 1023px */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .info-container {
+    flex-direction: row;
+  }
+
+  .info-sidebar {
+    width: 30%;
+    padding: 16px;
+  }
+
+  .info-main {
+    flex: 1;
+    padding: 16px;
+  }
+
+  .text-h5 {
+    font-size: 20px !important;
+  }
+
+  .text-h6 {
+    font-size: 17px !important;
+  }
+
+  .text-body1 {
+    font-size: 14px !important;
+  }
+
+  :deep(.q-item) {
+    padding: 10px 12px;
+  }
+}
+
+/* Medium devices (md) - 1024px to 1365px */
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .info-sidebar {
+    width: 28%;
+    padding: 20px;
+  }
+
+  .info-main {
+    padding: 20px;
+  }
+
+  .text-h5 {
+    font-size: 22px !important;
+  }
+
+  .text-body1 {
+    font-size: 15px !important;
+  }
+}
+
+/* Large devices (lg+) - 1366px and up */
+@media (min-width: 1366px) {
+  .info-sidebar {
+    width: 25%;
+    padding: 24px;
+  }
+
+  .info-main {
+    padding: 24px;
+  }
+
+  .text-h5 {
+    font-size: 24px !important;
+  }
+
+  .text-body1 {
+    font-size: 16px !important;
+  }
+}
+
 </style>

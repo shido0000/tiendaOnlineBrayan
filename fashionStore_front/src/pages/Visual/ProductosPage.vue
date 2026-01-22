@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="q-pa-none bg-grey-1">
     <TopBar :categories="categories" />
 
     <div class="q-pa-lg bg-grey-1 row filters-products-container">
@@ -94,7 +94,7 @@
 </q-card-section>
 
               <q-card-actions align="right">
-                <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" @click.stop="() => wishlist.toggle(normalizarProductoParaCarrito(p, getProductoImagePreferVariant(p) || getProductoImage(p)))" />
+                <q-btn dense round flat color="primary" :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" @click.stop="() => wishlist.toggle(normalizarProductoParaCarrito(p, getProductoImagePreferVariant(p) || getProductoImage(p)))" />
                 <q-btn dense round flat icon="add_shopping_cart" color="primary" @click.stop="() => cart.addItem(normalizarProductoParaCarrito(p, getProductoImagePreferVariant(p) || getProductoImage(p)),1)" />
               </q-card-actions>
             </q-card>
@@ -799,7 +799,7 @@ function getProductoImagePreferVariant(prod) {
 }
 
 .filters-products-container {
-  max-width: 1400px;
+  max-width: auto;
   margin: 0 auto;
 }
 

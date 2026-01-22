@@ -45,7 +45,7 @@ module.exports = configure(function (ctx) {
                 API_URL: ctx.dev ? "https://localhost:6005/api" : "/api",
             },
 
-            distDir: "../zunpms_back/API.Application/wwwroot",
+            distDir: "../Backend/fashionStore_back/API.Application/wwwroot",
             publicPath: "/",
 
             target: {

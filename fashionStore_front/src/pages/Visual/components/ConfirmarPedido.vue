@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="showDialog" persistent>
-    <q-card style="min-width: 600px; max-width: 800px">
+    <q-card class="confirmar-pedido-card">
       <q-card-section>
         <div class="text-h6">Confirmar Pedido</div>
       </q-card-section>
@@ -813,3 +813,101 @@ function limpiarGestor(){
     form.value.impuestos=0
 }
 </script>
+
+<style scoped lang="scss">
+.confirmar-pedido-card {
+  width: 100%;
+  max-width: 800px;
+  min-width: auto;
+}
+
+/* Extra small devices (xs) - 0px to 599px */
+@media (max-width: 599px) {
+  .confirmar-pedido-card {
+    width: 95vw;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  :deep(.q-card__section) {
+    padding: 12px !important;
+  }
+
+  :deep(.q-card) {
+    box-shadow: none;
+  }
+
+  :deep(.q-item__label) {
+    font-size: 13px;
+  }
+
+  :deep(.q-input__native) {
+    font-size: 14px;
+  }
+
+  .text-h6 {
+    font-size: 16px !important;
+  }
+
+  .text-h5 {
+    font-size: 18px !important;
+  }
+
+  .text-subtitle1 {
+    font-size: 14px !important;
+  }
+
+  .text-subtitle2 {
+    font-size: 12px !important;
+  }
+
+  :deep(.q-card__actions) {
+    flex-direction: column-reverse;
+    gap: 8px;
+    padding: 12px !important;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  :deep(.q-card__actions .q-btn) {
+    width: calc(100% - 20px);
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :deep(.q-item-side) {
+    margin-left: 8px;
+  }
+}
+
+/* Small devices (sm) - 600px to 1023px */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .confirmar-pedido-card {
+    width: 90vw;
+    max-width: 600px;
+  }
+
+  :deep(.q-card__section) {
+    padding: 16px;
+  }
+
+  .text-h6 {
+    font-size: 18px !important;
+  }
+
+  :deep(.q-card__actions button) {
+    padding: 8px 16px;
+  }
+}
+
+/* Medium devices (md) and larger - 1024px and up */
+@media (min-width: 1024px) {
+  .confirmar-pedido-card {
+    width: 100%;
+    max-width: 800px;
+    min-width: 600px;
+  }
+}
+</style>

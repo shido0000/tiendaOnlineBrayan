@@ -1,6 +1,6 @@
 
 <template>
-  <div class="q-pa-none bg-grey-1">
+  <div class="q-pa-none  full-strip_background">
   <!-- centralized TopBar component -->
   <TopBar :categories="objeto.categoriasProductos" v-model:leftDrawer="leftDrawer" @update:searchCategory="selectedCategory = $event" />
     <!-- Banners de Promoción: full-viewport carousel -->
@@ -34,8 +34,11 @@
 <section class="q-px-lg q-py-md amazon-section responsive-section">
   <div class="row items-center q-mb-md">
     <div class="col">
-      <div class="text-h6 text-weight-bold">Novedades</div>
-    </div>
+  <div class="text-h6 text-weight-bold ">
+    Novedades
+  </div>
+</div>
+
     <div class="col-auto">
   <q-btn
     flat
@@ -46,43 +49,34 @@
 </div>
 
   </div>
-  <q-carousel
-    v-model="novedadesSlide"
-      animated
-      arrows
-      navigation
-      navigation-position="bottom"
-      infinite
-      class="banner-carousel"
-      :height="getNovedadesHeight()"
-    >
-    <q-carousel-slide v-for="(chunk, sidx) in novedadesSlides" :key="'nov-slide-'+sidx" :name="sidx" class="strip-slide">
-      <div class="strip-slide-inner">
-        <div v-for="p in chunk" :key="'amazon-nov-'+p.id" class="slide-item">
-          <q-card flat bordered class="shadow-1 clickable-card" @click="goToProduct(p.id)">
-            <q-img :src="getFotoUrl(getProductoImage(p))" ratio="4/3" style="object-fit: cover" @load="debugImg && debugResolveFoto(getProductoImage(p))" @error="debugImg ">
-              <template v-slot:after>
-                <div class="card-badge">Nuevo</div>
-              </template>
-            </q-img>
-            <q-card-section>
-              <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
-              <div class="text-subtitle1 text-weight-bold">$ {{ p.precioVenta != null ? Number(p.precioVenta).toLocaleString('es-ES', { minimumFractionDigits:2 }) : '0.00' }}</div>
-            </q-card-section>
-            <q-card-actions align="right">
-              <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" color="primary" @click.stop="() => wishlist.toggle(p)">
-                <q-tooltip>{{ wishlist.isFavorito(p.id) ? 'Quitar de favoritos' : 'Agregar a favoritos' }}</q-tooltip>
-              </q-btn>
-              <q-btn dense round flat icon="add_shopping_cart" color="primary" @click.stop="addToCart(p)">
-                <q-tooltip>Añadir al carrito</q-tooltip>
-              </q-btn>
-            </q-card-actions>
-          </q-card>
-        </div>
+  <div class="horizontal-scroll-container">
+    <div class="scroll-wrapper">
+      <div v-for="p in novedadesSlides" :key="'amazon-nov-'+p.id" class="slide-item">
+        <q-card bordered class="custom-shadow clickable-card clickable-card1" @click="goToProduct(p.id)">
+          <q-img :src="getFotoUrl(getProductoImage(p))" ratio="4/3" style="object-fit: cover" @load="debugImg && debugResolveFoto(getProductoImage(p))" @error="debugImg">
+            <template v-slot:after>
+              <div class="card-badge">Nuevo</div>
+            </template>
+          </q-img>
+          <q-card-section>
+            <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
+            <div class="text-subtitle1 text-weight-bold">$ {{ p.precioVenta != null ? Number(p.precioVenta).toLocaleString('es-ES', { minimumFractionDigits:2 }) : '0.00' }}</div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" color="primary" @click.stop="() => wishlist.toggle(p)">
+              <q-tooltip>{{ wishlist.isFavorito(p.id) ? 'Quitar de favoritos' : 'Agregar a favoritos' }}</q-tooltip>
+            </q-btn>
+            <q-btn dense round flat icon="add_shopping_cart" color="primary" @click.stop="addToCart(p)">
+              <q-tooltip>Añadir al carrito</q-tooltip>
+            </q-btn>
+          </q-card-actions>
+        </q-card>
       </div>
-    </q-carousel-slide>
-  </q-carousel>
+    </div>
+  </div>
 </section>
+
+  <q-separator style="height: 3px;"/>
 
 <!-- Catálogo por Categorías (Amazon-like tiles) -->
 <section class="q-px-lg q-py-xl responsive-section">
@@ -95,88 +89,75 @@
     </div>
   </div>
 
-     <q-carousel
-      v-model="categoriasSlide"
-      animated
-      arrows
-      navigation
-      navigation-position="bottom"
-      infinite
-      class="banner-carousel"
-      :height="getCategoriesHeight()"
-    >
-      <q-carousel-slide v-for="(chunk, sidx) in categoriasSlides" :key="'cat-slide-'+sidx" :name="sidx">
-        <div class="strip-slide-inner strip-cats">
-          <div v-for="cat in chunk" :key="'cat-'+cat.id" class="slide-item-cat">
-            <q-card flat bordered class="shadow-1 cat-card-bg" :style="{ backgroundImage: 'url(' + getFotoUrl(getCategoriaImage(cat)) + ')' }" role="img" :aria-label="cat.nombre" @click="$router.push({ name: 'CategoriaProductos', params: { id: cat.id } })">
+     <div class="horizontal-scroll-container">
+       <div class="scroll-wrapper">
+          <div v-for="cat in categoriasSlides" :key="'cat-'+cat.id" class="slide-item-cat">
+            <q-card flat bordered class="custom-shadow cat-card-bg clickable-card1" :style="{ backgroundImage: 'url(' + getFotoUrl(getCategoriaImage(cat)) + ')' }" role="img" :aria-label="cat.nombre" @click="$router.push({ name: 'CategoriaProductos', params: { id: cat.id } })">
               <div class="cat-card-overlay"></div>
               <q-card-section class="cat-tile-label">{{ cat.nombre }}</q-card-section>
             </q-card>
           </div>
-        </div>
-      </q-carousel-slide>
-    </q-carousel>
+       </div>
+     </div>
 </section>
 
+  <q-separator style="height: 3px;"/>
 <!-- Rebajas (Amazon-like deals) -->
-<section class="q-px-lg q-py-md amazon-section responsive-section">
-  <div class="row items-center q-mb-md">
-    <div class="col">
-      <div class="text-h6 text-weight-bold">Rebajas</div>
-    </div>
-    <div class="col-auto">
-      <q-btn style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" flat label="Ver todo" @click="$router.push('/productos?rebajas=1')" />
+<section class="q-px-lg q-py-md amazon-section responsive-section ">
+<div class="row items-center q-mb-md  " >
+  <div class="col">
+    <div class="text-h6 text-weight-bold ">
+      Rebajas
     </div>
   </div>
 
-  <q-carousel
-      v-model="rebajasSlide"
-      animated
-      arrows
-      navigation
-      navigation-position="bottom"
-      infinite
-      class="banner-carousel"
-      :height="getNovedadesHeight()"
-    >
-    <q-carousel-slide v-for="(chunk, sidx) in rebajasSlides" :key="'reb-slide-'+sidx" :name="sidx" class="strip-slide">
-      <div class="strip-slide-inner">
-        <div v-for="p in chunk" :key="'rebaja-'+p.id" class="slide-item">
-          <q-card flat bordered class="shadow-1 clickable-card" @click="goToProduct(p.id)">
-            <q-img :src="getFotoUrl(getProductoImage(p))" ratio="4/3" style="object-fit: cover" @load="debugImg && debugResolveFoto(getProductoImage(p))" @error="debugImg && console.warn('[IndexPage] q-img error loading product', getProductoImage(p))">
-              <template v-slot:after>
-                <div class="card-badge badge-sale">-{{ p.descuento || p.porcentajeDescuento || 10 }}%</div>
-              </template>
-            </q-img>
-            <q-card-section>
-              <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
-              <div v-if="p.tieneDescuento" class="row items-center">
-                <!-- Precio original tachado -->
-                <div class="text-subtitle1 text-grey-6 q-mr-sm">
-                  <s>$ {{ formatPrice(p.precioVenta) }}</s>
-                </div>
-                <!-- Precio con descuento -->
-                <div class="text-subtitle1 text-weight-bold text-primary">
-                  $ {{ formatPrice(p.precioVentaDescuento) }}
-                </div>
+  <div class="col-auto">
+    <q-btn
+      flat
+      label="Ver todo"
+      style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);"
+      @click="$router.push('/productos?rebajas=1')"
+    />
+  </div>
+  </div>
+
+  <div class="horizontal-scroll-container">
+    <div class="scroll-wrapper">
+      <div v-for="p in rebajasSlides" :key="'rebaja-'+p.id" class="slide-item">
+        <q-card bordered class="custom-shadow clickable-card clickable-card1" @click="goToProduct(p.id)">
+          <q-img :src="getFotoUrl(getProductoImage(p))" ratio="4/3" style="object-fit: cover" @load="debugImg && debugResolveFoto(getProductoImage(p))" @error="debugImg">
+            <template v-slot:after>
+              <div class="card-badge badge-sale">-{{ p.descuento || p.porcentajeDescuento || 10 }}%</div>
+            </template>
+          </q-img>
+          <q-card-section>
+            <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
+            <div v-if="p.tieneDescuento" class="row items-center">
+              <!-- Precio original tachado -->
+              <div class="text-subtitle1 text-grey-6 q-mr-sm">
+                <s>$ {{ formatPrice(p.precioVenta) }}</s>
               </div>
-              <div v-else class="text-subtitle1 text-weight-bold">
-                $ {{ formatPrice(p.precioVenta) }}
+              <!-- Precio con descuento -->
+              <div class="text-subtitle1 text-weight-bold text-primary">
+                $ {{ formatPrice(p.precioVentaDescuento) }}
               </div>
-            </q-card-section>
-            <q-card-actions align="right">
-              <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" color="accent" @click.stop="() => wishlist.toggle(p)">
-                <q-tooltip>{{ wishlist.isFavorito(p.id) ? 'Quitar de favoritos' : 'Agregar a favoritos' }}</q-tooltip>
-              </q-btn>
-              <q-btn dense round flat icon="add_shopping_cart" color="accent" @click.stop="addToCart(p)">
-                <q-tooltip>Añadir al carrito</q-tooltip>
-              </q-btn>
-            </q-card-actions>
-          </q-card>
-        </div>
+            </div>
+            <div v-else class="text-subtitle1 text-weight-bold">
+              $ {{ formatPrice(p.precioVenta) }}
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn dense round flat :icon="wishlist.isFavorito(p.id) ? 'favorite' : 'favorite_border'" color="primary" @click.stop="() => wishlist.toggle(p)">
+              <q-tooltip>{{ wishlist.isFavorito(p.id) ? 'Quitar de favoritos' : 'Agregar a favoritos' }}</q-tooltip>
+            </q-btn>
+            <q-btn dense round flat icon="add_shopping_cart" color="primary" @click.stop="addToCart(p)">
+              <q-tooltip>Añadir al carrito</q-tooltip>
+            </q-btn>
+          </q-card-actions>
+        </q-card>
       </div>
-    </q-carousel-slide>
-  </q-carousel>
+    </div>
+  </div>
 </section>
 
 
@@ -272,7 +253,7 @@ const info = reactive({ ...infoInicial })
 const bannerSlides = [
   {
     image: '/img/sunrise-in-summer-beach-background-free-vector.jpg',
-    title: 'Ofertas de Verano',
+    title: 'Productos',
     subtitle: 'Los mejores precios en ropa y accesorios. Envío rápido.',
     ctaText: 'Comprar ahora',
     ctaLink: '/productos'
@@ -282,14 +263,14 @@ const bannerSlides = [
     title: 'Nuevas Colecciones',
     subtitle: 'Descubre las novedades de la temporada.',
     ctaText: 'Ver colección',
-    ctaLink: '/catalogo'
+    ctaLink: '/productos?novedades=1'
   },
   {
     image: '/img/rebajas.jpg',
     title: 'Promociones Exclusivas',
     subtitle: 'Aprovecha descuentos por tiempo limitado.',
     ctaText: 'Aprovechar',
-    ctaLink: '/ofertas'
+    ctaLink: '/productos?rebajas=1'
   }
 ]
 const dialogLoad = ref(false)
@@ -328,27 +309,20 @@ function getProductoStock(p) {
   return stock
 }
 
-//const novedadesSlides = computed(() => chunkCategorias(((objeto.productosNovedades || []).filter(p => getProductoStock(p) > 0).slice(0, 20)), itemsPerSlideProducts))
+ //const novedadesSlides = computed(() => chunkCategorias(((objeto.productosNovedades || []).filter(p => getProductoStock(p) > 0).slice(0, 20)), itemsPerSlideProducts))
 
-// En tu data o computed, modifica la función que crea los slides
-
+// Computed properties para carruseles - sin chunks, items directos
 const novedadesSlides = computed(() => {
-    const productosPorSlide = 4
-  if (!objeto.productosNovedades || objeto.productosNovedades.length === 0) {
-    return []
-  }
-
-  const chunks = []
-  for (let i = 0; i < objeto.productosNovedades.length; i += productosPorSlide) {
-    const chunk = objeto.productosNovedades.slice(i, i + productosPorSlide)
-    chunks.push(chunk)
-  }
-  console.log("chunks: ",chunks)
-
-  return chunks
+  return objeto.productosNovedades || []
 })
-const rebajasSlides = computed(() => chunkCategorias(((rebajas.value || []).filter(p => getProductoStock(p) > 0).slice(0, 20)), itemsPerSlideProducts))
-const categoriasSlides = computed(() => chunkCategorias((objeto.categoriasProductos || []), itemsPerSlideCategories))
+
+const rebajasSlides = computed(() => {
+  return (rebajas.value || []).filter(p => getProductoStock(p) > 0).slice(0, 20)
+})
+
+const categoriasSlides = computed(() => {
+  return objeto.categoriasProductos || []
+})
 
 // selected category id used as filter for search
 const selectedCategory = ref(null)
@@ -693,15 +667,6 @@ function getProductoImage(prod) {
   return candidate
 }
 
-// función para dividir el array en chunks de 4
-function chunkCategorias(array, size) {
-  const result = []
-  for (let i = 0; i < array.length; i += size) {
-    result.push(array.slice(i, i + size))
-  }
-  return result
-}
-
 // Función para calcular precio con descuento
 function calculateDiscountedPrice(product) {
   if (!product || product.precioVenta == null) return '0.00'
@@ -734,11 +699,18 @@ function getNovedadesHeight() {
   return '60vh'
 }
 
-function getCategoriesHeight() {
+function getRebajasHeight() {
   if ($q.screen.xs) return '50vh'
-  if ($q.screen.sm) return '55vh'
-  if ($q.screen.md) return '60vh'
-  return '66vh'
+  if ($q.screen.sm) return '50vh'
+  if ($q.screen.md) return '55vh'
+  return '60vh'
+}
+
+function getCategoriesHeight() {
+  if ($q.screen.xs) return '30vh'
+  if ($q.screen.sm) return '10vh'
+  if ($q.screen.md) return '10vh'
+  return '38vh'
 }
 
 const abrirEnlace = (url) => {
@@ -863,6 +835,8 @@ const abrirEnlace = (url) => {
     font-size: 11px;
     padding: 3px 6px;
   }
+
+  .slide-item { flex: 1 1 100%; }
 }
 
 /* Small devices (sm) */
@@ -885,6 +859,8 @@ const abrirEnlace = (url) => {
     gap: 14px;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
+
+  .slide-item { flex: 1 1 calc(50% - 16px); }
 }
 
 /* Medium devices (md) */
@@ -894,6 +870,8 @@ const abrirEnlace = (url) => {
     gap: 15px;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
+
+  .slide-item { flex: 1 1 calc(33.333% - 16px); }
 }
 
 /* Large devices (lg+) */
@@ -965,11 +943,43 @@ const abrirEnlace = (url) => {
 }
 .badge-sale { background: $secondary !important; }
 
+/* Contenedor con scroll horizontal */
+.horizontal-scroll-container {
+  width: 100%;
+  overflow: hidden;
+  padding: 16px 0;
+}
+
+.scroll-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 20px;
+  padding: 16px 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.scroll-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-wrapper {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
 /* strip carousels (product/category rows) */
 .strip-carousel {
   background: transparent;
 }
-.strip-slide { padding: 0px 10px; }
+.strip-slide {
+  padding: 0px 10px;
+  overflow: hidden;
+}
 .strip-carousel ::v-deep .q-carousel__control { background: rgba(0,0,0,0.08) !important; }
 
 /* mirror banner controls & navigation so strips look like hero */
@@ -996,44 +1006,36 @@ const abrirEnlace = (url) => {
   color: darken($primary, 12%) !important;
 }
 
-/* layout for items inside strip slides to avoid overlap with controls */
-.strip-slide-inner {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  padding: 32px 0px 16px;
-  box-sizing: border-box;
-  align-items: center;
-  min-height: 100%;
-}
-.strip-cats {
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
 .slide-item {
-  flex: 0 0 280px;
-  max-width: 280px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  width: 220px;
 }
+
 .slide-item-cat {
-  flex: 0 0 240px;
-  max-width: 240px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  width: 240px;
 }
+
 
 /* Extra small devices (xs) */
 @media (max-width: 599px) {
-  .strip-slide-inner {
-    padding: 16px 12px;
+  .scroll-wrapper {
+    flex-direction: row;
+    padding: 12px 16px;
     gap: 12px;
   }
   .slide-item {
-    flex: 0 0 calc(50% - 6px);
-    max-width: calc(50% - 6px);
+    flex: 0 0 auto;
+    width: calc(50vw - 18px);
+    max-width: calc(50vw - 18px);
     min-height: auto;
   }
   .slide-item-cat {
-    flex: 0 0 calc(50% - 6px);
-    max-width: calc(50% - 6px);
+    flex: 0 0 auto;
+    width: calc(50vw - 18px);
+    max-width: calc(50vw - 18px);
   }
   .slide-item .q-card,
   .slide-item-cat .q-card {
@@ -1048,28 +1050,24 @@ const abrirEnlace = (url) => {
   .slide-item-cat .cat-card-bg {
     height: 150px;
   }
-  .strip-carousel ::v-deep .q-carousel__control {
-    width: 36px !important;
-    height: 36px !important;
-  }
-  .strip-carousel ::v-deep .q-carousel__control .q-icon {
-    font-size: 16px !important;
-  }
 }
 
 /* Small devices (sm) */
 @media (min-width: 600px) and (max-width: 1023px) {
-  .strip-slide-inner {
+  .scroll-wrapper {
+    flex-direction: row;
     padding: 20px 24px;
     gap: 16px;
   }
   .slide-item {
-    flex: 0 0 calc(33.333% - 11px);
-    max-width: calc(33.333% - 11px);
+    flex: 0 0 auto;
+    width: 240px;
+    max-width: 240px;
   }
   .slide-item-cat {
-    flex: 0 0 calc(40% - 10px);
-    max-width: calc(40% - 10px);
+    flex: 0 0 auto;
+    width: 260px;
+    max-width: 260px;
   }
   .slide-item .q-card,
   .slide-item-cat .q-card {
@@ -1087,17 +1085,20 @@ const abrirEnlace = (url) => {
 
 /* Medium devices (md) */
 @media (min-width: 1024px) and (max-width: 1365px) {
-  .strip-slide-inner {
+  .scroll-wrapper {
+    flex-direction: row;
     padding: 24px 32px;
     gap: 18px;
   }
   .slide-item {
-    flex: 0 0 calc(25% - 14px);
-    max-width: calc(25% - 14px);
+    flex: 0 0 auto;
+    width: 240px;
+    max-width: 240px;
   }
   .slide-item-cat {
-    flex: 0 0 calc(33.333% - 12px);
-    max-width: calc(33.333% - 12px);
+    flex: 0 0 auto;
+    width: 280px;
+    max-width: 280px;
   }
   .slide-item .q-card,
   .slide-item-cat .q-card {
@@ -1115,16 +1116,20 @@ const abrirEnlace = (url) => {
 
 /* Large devices (lg+) */
 @media (min-width: 1366px) {
-  .strip-slide-inner {
-    padding: 32px 72px 16px;
+  .scroll-wrapper {
+    flex-direction: row;
+    padding: 32px 48px 16px;
+    gap: 24px;
   }
   .slide-item {
-    flex: 0 0 calc((100% - 224px)/5);
-    max-width: calc((100% - 224px)/5);
+    flex: 0 0 auto;
+    width: 260px;
+    max-width: 260px;
   }
   .slide-item-cat {
-    flex: 0 0 calc((100% - 224px)/5);
-    max-width: calc((100% - 224px)/5);
+    flex: 0 0 auto;
+    width: 300px;
+    max-width: 300px;
   }
   .slide-item .q-card,
   .slide-item-cat .q-card {
@@ -1222,6 +1227,31 @@ const abrirEnlace = (url) => {
   .footer-link {
     font-size: 0.85rem;
   }
+}
+
+
+.custom-shadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.clickable-card1 {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+}
+
+
+.padding_card {
+  margin-left: 30px;
+}
+
+
+.full-strip_background {
+  background: linear-gradient(90deg, #EDE3FF, #ffffff);
 }
 </style>
 
