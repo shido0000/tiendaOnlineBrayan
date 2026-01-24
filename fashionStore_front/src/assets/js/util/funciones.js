@@ -876,18 +876,16 @@ const eliminarElemento = async (endpoint, id, load, dialogLoad) => {
         });
 };
 
-const CancelarPedido = async (endpoint, id, load, dialogLoad) => {
+const CancelarPedido = async (endpoint, id) => {
     const respuesta = reactive({
         resultado: null,
         mensajeError: null,
     });
-    dialogLoad.value = true;
     return await api
         .post(`/${endpoint}/${id}`)
         .then(async () => {
             setTimeout(async () => {
-                await load();
-                dialogLoad.value = false;
+                // await load();
                 Success.call(
                     this,
                     "El pedido ha sido cancelado correctamente"
@@ -904,7 +902,6 @@ const CancelarPedido = async (endpoint, id, load, dialogLoad) => {
                 Error(Error_Notify_DeletingElementIsRelated);
             else Error("Ocurrio un error al eliminar el elemento");
             respuesta.mensajeError = error ?? null;
-            dialogLoad.value = false;
             return respuesta;
         });
 };
@@ -1726,7 +1723,7 @@ const getFotoFromVarianteWithFallback = (variante, producto) => {
     }
 
     // Si la variante no tiene foto, busca en las otras variantes del mismo producto
-        const todasLasVariantes = producto.productoVariantes || producto.variants || producto.productosVariantes || []
+    const todasLasVariantes = producto.productoVariantes || producto.variants || producto.productosVariantes || []
 
     for (const v of todasLasVariantes) {
         if (!v || v.id === variante.id) {
@@ -1749,6 +1746,40 @@ const getFotoFromVarianteWithFallback = (variante, producto) => {
 
     return null
 }
+
+const loadGetPaginados = async (endpoint, params = {}) => {
+    try {
+        const response = await api.get(`/${endpoint}`, {
+            params: {
+                cantidadIgnorar: params.cantidadIgnorar || 0,
+                cantidadMostrar: params.cantidadMostrar || 10,
+                secuenciaOrdenamiento: params.secuenciaOrdenamiento,
+                textoBuscar: params.textoBuscar,
+                filtros: params.filtros,
+            },
+        });
+        // Verifica estructura de respuesta
+        if (
+            !response.data?.result?.elementos ||
+            !response.data?.result?.cantidad
+        ) {
+            throw new Error("Estructura de respuesta inválida del servidor");
+        }
+
+        return {
+            elementos: Array.isArray(response.data.result.elementos)
+                ? response.data.result.elementos
+                : [],
+            total: Number(response.data.result.cantidad) || 0,
+        };
+    } catch (error) {
+        // console.error('Error en loadGetPaginados:', error)
+        return {
+            elementos: [],
+            total: 0,
+        };
+    }
+};
 
 export {
     saveData,
@@ -1826,4 +1857,5 @@ export {
     saveDataPerfil,
     CancelarPedido,
     getFotoFromVarianteWithFallback,
+    loadGetPaginados
 };

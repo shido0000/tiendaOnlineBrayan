@@ -4,7 +4,7 @@
         style="max-width: 350px; font-weight: 700; color: #205072"
     >
         <q-list padding class="rounded-borders">
-            <div v-for="(link, index) in essentialListUrl" :key="index">
+            <div v-for="(link, index) in menuList" :key="index">
                 <q-item
                     class="navbar-late q-pl-none text-grey-8"
                     active-class="navbar-active"
@@ -87,8 +87,10 @@
     </div>
 </template>
 <script setup>
-import { essentialListUrl } from "src/assets/js/util/essentialListUrl";
-import { ref, onMounted } from "vue";
+import { getEssentialListUrl } from "src/assets/js/util/essentialListUrl";
+import { ref, onMounted, computed } from "vue";
+
+const menuList = computed(() => getEssentialListUrl());
 
 onMounted(async () => {
 

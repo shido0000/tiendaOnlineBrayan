@@ -210,6 +210,7 @@ function formatPrice(v) {
   margin: 0 auto;
   margin-top: 32px;
   padding: 16px;
+   border-radius: 15px;
 }
 
 .wishlist-card {
@@ -250,7 +251,7 @@ function formatPrice(v) {
     justify-content: center !important;
     padding-top: 10px;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
-    
+
   }
 
   .wishlist-img-container {

@@ -220,12 +220,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import useCart from 'src/stores/cartStore'
 import { loadGet, saveDataPronosticoEnviarObjeto } from 'src/assets/js/util/funciones'
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
 import { Error, Success } from 'src/assets/js/util/notify'
+import signalRService from 'src/services/signalRService'
 
 const props = defineProps({
   desdeElCarrito: Boolean,
@@ -702,14 +703,13 @@ const payload = JSON.parse(
         // Limpiar localStorage también para mayor seguridad
         localStorage.removeItem('fashion_cart_v1')
 
-       // if(!props.desdeElCarrito){
-          router.push({ name: 'IndexPage' })
-        //}
-  showDialog.value = false
+        // El backend se encargará de notificar a través de SignalR
+        // No necesitamos hacerlo desde aquí
+
+        router.push({ name: 'IndexPage' })
+        showDialog.value = false
     }
   })
-
- // router.push({ name: 'CheckoutPage' }) // o la página de confirmación final
 
 
 }
@@ -724,6 +724,13 @@ onMounted(async () => {
   filtradoGestor.value = itemsGestor.value
   filtradoMensajeria.value = itemsMensajeria.value
   dialogLoad.value = false
+
+  // Conectar a SignalR si no está conectado
+  try {
+    await signalRService.connect()
+  } catch (error) {
+    console.warn('No se pudo conectar a SignalR:', error)
+  }
 })
 
 async function aplicarCupon() {

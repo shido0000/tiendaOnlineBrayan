@@ -34,6 +34,8 @@
       </q-toolbar>
     </q-header>
 
+    <!-- Componente para notificaciones -->
+
     <q-drawer
       v-model="drawer"
       show-if-above
@@ -58,6 +60,7 @@ import { defineComponent, ref } from 'vue'
 import { emp } from 'src/boot/axios'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useRouter } from 'vue-router'
+import ComponenteParaNotificaciones from 'src/pages/Visual/components/ComponenteParaNotificaciones.vue';
 
 export default defineComponent({
   name: 'MainLayout',
@@ -74,6 +77,7 @@ export default defineComponent({
       const onLogout = () => {
       // Aquí puedes limpiar tokens, storage, etc.
       localStorage.removeItem('token')
+      localStorage.removeItem('token_exp')
       sessionStorage.clear()
 
       // Redirigir al login

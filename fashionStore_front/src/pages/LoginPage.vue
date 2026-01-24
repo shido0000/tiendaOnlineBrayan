@@ -30,12 +30,7 @@
         <div class="row items-center q-mb-md">
           <q-checkbox v-model="remember" label="Recuérdame" />
           <q-space />
-          <!--   <q-btn
-            flat
-            label="Forgot Password?"
-            class="text-grey-4"
-            @click="onForgot"
-          />-->
+
         </div>
 
         <q-btn
@@ -49,34 +44,68 @@
       <div class="text-center q-mt-md">
         <span class="text-black-4">¿No tienes cuenta?</span>
         <q-btn flat label="Regístrate" color="purple-4" @click="onRegister" />
+
+        <q-btn
+            flat
+            color="purple-4"
+            label="Olvidaste la contraseña?"
+            @click="abrirDialogoRecuperarContrasenha"
+          />
       </div>
     </div>
   </div>
 
    <!-- Diálogo para recuperar contraseña -->
-      <q-dialog v-model="showForgotDialog">
-        <q-card style="min-width: 350px">
-          <q-card-section>
-            <div class="text-h6">Recuperar contraseña</div>
-          </q-card-section>
+    <q-dialog v-model="showForgotDialog">
+  <q-card style="min-width: 350px">
+    <q-card-section>
+      <div class="text-h6">Recuperar contraseña</div>
+    </q-card-section>
 
-          <q-card-section>
-            <q-input
-              v-model="forgotEmail"
-              label="Correo electrónico"
-              type="email"
-              outlined
-              dense
-              autofocus
-            />
-          </q-card-section>
+    <!-- Paso 1: ingresar correo -->
+    <q-card-section v-if="!correoValido">
+      <q-input
+        v-model="forgotEmail"
+        label="Correo electrónico"
+        type="email"
+        outlined
+        dense
+        autofocus
+      />
+    </q-card-section>
 
-          <q-card-actions align="right">
-            <q-btn flat label="Cancelar" v-close-popup />
-            <q-btn flat label="Enviar" color="primary" @click="onForgot" />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
+    <!-- Paso 2: ingresar nueva contraseña -->
+    <q-card-section v-if="correoValido">
+      <q-input
+        v-model="nuevaContrasenna"
+        label="Nueva contraseña"
+        type="password"
+        outlined
+        dense
+        class="q-mb-md"
+      />
+      <q-input
+        v-model="confirmarContrasenna"
+        label="Confirmar contraseña"
+        type="password"
+        outlined
+        dense
+      />
+    </q-card-section>
+
+    <q-card-actions align="right">
+      <q-btn flat label="Cancelar" v-close-popup />
+      <q-btn
+        flat
+        label="Enviar"
+        color="primary"
+        @click="correoValido ? cambiarContrasenna() : verificarCorreo()"
+      />
+    </q-card-actions>
+  </q-card>
+</q-dialog>
+
+
 
   <DialogLoad :dialogLoad="dialogLoad" />
 </template>
@@ -89,6 +118,7 @@ import { useQuasar } from 'quasar'
 import { loadGet, saveDataPronosticoEnviarObjeto } from 'src/assets/js/util/funciones'
 import { Error } from 'src/assets/js/util/notify'
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
+import { api } from 'src/boot/axios'
 
 // refs reactivas
 const username = ref('')
@@ -96,8 +126,13 @@ const password = ref('')
 const remember = ref(false)
 const dialogLoad = ref(false)
 
-const showForgotDialog = ref(false)
 const forgotEmail = ref('')
+const nuevaContrasenna = ref('')
+const confirmarContrasenna = ref('')
+const correoValido = ref(false)
+
+
+const showForgotDialog = ref(false)
 
 const router = useRouter()
 const $q = useQuasar()
@@ -111,6 +146,7 @@ const onLogin = async () => {
    await login()
 }
 
+/*
 const onForgot = async () => {
   if (!forgotEmail.value) {
     $q.notify({ type: 'negative', message: 'Introduce tu correo' })
@@ -127,7 +163,7 @@ const onForgot = async () => {
   } catch (err) {
     $q.notify({ type: 'negative', message: 'Error al enviar correo de recuperación' })
   }
-}
+}*/
 
 const onRegister = () => {
   router.push('/register')
@@ -165,7 +201,44 @@ const login = async () => {
 
      //const informacion = await loadGet('Autenticacion/ObtenerInformacionUsuario')
 
-        router.push('/NomenclatorsCard')
+        router.push('/Perfil')
+      }
+    }
+  )
+}
+
+const loginDesdeRecuperacion = async (usuario,contrasenha) => {
+  const url = 'Autenticacion/Login'
+  const payload = {
+    username: usuario,
+    contrasenna: contrasenha
+  }
+
+  await saveDataPronosticoEnviarObjeto(url, payload, dialogLoad).then(
+    async (respuesta) => {
+      if (!!respuesta?.mensajeError) {
+        Error(respuesta?.mensajeError)
+      } else {
+        let  token=respuesta?.resultado?.result?.token;
+ let  exp=respuesta?.resultado?.result?.fechaExpiracion;
+
+        if (token) {
+          if (remember.value) {
+            // ✅ Guardar en localStorage si marcó "Recuérdame"
+            localStorage.setItem('token', token)
+            localStorage.setItem('token_exp', exp)
+          } else {
+            // ✅ Guardar en sessionStorage si NO marcó "Recuérdame"
+            sessionStorage.setItem('token', token)
+            sessionStorage.setItem('token_exp', exp)
+          }
+        }
+
+        $q.notify({ type: 'positive', message: 'Login exitoso' })
+
+     //const informacion = await loadGet('Autenticacion/ObtenerInformacionUsuario')
+
+        router.push('/Perfil')
       }
     }
   )
@@ -173,6 +246,71 @@ const login = async () => {
 
 function goToHome() {
   router.push('/')
+}
+
+const onForgot = async () => {
+  if (!forgotEmail.value) {
+    $q.notify({ type: 'negative', message: 'Introduce tu correo' })
+    return
+  }
+
+  // Endpoint del backend que hicimos
+  const url = 'Autenticacion/Recuperar'   // 👈 ajusta según tu controlador real
+  const payload = { correo: forgotEmail.value }
+   let response =''
+  try {
+      response =await saveDataPronosticoEnviarObjeto(url, payload, dialogLoad)
+        // Guardar la contraseña devuelta
+        nuevaContrasenna.value = response.NuevaContrasenna
+    $q.notify({ type: 'positive', message: 'Se ha cambiado la contraseña' })
+    //showForgotDialog.value = false
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.response.data.errorMessage })
+  }
+}
+
+const verificarCorreo = async () => {
+    if (!forgotEmail.value) {
+        $q.notify({ type: 'negative', message: 'Introduce tu correo' })
+         return
+         }
+         const url = 'Autenticacion/VerificarCorreo'
+         const payload = { correo: forgotEmail.value }
+         try {
+            const response = await saveDataPronosticoEnviarObjeto(url, payload, dialogLoad)
+            if (response.resultado.existe) {
+                correoValido.value = true
+                $q.notify({ type: 'positive', message: 'Correo válido, ingresa tu nueva contraseña' })
+                }
+                 } catch (err) { $q.notify({ type: 'negative', message: 'Correo no encontrado' }) } }
+
+
+const cambiarContrasenna = async () => {
+    if (!nuevaContrasenna.value || !confirmarContrasenna.value) {
+         $q.notify({ type: 'negative', message: 'Completa ambos campos' })
+          return
+        }
+         if (nuevaContrasenna.value !== confirmarContrasenna.value) {
+             $q.notify({ type: 'negative', message: 'Las contraseñas no coinciden' })
+             return
+            }
+            const url = 'Usuario/CambiarContrasennaDesdeRecuperar'
+            const payload = { correo: forgotEmail.value, nuevaContrasenna: nuevaContrasenna.value, contrasennaConfirmada: confirmarContrasenna.value }
+             try {
+               const result= await saveDataPronosticoEnviarObjeto(url, payload, dialogLoad)
+                await loginDesdeRecuperacion(result.resultado.result.usu,result.resultado.result.cont)
+                 $q.notify({ type: 'positive', message: 'Contraseña cambiada correctamente ✅' })
+                  showForgotDialog.value = false
+                } catch (err) {
+                     $q.notify({ type: 'negative', message: 'Error al cambiar la contraseña' }) }
+                    }
+
+function abrirDialogoRecuperarContrasenha(){
+    showForgotDialog.value=true
+    forgotEmail.value=''
+    nuevaContrasenna.value=''
+    confirmarContrasenna.value=''
+    correoValido.value=false
 }
 </script>
 

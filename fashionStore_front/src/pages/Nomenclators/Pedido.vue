@@ -22,6 +22,8 @@
         no-results-label="No hay elementos disponibles"
         loading-label="Cargando..."
         rows-per-page-label="Filas por página"
+        v-model:pagination="pagination"
+         @request="onRequest"
       >
         <template v-slot:top>
           <div class="col-4 q-table__title">
@@ -113,9 +115,9 @@
                 size="sm"
                 @click="abrirDialogoEditarPedido(props.row.id, false)"
                 text-color="primary"
-                icon="edit"
+                :icon="rol==='Cliente' ? 'visibility' : 'edit'"
               >
-                <q-tooltip>Editar líneas del pedido</q-tooltip>
+                <q-tooltip>{{ rol==='Cliente' ? 'Ver datos del pedido' : 'Editar líneas del pedido' }}</q-tooltip>
               </q-btn>
          <!--     <q-btn
                 :disable="props.row.estado === 'Rechazado'"
@@ -229,7 +231,7 @@
               <template v-slot:body-cell-cantidad="props">
                 <q-td :props="props" class="text-center">
                   <q-input
-                    v-if="!verDatosPedido"
+                    v-if="!verDatosPedido && rol !== 'Cliente'"
                     v-model.number="props.row.cantidad"
                     type="number"
                     min="1"
@@ -286,7 +288,7 @@
               <template v-slot:body-cell-acciones="props">
                 <q-td :props="props">
                   <q-btn
-                    v-if="!verDatosPedido"
+                    v-if="!verDatosPedido && rol !== 'Cliente'"
                     flat
                     dense
                     size="sm"
@@ -348,14 +350,14 @@
             @click="cerrarDialogoEditar(false)"
           />
            <q-btn
-            v-show="!verDatosPedido && !pedidoConfirmado"
+            v-show="!verDatosPedido && !pedidoConfirmado && rol !== 'Cliente'"
             class="text-white"
             color="primary"
             label="Rechazar Pedido"
             @click="abrirDialogoEliminar(pedidoSeleccionado.id)"
           />
           <q-btn
-            v-if="!verDatosPedido && !pedidoConfirmado"
+            v-if="!verDatosPedido && !pedidoConfirmado && rol !== 'Cliente'"
             class="text-white"
             color="primary"
             label="Confirmar Pedido"
@@ -386,11 +388,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, onBeforeUnmount } from 'vue'
 import DialogLoad from 'components/DialogBoxes/DialogLoad.vue'
 import DialogCancelarPedido from 'src/components/DialogBoxes/DialogCancelarPedido.vue'
-import { CancelarPedido, loadGetHastaData, loadGet } from 'src/assets/js/util/funciones'
+import { CancelarPedido, loadGetHastaData, loadGet, loadGetPaginados } from 'src/assets/js/util/funciones'
 import { Error, Success } from 'src/assets/js/util/notify'
+import signalRService from 'src/services/signalRService'
 
 // Variables Booleanas
 const dialogLoad = ref(false)
@@ -398,6 +401,16 @@ const verDatosPedido = ref(false)
 const isDialogoEliminarAbierto = ref(false)
 const dialogEditarPedido = ref(false)
 const pedidoConfirmado = ref(false)
+const rol = ref('')
+
+// Paginación
+const pagination = ref({
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 0,
+  sortBy: 'id',
+  descending: false
+})
 
 // Variables
 const idElementoSeleccionado = ref(null)
@@ -541,7 +554,8 @@ const rechazarLinea = (idLinea) => {
 const abrirDialogoEditarPedido = async (id, soloVer) => {
   pedidoConfirmado.value = false
   dialogLoad.value = true
-  verDatosPedido.value = soloVer
+  // Si el usuario es Cliente, siempre es modo vista (solo lectura)
+  verDatosPedido.value = rol.value === 'Cliente' ? true : soloVer
 
   try {
     const { api } = await import('src/boot/axios')
@@ -640,16 +654,32 @@ const confirmarPedido = async () => {
     if (response.data.success || response.status === 200) {
       pedidoConfirmado.value = true
       Success('Pedido confirmado exitosamente')
-      setTimeout(() => {
-        load()
-        cerrarDialogoEditar(false)
-        window.location.reload()
-      }, 150)
+
+      // Disparar evento para actualizar en tiempo real en todas las ventanas
+      const event = new CustomEvent('nuevoPedidoConfirmado', {
+        detail: {
+          id: pedidoSeleccionado.value.id,
+          codigo: pedidoSeleccionado.value.codigo,
+          estado: 'Confirmado',
+          timestamp: new Date().toISOString()
+        }
+      })
+      window.dispatchEvent(event)
+
+      // Esperar a que el evento se procese completamente antes de recargar
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+     // load()
+       cerrarDialogoEditar(false)
+
+     // window.location.reload()
     }
   } catch (error) {
     console.error('Error al confirmar pedido:', error)
     Error('Error al confirmar el pedido')
   } finally {
+     await load()
+
     dialogLoad.value = false
   }
 }
@@ -663,23 +693,91 @@ const cerrarDialogoEditar = (valor) => {
     verDatosPedido.value = false
   }
 }
-
+/*
 const load = async () => {
     dialogLoad.value = true
-  items.value = await loadGet(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}`) ?? []
-  dialogLoad.value = false
+
+    // Si es Cliente, filtrar solo sus pedidos
+    if(rol.value==='Cliente'){
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const usuarioId = payload.Id
+      items.value = await loadGet(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}&usuarioId=${usuarioId}`) ?? []
+    }
+    else{
+      items.value = await loadGet(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}`) ?? []
+    }
+
+    dialogLoad.value = false
+}*/
+const load = async () => {
+    dialogLoad.value = true
+ const params = {
+      cantidadIgnorar: (pagination.value.page - 1) * pagination.value.rowsPerPage,
+      cantidadMostrar:
+            pagination.value.rowsPerPage !== 0
+                ? pagination.value.rowsPerPage
+                : pagination.value.rowsNumber,
+      secuenciaOrdenamiento: orden,
+      textoBuscar: filter.value
+    }
+
+    let elementos = []
+    let total = 0
+    // Si es Cliente, filtrar solo sus pedidos
+    if(rol.value==='Cliente'){
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const usuarioId = payload.Id
+
+       const { elementos: elems, total: tot } =
+        (await loadGetPaginados(
+          `Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}&usuarioId=${usuarioId}`,
+          params
+        )) ?? { elementos: [], total: 0 }
+
+      elementos = elems
+      total = tot
+    }
+    else{
+
+         const { elementos: elems, total: tot } =
+        (await loadGetPaginados(
+          `Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}`,
+          params
+        )) ?? { elementos: [], total: 0 }
+
+      elementos = elems
+      total = tot
+    }
+
+     items.value = elementos
+    pagination.value.rowsNumber = total
+
+    dialogLoad.value = false
 }
 
 const eliminar = async () => {
+    dialogLoad.value=true
   await CancelarPedido(
     'Pedido/CancelarPedido',
     idElementoSeleccionado.value,
-    load,
-    dialogLoad
   )
+
+  // Disparar evento para actualizar en tiempo real en todas las ventanas
+  const event = new CustomEvent('PedidoCancelado', {
+    detail: {
+      id: idElementoSeleccionado.value,
+      timestamp: new Date().toISOString()
+    }
+  })
+  window.dispatchEvent(event)
+
   await load()
+    dialogLoad.value=false
+dialogEditarPedido.value=false
   setTimeout(() => {
-    window.location.reload()
+   // window.location.reload()
   }, 1500)
 }
 
@@ -697,10 +795,59 @@ const imprimir = () => {
 }
 
 onMounted(async () => {
-  dialogLoad.value = true
+   const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+   const payload = JSON.parse(atob(token.split('.')[1]))
+   rol.value= payload.Rol
+   /*if(rol.value==='Cliente'){
+    const usuarioId= payload.Id
+  items.value = await loadGet(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}&usuarioId=${usuarioId}`) ?? []
+  }
+  else{
   items.value = await loadGet(`Pedido/ObtenerListadoPaginado?SecuenciaOrdenamiento=${orden.value}&estado=${filtroEstado.value}`) ?? []
-  dialogLoad.value = false
+  }*/
+
+  // Conectar a SignalR para recibir actualizaciones en tiempo real
+  await load()
+  try {
+    await signalRService.connect()
+
+    // Listener para cuando se genera un nuevo pedido
+    window.addEventListener('pedido-generado', handlePedidoActualizado)
+    window.addEventListener('pedido-actualizado', handlePedidoActualizado)
+    window.addEventListener('pedidoEliminado', handlePedidoActualizado)
+    window.addEventListener('pedido-cancelado', handlePedidoActualizado)
+
+    // Listener personalizado para actualizaciones de pedidos
+    signalRService.onPedidoGenerado(async() => {
+      //console.log('🔄 Recibido evento de actualización de pedido, recargando lista...')
+     await load()
+
+    })
+  } catch (error) {
+    console.error('Error conectando a SignalR:', error)
+  }
 })
+
+// Limpiar listeners al desmontar componente
+onBeforeUnmount(() => {
+  window.removeEventListener('pedido-generado', handlePedidoActualizado)
+  window.removeEventListener('pedido-actualizado', handlePedidoActualizado)
+  window.removeEventListener('pedidoEliminado', handlePedidoActualizado)
+  window.removeEventListener('pedido-cancelado', handlePedidoActualizado)
+  // Mantener la conexión SignalR activa para otras páginas
+})
+
+// Manejador de evento de pedido actualizado
+const handlePedidoActualizado = async(event) => {
+  console.log('📦 Evento de pedido actualizado recibido:', event.detail)
+  // Recargar la lista de pedidos cuando hay cambios
+ await load()
+}
+
+const onRequest = async (props) => {
+  pagination.value = props.pagination
+  await load()
+}
 </script>
 
 <style scoped lang="scss">

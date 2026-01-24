@@ -283,6 +283,7 @@ function onQtyChange(item) {
   margin: 0 auto;
   margin-top: 32px;
   padding-top: 16px;
+  border-radius: 15px;
 }
 .carrito-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;

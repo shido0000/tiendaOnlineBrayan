@@ -188,17 +188,16 @@ const categories = ref([])
 
 onMounted(async () => {
   try {
-     inicio.value  = await loadGetDatosInicio('ObtenerDatosInicio')
+    const inicio  = await loadGetDatosInicio('ObtenerDatosInicio')
     categories.value =
-      inicio?.value.categoriasProductos ??
-      inicio?.value.categorias ??
-      inicio?.value.data?.categorias ??
-      inicio?.value.result?.categoriasProductos ??
+      inicio?.categoriasProductos ??
+      inicio?.categorias ??
+      inicio?.data?.categorias ??
+      inicio?.result?.categoriasProductos ??
       []
   } catch (e) {
     console.warn('Error cargando categorías', e)
     categories.value = []
-    inicio.value = []
   }
 })
 
@@ -335,7 +334,7 @@ function closeMobileMenu(callback) {
   border-radius: 999px;
   padding: 6px 10px;
   height: 48px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
   box-sizing: border-box;
   border: 1px solid #C7B5FF;
 }
@@ -394,13 +393,13 @@ function closeMobileMenu(callback) {
 .topbar-nav {
   padding: 8px 12px;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   box-sizing: border-box;
 }
 
 .nav-items-container {
   gap: 0;
   overflow-x: auto;
+  width: auto;
   -webkit-overflow-scrolling: touch;
 }
 

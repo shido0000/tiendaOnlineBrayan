@@ -1,6 +1,7 @@
 <template>
   <div class="q-pa-md">
-    <q-card class="q-pa-lg dashboard-card">
+
+    <q-card class="q-pa-lg dashboard-card q-mt-md">
       <q-card-section>
         <div class="row items-center q-col-gutter-md">
           <div class="col">
@@ -142,6 +143,8 @@ import { reactive, onMounted, ref, computed } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { api } from 'src/boot/axios'
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
+import TestSignalR from './Test/TestSignalR.vue'
+import DiagnosticoSignalR from './Test/DiagnosticoSignalR.vue'
 
 const dialogLoad = ref(false)
 Chart.register(...registerables)
