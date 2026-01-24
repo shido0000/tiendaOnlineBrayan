@@ -59,6 +59,17 @@ namespace API.Domain.Services.Seguridad
             await base.Actualizar(usuario);
         }
 
+        public async Task CambiarContrasennaPorCorreo(string correo, string nuevaContrasenna, bool debeCambiarContrasenna = false)
+        {
+            Usuario? usuario = await ObtenerPorCorreo(correo) ??
+                throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Usuario no encontrado." };
+
+            usuario.Contrasenna = Crypto.HashPassword(nuevaContrasenna);
+            usuario.DebeCambiarContrasenna = debeCambiarContrasenna;
+
+            await base.Actualizar(usuario);
+        }
+        
 
         public async Task<Guid> ActualizarPerfil(Guid id, UsuarioActualizarDto usuarioDto)
         {
@@ -102,6 +113,7 @@ namespace API.Domain.Services.Seguridad
             //    throw new CustomException { Status = StatusCodes.Status404NotFound, Message = "Elemento no encontrado." };
         }
         public async Task<Usuario?> ObtenerPorUsername(string username, Func<IQueryable<Usuario>, IIncludableQueryable<Usuario, object>>? propiedadesIncluidas = null) => await _repositorios.BasicRepository.FirstAsync(entity => entity.Username == username, propiedadesIncluidas: query => query.Include(e => e.Rol));
+        public async Task<Usuario?> ObtenerPorCorreo(string correo, Func<IQueryable<Usuario>, IIncludableQueryable<Usuario, object>>? propiedadesIncluidas = null) => await _repositorios.BasicRepository.FirstAsync(entity => entity.Correo == correo, propiedadesIncluidas: query => query.Include(e => e.Rol));
 
         public async Task<List<Permiso>> ObtenerPermisos(string username)
             => (await _repositorios.Usuarios.FirstAsync(e => e.Username == username, query => query.Include(e => e.Rol.RolPermiso).ThenInclude(e => e.Permiso)))?.Rol.RolPermiso.Select(e => e.Permiso).ToList() ?? new();

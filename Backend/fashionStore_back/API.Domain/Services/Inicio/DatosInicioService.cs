@@ -23,7 +23,8 @@ namespace API.Domain.Services.Inicio
         public async Task<DatosInicio> ObtenerDatosInicio()
         {
             var productosNovedades = await _productoService.ObtenerProductosNovedades();
-            var categorias = (await _categoriaProductoService.ObtenerTodos()).ToList();
+            // var categorias = (await _categoriaProductoService.ObtenerTodos()).ToList();
+            var categorias = await _categoriaProductoService.ObtenerCategorias();
 
             return new DatosInicio()
             {

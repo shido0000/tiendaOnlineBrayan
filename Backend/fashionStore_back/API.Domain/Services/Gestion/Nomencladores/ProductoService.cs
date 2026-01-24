@@ -392,10 +392,82 @@ namespace API.Domain.Services.Gestion.Nomencladores
             var lista = await _repositorios.Productos
                             .GetQuery()
                             .AsNoTracking()
-                            .Include(e => e.ProductosVariantes)
-                                .ThenInclude(e => e.Fotos)
-                            .Include(e => e.ProductoCategorias)
-                                .ThenInclude(e => e.Categoria)
+                            //.Include(e => e.ProductosVariantes)
+                            //    .ThenInclude(e => e.Fotos)
+                            //.Include(e => e.ProductoCategorias)
+                            //    .ThenInclude(e => e.Categoria)
+                            .Select(e => new Producto
+                            {
+                                Id = e.Id,
+                                Codigo = e.Codigo,
+                                SKU = e.SKU,
+                                StockTotal = e.StockTotal,
+                                Descripcion = e.Descripcion,
+                                EsActivo = e.EsActivo,
+                                MonedaVentaId = e.MonedaVentaId,
+                                PrecioVenta = e.PrecioVenta,
+                                FechaCreado = e.FechaCreado,
+                                MonedaVenta = new Moneda
+                                {
+                                    Id = e.MonedaVenta.Id,
+                                    Codigo = e.MonedaVenta.Codigo,
+                                    Descripcion = e.MonedaVenta.Descripcion,
+                                },
+                                ProductoCategorias = e.ProductoCategorias.Select(x => new ProductoCategoria
+                                {
+                                    CategoriaId = x.CategoriaId,
+                                    ProductoId = x.ProductoId,
+                                    Categoria = new CategoriaProducto
+                                    {
+                                        Descripcion = x.Categoria.Descripcion,
+                                        Nombre = x.Categoria.Nombre,
+                                        Id = x.Categoria.Id,
+                                    },
+                                }).ToList(),
+                                ProductoDescuentos = e.ProductoDescuentos.Select(x => new ProductoDescuento
+                                {
+                                    DescuentoId = x.DescuentoId,
+                                    ProductoId = x.ProductoId,
+                                    Descuento = new Descuento
+                                    {
+                                        Id = x.Descuento.Id,
+                                        Porcentaje = x.Descuento.Porcentaje,
+                                        Nombre = x.Descuento.Nombre,
+                                        MontoFijo = x.Descuento.MontoFijo,
+                                    },
+                                }).ToList(),
+                                ProductosVariantes = e.ProductosVariantes.Select(x => new ProductoVariante
+                                {
+                                    Id = x.Id,
+                                    ProductoId = x.ProductoId,
+                                    Stock = x.Stock,
+                                    Talla = x.Talla,
+                                    Principal = x.Principal,
+                                    Color = x.Color,
+                                    EsActivo = x.EsActivo,
+                                    OtraVarianteProductoVariantes = x.OtraVarianteProductoVariantes.Select(x => new OtraVarianteProductoVariante
+                                    {
+                                        Id = x.Id,
+                                        ProductoVarianteId = x.ProductoVarianteId,
+                                        OtraVarianteId = x.OtraVarianteId,
+                                        OtraVariante = new OtraVariante
+                                        {
+                                            Nombre = x.OtraVariante.Nombre,
+                                            Id = x.OtraVariante.Id,
+                                        }
+
+                                    }).ToList(),
+                                    Fotos = x.Fotos.Select(x => new ProductoFoto
+                                    {
+                                        Id = x.Id,
+                                        EsPrincipal = x.EsPrincipal,
+                                        Descripcion = x.Descripcion,
+                                        Url = x.Url,
+                                        Orden = x.Orden,
+                                        ProductoVarianteId = x.ProductoVarianteId,
+                                    }).ToList(),
+                                }).ToList(),
+                            })
                             .ToListAsync();
 
             var hoy = DateTime.Today; // solo la fecha, sin hora
@@ -408,15 +480,101 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
         public async Task<List<Producto>> ObtenerProductosRelacionados(List<Guid> categoriasIds, Guid productoActualId)
         {
+            //return await _repositorios.Productos
+            //    .GetQuery()
+            //    .AsNoTracking()
+            //    .Include(e => e.ProductosVariantes)
+            //        .ThenInclude(e => e.Fotos)
+            //    .Include(e => e.ProductoCategorias)
+            //        .ThenInclude(e => e.Categoria)
+            //    .Where(e => e.Id != productoActualId && e.EsActivo)
+            //    .Where(e => e.ProductoCategorias.Any(pc => categoriasIds.Contains(pc.CategoriaId)))
+            //    .Select(e=>new Producto {
+
+            //    })
+            //    .ToListAsync(); 
+
             return await _repositorios.Productos
                 .GetQuery()
                 .AsNoTracking()
-                .Include(e => e.ProductosVariantes)
-                    .ThenInclude(e => e.Fotos)
-                .Include(e => e.ProductoCategorias)
-                    .ThenInclude(e => e.Categoria)
+                //.Include(e => e.ProductosVariantes)
+                //    .ThenInclude(e => e.Fotos)
+                //.Include(e => e.ProductoCategorias)
+                //    .ThenInclude(e => e.Categoria)
                 .Where(e => e.Id != productoActualId && e.EsActivo)
                 .Where(e => e.ProductoCategorias.Any(pc => categoriasIds.Contains(pc.CategoriaId)))
+                .Select(e => new Producto
+                {
+                    Id = e.Id,
+                    Codigo = e.Codigo,
+                    SKU = e.SKU,
+                    StockTotal = e.StockTotal,
+                    Descripcion = e.Descripcion,
+                    EsActivo = e.EsActivo,
+                    MonedaVentaId = e.MonedaVentaId,
+                    PrecioVenta = e.PrecioVenta,
+                    FechaCreado = e.FechaCreado,
+                    MonedaVenta = new Moneda
+                    {
+                        Id = e.MonedaVenta.Id,
+                        Codigo = e.MonedaVenta.Codigo,
+                        Descripcion = e.MonedaVenta.Descripcion,
+                    },
+                    ProductoCategorias = e.ProductoCategorias.Select(x => new ProductoCategoria
+                    {
+                        CategoriaId = x.CategoriaId,
+                        ProductoId = x.ProductoId,
+                        Categoria = new CategoriaProducto
+                        {
+                            Descripcion = x.Categoria.Descripcion,
+                            Nombre = x.Categoria.Nombre,
+                            Id = x.Categoria.Id,
+                        },
+                    }).ToList(),
+                    ProductoDescuentos = e.ProductoDescuentos.Select(x => new ProductoDescuento
+                    {
+                        DescuentoId = x.DescuentoId,
+                        ProductoId = x.ProductoId,
+                        Descuento = new Descuento
+                        {
+                            Id = x.Descuento.Id,
+                            Porcentaje = x.Descuento.Porcentaje,
+                            Nombre = x.Descuento.Nombre,
+                            MontoFijo = x.Descuento.MontoFijo,
+                        },
+                    }).ToList(),
+                    ProductosVariantes = e.ProductosVariantes.Select(x => new ProductoVariante
+                    {
+                        Id = x.Id,
+                        ProductoId = x.ProductoId,
+                        Stock = x.Stock,
+                        Talla = x.Talla,
+                        Principal = x.Principal,
+                        Color = x.Color,
+                        EsActivo = x.EsActivo,
+                        OtraVarianteProductoVariantes = x.OtraVarianteProductoVariantes.Select(x => new OtraVarianteProductoVariante
+                        {
+                            Id = x.Id,
+                            ProductoVarianteId = x.ProductoVarianteId,
+                            OtraVarianteId = x.OtraVarianteId,
+                            OtraVariante = new OtraVariante
+                            {
+                                Nombre = x.OtraVariante.Nombre,
+                                Id = x.OtraVariante.Id,
+                            }
+
+                        }).ToList(),
+                        Fotos = x.Fotos.Select(x => new ProductoFoto
+                        {
+                            Id = x.Id,
+                            EsPrincipal = x.EsPrincipal,
+                            Descripcion = x.Descripcion,
+                            Url = x.Url,
+                            Orden = x.Orden,
+                            ProductoVarianteId = x.ProductoVarianteId,
+                        }).ToList(),
+                    }).ToList(),
+                })
                 .ToListAsync();
         }
 

@@ -16,7 +16,7 @@ namespace API.Application.Controllers.Inicio
         }
 
         [HttpGet("ObtenerDatosInicio")]
-        public async Task<IActionResult> CrearConFotos()
+        public async Task<IActionResult> ObtenerDatosInicio()
         {
 
             var result = await _DatosInicioService.ObtenerDatosInicio();

@@ -1,6 +1,9 @@
 using API.Application.IoC;
 using API.Data.ClasesAuxiliares.Correo;
+using API.Data.ClasesAuxiliares.WhatsApp;
 using API.Domain.Services.NotificacionTiempoReal;
+using API.Hubs;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.FileProviders;
 
 //var builder = WebApplication.CreateBuilder(args);
@@ -40,9 +43,49 @@ ConfigurationManager configuration = builder.Configuration;
 
 builder.Services.AddRegistration(configuration);
 IoCRegister.AddLogsRegistration(builder);
-builder.Services.AddSignalR();
+//builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNamingPolicy = null;
+    });
+
+
+// Configurar CORS para SignalR
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SignalRPolicy", builder =>
+    {
+        builder
+            .WithOrigins(
+                "http://localhost:8080",
+                "http://localhost:9000",
+                "http://localhost:9001",
+                "http://localhost:6004",
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://localhost:8080",
+                "https://localhost:6005",
+                "https://localhost:9000"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials(); // ¡IMPORTANTE PARA SIGNALR!
+    });
+
+});
+
+
+// SMTP
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+builder.Services.Configure<WhatsAppOptions>(builder.Configuration.GetSection("WhatsApp"));
+
 
 var app = builder.Build();
+app.UseCors("SignalRPolicy");
+
+//app.UseWebSockets();
+
 
 // Archivos estáticos
 app.UseStaticFiles();
@@ -54,7 +97,8 @@ app.UseStaticFiles();
 
 
 // SignalR
-app.MapHub<PedidosHub>("/pedidosHub");
+app.MapHub<PedidosHub>("/pedidosHub").RequireAuthorization();
+//app.MapHub<PedidosHub>("/pedidosHub");
 
 app.Use(async (context, next) =>
 {
@@ -73,8 +117,6 @@ app.Use(async (context, next) =>
 // Rutas de tu API
 IoCRegister.AddRegistration(app, app.Environment);
 
-// SMTP
-builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
 
 app.Run();
 

@@ -95,5 +95,21 @@ namespace API.Domain.Services.Gestion.Nomencladores
             return categoria.Id;
         }
 
+        public async Task<List<CategoriaProducto>> ObtenerCategorias()
+        {
+            var categorias = await _repositorios.CategoriasProductos
+                               .GetQuery()
+                               .AsNoTracking()
+                               .Select(e => new CategoriaProducto
+                               {
+                                   FotoUrl = e.FotoUrl,
+                                   Id = e.Id,
+                                   Nombre = e.Nombre,
+                                   Descripcion = e.Descripcion,
+                               })
+                               .ToListAsync();
+
+            return categorias;
+        }
     }
 }

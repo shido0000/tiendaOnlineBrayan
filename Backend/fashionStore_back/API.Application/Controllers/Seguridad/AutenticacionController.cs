@@ -1,13 +1,14 @@
 ﻿using API.Application.Dtos.Comunes;
 using API.Application.Dtos.Seguridad.Autenticacion;
+using API.Application.Dtos.Seguridad.Recuperacion;
 using API.Application.Filters;
+using API.Domain.Exceptions;
 using API.Domain.Interfaces.Seguridad;
 using AutoMapper;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace API.Application.Controllers.Seguridad
@@ -23,13 +24,15 @@ namespace API.Application.Controllers.Seguridad
         protected readonly IAutenticacionService _autenticacionServicio;
         protected readonly IUsuarioService _usuarioService;
         protected readonly IBackgroundJobClient _clientHangfire;
+        protected readonly IRecuperacionContrasennaService _RecuperacionContrasennaService;
 
-        public AutenticacionController(IMapper mapper, IAutenticacionService autenticacionServicio, IBackgroundJobClient clientHangfire, IUsuarioService usuarioService)
+        public AutenticacionController(IMapper mapper, IAutenticacionService autenticacionServicio, IBackgroundJobClient clientHangfire, IUsuarioService usuarioService, IRecuperacionContrasennaService recuperacionContrasennaService)
         {
             _autenticacionServicio = autenticacionServicio;
             _mapper = mapper;
             _clientHangfire = clientHangfire;
             _usuarioService = usuarioService;
+            _RecuperacionContrasennaService = recuperacionContrasennaService;
         }
 
 
@@ -83,12 +86,12 @@ namespace API.Application.Controllers.Seguridad
                 Status = StatusCodes.Status200OK,
                 Result = new
                 {
-                    Id=usuario.Id,
-                    Username=usuario.Username,
-                    NombreCompleto=usuario.NombreCompleto,
-                    Nombre=usuario.Nombre,
-                    Apellidos=usuario.Apellidos,
-                    Correo=usuario.Correo,
+                    Id = usuario.Id,
+                    Username = usuario.Username,
+                    NombreCompleto = usuario.NombreCompleto,
+                    Nombre = usuario.Nombre,
+                    Apellidos = usuario.Apellidos,
+                    Correo = usuario.Correo,
                     Telefono = usuario.Telefono,
                     RolNombre = usuario.Rol.Nombre,
                     RolId = usuario.Rol.Id,
@@ -97,28 +100,22 @@ namespace API.Application.Controllers.Seguridad
             });
         }
 
-
-        //[HttpPost("ForgotPassword")]
-        //public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        //[HttpPost("Recuperar")]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> Recuperar([FromBody] RecuperarContrasenhaRequest recuperarContrasenhaRequest)
         //{
-        //    if (string.IsNullOrEmpty(request.Email))
-        //        return BadRequest(new { mensajeError = "El correo es obligatorio" });
-
-        //    var user = await _usuarioService.FindByEmailAsync(request.Email);
-        //    if (user == null)
-        //        return NotFound(new { mensajeError = "Usuario no encontrado" });
-
-        //    // Generar token de reseteo
-        //    var resetToken = await _usuarioService.GeneratePasswordResetTokenAsync(user);
-
-        //    // Construir link de reseteo
-        //    var resetLink = $"https://tudominio.com/reset-password?token={resetToken}&email={request.Email}";
-
-        //    // Enviar correo
-        //    await _usuarioService.SendAsync(request.Email, "Recuperar contraseña",
-        //        $"Haz clic en este enlace para restablecer tu contraseña: {resetLink}");
-
-        //    return Ok(new { mensaje = "Correo de recuperación enviado" });
+        //    var resultado = await _RecuperacionContrasennaService.RecuperarContrasennaAsync(recuperarContrasenhaRequest.Correo);
+        //    return Ok(new { NuevaContrasenna = resultado });
         //}
+
+
+        [HttpPost("VerificarCorreo")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerificarCorreo([FromBody] RecuperarContrasenhaRequest request)
+        {
+            var existe = await _RecuperacionContrasennaService.CorreoExistente(request.Correo);
+            if(!existe) throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "No existe usuario con ese correo." };
+            return Ok(new { Existe = existe });
+        }
     }
 }

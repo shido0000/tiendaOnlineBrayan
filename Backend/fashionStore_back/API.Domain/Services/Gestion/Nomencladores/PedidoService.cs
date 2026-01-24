@@ -5,8 +5,8 @@ using API.Data.IUnitOfWorks.Interfaces;
 using API.Domain.Exceptions;
 using API.Domain.Interfaces.Contabilidad;
 using API.Domain.Interfaces.Gestion.Nomencladores;
-using API.Domain.Services.NotificacionTiempoReal;
 using API.Domain.Validators.Gestion.Nomencladores;
+using API.Hubs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -202,12 +202,13 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 .GetQuery()
                 .AsNoTracking()
                 .Include(e => e.ProductosVariantes)
-                .Include(e=>e.MonedaVenta)
+                .Include(e => e.MonedaVenta)
                 .FirstOrDefaultAsync(v => v.Id == primerProductoVarianteId);
 
-                productoVariante= producto.ProductosVariantes.FirstOrDefault();
+                productoVariante = producto.ProductosVariantes.FirstOrDefault();
             }
-            else {
+            else
+            {
                 productoVariante = productoVarianteOpcion1;
             }
 
@@ -281,7 +282,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     .GetQuery()
                     .Include(v => v.Producto)
                     .FirstOrDefaultAsync(v => v.Id == productoDto.ProductoId);
-                 
+
 
                 if (varianteOpcion1 == null)
                 {
@@ -370,16 +371,108 @@ namespace API.Domain.Services.Gestion.Nomencladores
             await _repositorios.SaveChangesAsync();
 
             // 🔹 Notificar
-            await _hubContext.Clients.Group("vendedores")
-                .SendAsync("PedidoGenerado", new
-                {
-                    PedidoId = nuevoPedido.Id,
-                    Total = nuevoPedido.Total,
-                    Cliente = generarPedidoDto.Direccion,
-                    Fecha = DateTime.UtcNow
-                });
+            // 🔹 Notificar en tiempo real
+            await NotificarNuevoPedido(nuevoPedido, generarPedidoDto, listadoDetalles);
+
+
+            //        await _hubContext.Clients.Group("vendedores")
+            //.SendAsync("PedidoGenerado", new
+            //{
+            //    PedidoId = nuevoPedido.Id,
+            //    Codigo = nuevoPedido.Codigo,              // ← IMPORTANTE
+            //    Total = nuevoPedido.Total,
+            //    Cliente = generarPedidoDto.Direccion,
+            //    Fecha = DateTime.UtcNow,
+            //    CantidadProductos = listadoDetalles.Count // ← IMPORTANTE
+            //});
+
+            //        await _hubContext.Clients.Group("admin")
+            //            .SendAsync("PedidoGenerado", new
+            //            {
+            //                PedidoId = nuevoPedido.Id,
+            //                Codigo = nuevoPedido.Codigo,              // ← IMPORTANTE
+            //                Total = nuevoPedido.Total,
+            //                Cliente = generarPedidoDto.Direccion,
+            //                Fecha = DateTime.UtcNow,
+            //                CantidadProductos = listadoDetalles.Count, // ← IMPORTANTE
+            //                TipoNotificacion = "admin"
+            //            });
+
+            //await _hubContext.Clients.Group("vendedores")
+            //    .SendAsync("PedidoGenerado", new
+            //    {
+            //        PedidoId = nuevoPedido.Id,
+            //        Total = nuevoPedido.Total,
+            //        Cliente = generarPedidoDto.Direccion,
+            //        Fecha = DateTime.UtcNow
+            //    });
+
+            //// Enviar también al admin
+            //await _hubContext.Clients.Group("admin")
+            //    .SendAsync("PedidoGenerado", new
+            //    {
+            //        PedidoId = nuevoPedido.Id,
+            //        Total = nuevoPedido.Total,
+            //        Cliente = generarPedidoDto.Direccion,
+            //        Fecha = DateTime.UtcNow,
+            //        TipoNotificacion = "admin"
+            //        /*  PedidoId = nuevoPedido.Id,
+            //          Codigo = nuevoPedido.Codigo,
+            //          Total = nuevoPedido.Total,
+            //          Cliente = generarPedidoDto.Direccion,
+            //          Fecha = DateTime.UtcNow,
+            //          CantidadProductos = listadoDetalles.Count,
+            //          UsuarioId = generarPedidoDto.UsuarioId,
+            //          TipoNotificacion = "admin"*/
+            //    });
 
             return nuevoPedido.Id;
+        }
+
+        private async Task NotificarNuevoPedido(Pedido pedido, GenerarPedidoDto dto, List<PedidoDetalle> detalles)
+        {
+            var nombreCliente = await _repositorios.Usuarios
+                                    .GetQuery()
+                                    .AsNoTracking()
+                                    .Where(e => e.Id == pedido.UsuarioId)
+                                    .Select(e => e.NombreCompleto)
+                                    .FirstOrDefaultAsync();
+            try
+            {
+                var notificacionData = new
+                {
+                    PedidoId = pedido.Id,
+                    Cliente = nombreCliente,
+                    Codigo = pedido.Codigo,
+                    Total = pedido.Total,
+                    Fecha = DateTime.UtcNow,
+                    CantidadProductos = detalles.Count,
+                    TipoNotificacion = "Nuevo Pedido",
+                    Estado = pedido.Estado.ToString(),
+                    MonedaId = pedido.MonedaId,
+                    Items = detalles.Select(d => new
+                    {
+                        ProductoId = d.ProductoVarianteId,
+                        Cantidad = d.Cantidad,
+                        Precio = d.PrecioUnitario
+                    })
+                };
+
+                // Notificar a administradores
+                await _hubContext.Clients.Group("Administrador")
+                    .SendAsync("PedidoGenerado", notificacionData);
+
+                // Notificar a vendedores
+                await _hubContext.Clients.Group("Vendedor")
+                    .SendAsync("PedidoGenerado", notificacionData);
+
+                Console.WriteLine($"📢 Notificación enviada - Pedido #{pedido.Codigo}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al enviar notificación: {ex.Message}");
+                // No lanzar excepción para no interrumpir el flujo del pedido
+            }
         }
 
         public async Task<PedidoObtenidoDto?> ObtenerPedidoPorId(Guid id)
@@ -601,7 +694,15 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
                 venta.Pedido = pedido; // Asignar pedido para la descripción del asiento
                 await _AsientoContableService.GenerarAsientoVenta(venta);
-
+                var datosNotificacion = new
+                {
+                    Codigo = pedido.Codigo,
+                    Estado = pedido.Estado.ToString(),
+                    Total = pedido.Total,
+                    UsuarioId = pedido.UsuarioId,
+                    Timestamp = DateTime.UtcNow
+                };
+                await _hubContext.Clients.All.SendAsync("PedidoActualizado", datosNotificacion);
                 // Confirmar transacción ANTES del asiento contable
                 await transaction.CommitAsync();
             }
@@ -682,6 +783,17 @@ namespace API.Domain.Services.Gestion.Nomencladores
             _repositorios.Productos.UpdateRange(productosGenerales);
             _repositorios.Pedidos.Update(pedido);
             await _repositorios.SaveChangesAsync();
+
+            // ✅ Emitir evento correcto con datos del pedido
+            var datosNotificacion = new
+            {
+                Codigo = pedido.Codigo,
+                Estado = pedido.Estado.ToString(),
+                Timestamp = DateTime.UtcNow
+            };
+
+            // Notificar a todos los clientes
+            await _hubContext.Clients.All.SendAsync("PedidoCancelado", datosNotificacion);
         }
     }
 }

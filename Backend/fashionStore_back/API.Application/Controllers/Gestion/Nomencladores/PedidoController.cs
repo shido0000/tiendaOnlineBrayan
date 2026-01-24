@@ -4,8 +4,10 @@ using API.Data.Entidades.Gestion.Nomencladores;
 using API.Data.Enum;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
+using API.Hubs;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -15,10 +17,12 @@ namespace API.Application.Controllers.Gestion.Nomencladores
     public class PedidoController : BasicController<Pedido, PedidoValidator, DetallesPedidoDto, CrearPedidoInputDto, ActualizarPedidoInputDto, ListadoPaginadoPedidoDto, FiltrarConfigurarListadoPaginadoPedidoIntputDto>
     {
         private readonly IPedidoService _PedidoService;
+        private readonly IHubContext<PedidosHub> _hubContext;
 
-        public PedidoController(IMapper mapper, IPedidoService servicioPedido, IPedidoService PedidoService) : base(mapper, servicioPedido)
+        public PedidoController(IMapper mapper, IPedidoService servicioPedido, IPedidoService PedidoService, IHubContext<PedidosHub> hubContext) : base(mapper, servicioPedido)
         {
             _PedidoService = PedidoService;
+            _hubContext = hubContext;
         }
 
         protected override Task<(IEnumerable<Pedido>, int)> AplicarFiltrosIncluirPropiedades(FiltrarConfigurarListadoPaginadoPedidoIntputDto inputDto)
@@ -44,6 +48,11 @@ namespace API.Application.Controllers.Gestion.Nomencladores
                 {
                     filtros.Add(Pedido => Pedido.Estado == EstadoPedido.Pendiente);
                 }
+            }
+
+            if (inputDto.UsuarioId.HasValue)
+            {
+                filtros.Add(Pedido => Pedido.UsuarioId == inputDto.UsuarioId);
             }
 
             return _servicioBase.ObtenerListadoPaginado(inputDto.CantidadIgnorar, inputDto.CantidadMostrar, inputDto.SecuenciaOrdenamiento, propiedadesIncluidas: query => query.Include(e => e.Usuario).Include(e => e.Moneda).Include(e => e.Cupon)!, filtros.ToArray());

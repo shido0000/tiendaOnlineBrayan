@@ -2,6 +2,7 @@
 using API.Domain.Exceptions;
 using API.Domain.Interfaces.Seguridad;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -33,7 +34,7 @@ namespace API.Domain.Services.Seguridad
             Usuario usuario = await _usuarioService.ObtenerPorUsername(username) ??
                 throw new CustomException { Status = StatusCodes.Status401Unauthorized, Message = "Usuario o contraseña no válido." };
 
-            if(!usuario.EsActivo) throw new CustomException { Status = StatusCodes.Status401Unauthorized, Message = "Acceso denegado." };
+            if (!usuario.EsActivo) throw new CustomException { Status = StatusCodes.Status401Unauthorized, Message = "Acceso denegado." };
 
             if (usuario.DebeCambiarContrasenna)
                 throw new CustomException { Status = StatusCodes.Status307TemporaryRedirect, Message = "El usuario debe cambiar la contraseña." };
@@ -58,12 +59,13 @@ namespace API.Domain.Services.Seguridad
             foreach (var tarea in tareas)
                 claims.Add(new Claim(tarea.Nombre.ToLower(), tarea.Nombre.ToLower()));
 
-            var usuario = await _usuarioService.ObtenerPorUsername(username);
+            var usuario = await _usuarioService.ObtenerPorUsername(username, query => query.Include(e => e.Rol));
 
             claims.Add(new Claim("Id", usuario.Id.ToString()));
             claims.Add(new Claim("NombreCompleto", usuario.NombreCompleto));
             claims.Add(new Claim("Telefono", usuario.Telefono));
             claims.Add(new Claim("Correo", usuario.Correo));
+            claims.Add(new Claim("Rol", usuario.Rol.Nombre));
 
 
             //construyendo token

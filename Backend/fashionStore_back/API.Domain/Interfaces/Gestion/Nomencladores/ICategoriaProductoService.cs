@@ -8,5 +8,7 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
     {
         Task<Guid> CrearCategoriaAsync(CategoriaProducto dto, IFormFile? foto);
         Task<Guid> ActualizarCategoriaAsync(Guid id, CategoriaProducto dto, IFormFile? foto);
+
+        Task<List<CategoriaProducto>> ObtenerCategorias();
     }
 }

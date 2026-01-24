@@ -10,12 +10,14 @@ using API.Domain.Interfaces.Contabilidad;
 using API.Domain.Interfaces.Dashboard;
 using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Interfaces.Inicio;
+using API.Domain.Interfaces.NotificacionTiempoReal;
 using API.Domain.Interfaces.Seguridad;
 using API.Domain.Services;
 using API.Domain.Services.Contabilidad;
 using API.Domain.Services.Dashboard;
 using API.Domain.Services.Gestion.Nomencladores;
 using API.Domain.Services.Inicio;
+using API.Domain.Services.NotificacionTiempoReal;
 using API.Domain.Services.Seguridad;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -222,6 +224,11 @@ namespace API.Application.IoC
             services.AddScoped<IRolPermisoService, RolPermisoService>();
             services.AddScoped<IRolService, RolService>();
             services.AddScoped<IUsuarioService, UsuarioService>();
+            services.AddScoped<IRecuperacionContrasennaService, RecuperacionContrasennaService>();
+
+            //NOTIFICACION
+
+            services.AddScoped<INotificacionPedidoService, NotificacionPedidoService>();
 
 
             // GESTION
@@ -286,6 +293,13 @@ namespace API.Application.IoC
                 {
                     OnMessageReceived = context =>
                     {
+                        // Para SignalR: buscar el token en la query string
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            context.Token = accessToken;
+                        }
+
                         //Validando la fecha de expiracion del token
                         string tokenExpiration = context.Request.Headers["tokenExpiration"];
                         var path = context.HttpContext.Request.Path;

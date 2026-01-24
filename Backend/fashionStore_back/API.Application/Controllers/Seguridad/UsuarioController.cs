@@ -61,6 +61,31 @@ namespace API.Application.Controllers.Seguridad
             return Ok(new ResponseDto { Status = StatusCodes.Status200OK });
         }
 
+
+        /// <summary>
+        /// Cambiar contraseña de un usuario
+        /// </summary>
+        /// <param name="cambiarContrasennaDto">Elemento a editar</param>
+        /// <response code="200">Completado con exito!</response>
+        /// <response code="400">Ha ocurrido un error</response>
+        /// <response code="404">Elemento no encontrado</response>
+        [HttpPost("[action]")]
+        public async Task<IActionResult> CambiarContrasennaDesdeRecuperar(CambiarContrasennaRecuperarInputDto cambiarContrasennaDto)
+        {
+            await new CambiarContrasennaRecuperarInputDtoValidator().ValidateAndThrowAsync(cambiarContrasennaDto);
+
+
+            // Usuario? usuario = await _UsuarioService.ObtenerPorId(cambiarContrasennaDto.UsuarioId) ?? throw new CustomException { Status = StatusCodes.Status404NotFound, Message = "Elemento no encontrado." };
+            Usuario? usuario = await _UsuarioService.ObtenerPorCorreo(cambiarContrasennaDto.Correo) ?? throw new CustomException { Status = StatusCodes.Status404NotFound, Message = "Usuario no encontrado." };
+            await ((IUsuarioService)_servicioBase).CambiarContrasennaPorCorreo(cambiarContrasennaDto.Correo, cambiarContrasennaDto.NuevaContrasenna);
+
+            await _servicioBase.GuardarTraza(usuario.Nombre, $"Se ha camibado la contraseña para del usuario con id = {usuario.Id}", typeof(Usuario).Name);
+            await _servicioBase.SalvarCambios();
+
+            return Ok(new ResponseDto { Status = StatusCodes.Status200OK, Result = new { Usu = usuario.Username, Cont = cambiarContrasennaDto.NuevaContrasenna } });
+        }
+
+
         protected override Task<(IEnumerable<Usuario>, int)> AplicarFiltrosIncluirPropiedades(FiltrarConfigurarListadoPaginadoUsuarioIntputDto inputDto)
         {
             //agregando filtros
