@@ -64,25 +64,25 @@ const menuByRole = {
     'NomenclatorsCard': ['Admin', 'Vendedor']
 };*/
 export const routePermissions = {
-    'Dashboard': ['Admin'],
-    'Moneda': ['Admin'],
-    'Gestor': ['Admin'],
-    'Mensajeria': ['Admin'],
-    'Categoria': ['Admin'],
-    'Producto': ['Admin'],
-    'Descuento': ['Admin'],
-    'Pedido': ['Admin', 'Vendedor', 'Cliente'],
-    'Cupon': ['Admin'],
-    'Usuario': ['Admin'],
-    'Perfil': ['Admin', 'Vendedor', 'Cliente'],
-    'OtraVariante': ['Admin'],
-    'CuentasContables': ['Admin'],
-    'AsientosContables': ['Admin'],
-    'ReporteContable': ['Admin'],
-    'Contabilidad': ['Admin'],
-    'CrearInformacion': ['Admin'],
-    'DiagnosticoNotificaciones': ['Admin'],
-    'NomenclatorsCard': ['Admin']
+    'Dashboard': ['Administrador'],
+    'Moneda': ['Administrador'],
+    'Gestor': ['Administrador'],
+    'Mensajeria': ['Administrador'],
+    'Categoria': ['Administrador'],
+    'Producto': ['Administrador'],
+    'Descuento': ['Administrador'],
+    'Pedido': ['Administrador', 'Vendedor', 'Cliente'],
+    'Cupon': ['Administrador'],
+    'Usuario': ['Administrador'],
+    'Perfil': ['Administrador', 'Vendedor', 'Cliente'],
+    'OtraVariante': ['Administrador'],
+    'CuentasContables': ['Administrador'],
+    'AsientosContables': ['Administrador'],
+    'ReporteContable': ['Administrador'],
+    'Contabilidad': ['Administrador'],
+    'CrearInformacion': ['Administrador'],
+    'DiagnosticoNotificaciones': ['Administrador'],
+    'NomenclatorsCard': ['Administrador']
 };
 
 /**
