@@ -1,0 +1,1 @@
+import{s as e}from"./signalRService.b2f92cf4.js";import"./index.1c30e040.js";var n=async()=>{if(localStorage.getItem("token")||sessionStorage.getItem("token"))try{await e.connect()}catch(o){console.error("Error inicializando SignalR:",o)}};export{n as default};
