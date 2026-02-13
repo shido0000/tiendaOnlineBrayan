@@ -4,18 +4,17 @@ namespace API.Application.Dtos.Gestion.Nomencladores.BannerPromocion
 {
     public class BannerPromocionDto : EntidadBaseDto
     {
-        public required string Nombre { get; set; }
-        public required string Imagen { get; set; }
         public string? TextoTitulo { get; set; }
         public string? TextoSubtitulo { get; set; }
-        public string? BotonTexto { get; set; }
-        public string? BotonVinculo { get; set; }
-        public bool EsActivo { get; set; }
-        public bool Destacado { get; set; }
-        public int Orden { get; set; }
-        public required string Ubicaciones { get; set; }
-        public string? Dispositivos { get; set; }
-        public DateTime FechaInicio { get; set; }
-        public DateTime FechaFin { get; set; }
+        public string? TextoBoton { get; set; }
+        // Imagen
+        public string Imagen { get; set; } = string.Empty; // ruta o URL
+
+        // Control
+        public bool EsActivo { get; set; } = true;
+        public bool Rebajas { get; set; } = false;
+
+        // Ubicaciones (separadas por coma: "home,productos,categorias")
+        public Guid? CategoriaProductoId { get; set; }
     }
 }

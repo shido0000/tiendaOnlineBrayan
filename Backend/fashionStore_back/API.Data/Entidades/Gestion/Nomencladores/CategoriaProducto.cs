@@ -16,5 +16,6 @@ namespace API.Data.Entidades.Gestion.Nomencladores
         // 👇 Nueva propiedad para la foto
         public string? FotoUrl { get; set; }
         public ICollection<ProductoCategoria> ProductoCategorias { get; set; } = new List<ProductoCategoria>();
+        public ICollection<BannerPromocion> BannersPromociones { get; set; } = new List<BannerPromocion>();
     }
 }

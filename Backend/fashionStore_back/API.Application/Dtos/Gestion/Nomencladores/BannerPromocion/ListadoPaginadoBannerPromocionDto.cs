@@ -2,5 +2,7 @@
 {
     public class ListadoPaginadoBannerPromocionDto : DetallesBannerPromocionDto
     {
+        public string? CategoriaDescripcion { get; set; }
+
     }
 }

@@ -4,6 +4,7 @@ using API.Domain.Interfaces.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace API.Application.Controllers.Gestion.Nomencladores
@@ -25,13 +26,18 @@ namespace API.Application.Controllers.Gestion.Nomencladores
             List<Expression<Func<BannerPromocion, bool>>> filtros = new();
 
             if (!string.IsNullOrEmpty(inputDto.TextoBuscar))
-                filtros.Add(b => b.Nombre.Contains(inputDto.TextoBuscar));
+                filtros.Add(b => b.TextoTitulo.Contains(inputDto.TextoBuscar));
+
+            if (inputDto.Activo.HasValue && inputDto.Activo.Value)
+            {
+                filtros.Add(b => b.EsActivo);
+            }
 
             return _servicioBase.ObtenerListadoPaginado(
                 inputDto.CantidadIgnorar,
                 inputDto.CantidadMostrar,
                 inputDto.SecuenciaOrdenamiento,
-                null,
+                propiedadesIncluidas: query => query.Include(e => e.CategoriaProducto)!,
                 filtros.ToArray());
         }
 
@@ -42,20 +48,6 @@ namespace API.Application.Controllers.Gestion.Nomencladores
         public async Task<ActionResult<List<ListadoPaginadoBannerPromocionDto>>> ObtenerActivos()
         {
             var banners = await _bannerService.ObtenerActivos();
-            return Ok(_mapper.Map<List<ListadoPaginadoBannerPromocionDto>>(banners));
-        }
-
-        [HttpGet("ObtenerActivosPorUbicacion/{ubicacion}")]
-        public async Task<ActionResult<List<ListadoPaginadoBannerPromocionDto>>> ObtenerActivosPorUbicacion(string ubicacion)
-        {
-            var banners = await _bannerService.ObtenerActivosPorUbicacion(ubicacion);
-            return Ok(_mapper.Map<List<ListadoPaginadoBannerPromocionDto>>(banners));
-        }
-
-        [HttpGet("ObtenerDestacados")]
-        public async Task<ActionResult<List<ListadoPaginadoBannerPromocionDto>>> ObtenerDestacados()
-        {
-            var banners = await _bannerService.ObtenerDestacados();
             return Ok(_mapper.Map<List<ListadoPaginadoBannerPromocionDto>>(banners));
         }
     }

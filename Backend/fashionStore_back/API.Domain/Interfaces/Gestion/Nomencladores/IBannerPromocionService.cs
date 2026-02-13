@@ -6,7 +6,5 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
     public interface IBannerPromocionService : IBaseService<BannerPromocion, BannerPromocionValidator>
     {
         Task<List<BannerPromocion>> ObtenerActivos();
-        Task<List<BannerPromocion>> ObtenerActivosPorUbicacion(string ubicacion);
-        Task<List<BannerPromocion>> ObtenerDestacados();
     }
 }

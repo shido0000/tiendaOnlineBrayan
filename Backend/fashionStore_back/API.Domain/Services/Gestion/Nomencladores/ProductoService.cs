@@ -472,9 +472,9 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
             var hoy = DateTime.Today; // solo la fecha, sin hora
             var desde = hoy.AddDays(-10);
+            //var listaNovedades= lista.Where(e => e.FechaCreado.Date >= desde && e.FechaCreado.Date <= hoy).ToList();
 
-            lista = lista.Where(e => e.FechaCreado.Date >= desde && e.FechaCreado.Date <= hoy).ToList();
-
+            lista=lista.OrderByDescending(x => x.FechaCreado).ToList();
             return lista;
         }
 

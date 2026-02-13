@@ -11,7 +11,7 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
         //Task RechazarPedidoCompletoAsync(Guid pedidoId);
         Task<Guid> GenerarPedido(GenerarPedidoDto generarPedidoDto);
         Task<PedidoObtenidoDto?> ObtenerPedidoPorId(Guid id);
-        Task ActualizarPedidoConLineas(PedidoConfirmarDto dto);
+        Task<string> ActualizarPedidoConLineas(PedidoConfirmarDto dto);
         Task CancelarPedido(Guid id);
     }
 }

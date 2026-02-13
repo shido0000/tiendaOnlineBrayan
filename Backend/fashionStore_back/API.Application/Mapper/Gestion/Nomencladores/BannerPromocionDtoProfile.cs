@@ -8,6 +8,7 @@ namespace API.Application.Mapper.Gestion.Nomencladores
         public BannerPromocionProfile()
         {
             MapBannerPromocionDto();
+            MapBannerPromocionListadoDto();
         }
 
         public void MapBannerPromocionDto()
@@ -16,5 +17,15 @@ namespace API.Application.Mapper.Gestion.Nomencladores
             CreateMap<BannerPromocion, DetallesBannerPromocionDto>().ReverseMap();
             CreateMap<BannerPromocion, ListadoPaginadoBannerPromocionDto>().ReverseMap();
         }
+
+        public void MapBannerPromocionListadoDto()
+        {
+
+            CreateMap<BannerPromocion, ListadoPaginadoBannerPromocionDto>()
+                .ForMember(dest => dest.CategoriaDescripcion,
+                    opt => opt.MapFrom(src => src.CategoriaProducto != null ? src.CategoriaProducto.Descripcion : "-"));
+        }
+
+
     }
 }

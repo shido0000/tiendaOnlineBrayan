@@ -6,6 +6,7 @@ namespace API.Data.Dto.Pedido
     {
         public Guid Id { get; set; }
         public int Cantidad { get; set; }
+        public int QueHago { get; set; }
 
     }
 }

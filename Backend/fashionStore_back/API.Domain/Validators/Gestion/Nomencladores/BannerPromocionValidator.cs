@@ -14,9 +14,9 @@ namespace API.Domain.Validators.Gestion.Nomencladores
 
             _repositorios = repositorios;
 
-            RuleFor(x => x.Nombre)
+            RuleFor(x => x.TextoBoton)
                 .NotEmpty().WithMessage("El nombre es requerido")
-                .MaximumLength(200).WithMessage("El nombre no puede exceder 200 caracteres");
+                .MaximumLength(20).WithMessage("El nombre no puede exceder 20 caracteres");
 
             RuleFor(x => x.Imagen)
                 .NotEmpty().WithMessage("La imagen es requerida");
@@ -26,13 +26,6 @@ namespace API.Domain.Validators.Gestion.Nomencladores
 
             RuleFor(x => x.TextoSubtitulo)
                 .MaximumLength(500).WithMessage("El subtítulo no puede exceder 500 caracteres");
-
-            RuleFor(x => x.BotonTexto)
-                .MaximumLength(100).WithMessage("El texto del botón no puede exceder 100 caracteres");
-
-            RuleFor(x => x.BotonVinculo)
-                .MaximumLength(500).WithMessage("El vinculo no puede exceder 500 caracteres");
-           
         }
     }
 }

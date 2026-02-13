@@ -20,39 +20,10 @@ namespace API.Domain.Services.Gestion.Nomencladores
             var banners = await _repositorios.BannerPromociones
                                 .GetQuery()
                                 .AsNoTracking()
-                                .Where(e=>e.EsActivo && e.FechaInicio==null || e.FechaInicio<=hoy && e.FechaFin==null || e.FechaFin>=hoy)
+                                .Where(e=>e.EsActivo)
                                 .ToListAsync();
             
-            return banners.OrderByDescending(b => b.Destacado)
-                         .ThenBy(b => b.Orden)
-                         .ToList();
-        }
-
-        public async Task<List<BannerPromocion>> ObtenerActivosPorUbicacion(string ubicacion)
-        {
-            var hoy = DateTime.UtcNow.Date;
-            var banners = await _repositorios.BannerPromociones
-                               .GetQuery()
-                               .AsNoTracking()
-                               .Where(e => e.EsActivo && e.Ubicaciones.Contains(ubicacion) && e.FechaInicio == null || e.FechaInicio <= hoy && e.FechaFin == null || e.FechaFin >= hoy)
-                               .ToListAsync();
-           
-            return banners.OrderByDescending(b => b.Destacado)
-                         .ThenBy(b => b.Orden)
-                         .ToList();
-        }
-
-        public async Task<List<BannerPromocion>> ObtenerDestacados()
-        {
-            var hoy = DateTime.UtcNow.Date;
-
-            var banners = await _repositorios.BannerPromociones
-                              .GetQuery()
-                              .AsNoTracking()
-                              .Where(e => e.EsActivo && e.Destacado && e.FechaInicio == null || e.FechaInicio <= hoy && e.FechaFin == null || e.FechaFin >= hoy)
-                              .ToListAsync();
-
-            return banners.OrderBy(b => b.Orden).ToList();
+            return banners.ToList();
         }
     }
 }

@@ -90,8 +90,8 @@ namespace API.Application.Controllers.Gestion.Nomencladores
         [HttpPost("[action]")]
         public async Task<IActionResult> ActualizarPedidoConLineas([FromBody] PedidoConfirmarDto dto)
         {
-            await _PedidoService.ActualizarPedidoConLineas(dto);
-            return Ok();
+            var result = await _PedidoService.ActualizarPedidoConLineas(dto);
+            return Ok(result);
         }
         [HttpPost("[action]/{id}")]
         public async Task<IActionResult> CancelarPedido(Guid id)
