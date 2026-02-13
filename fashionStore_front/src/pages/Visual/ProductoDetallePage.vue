@@ -20,6 +20,7 @@
           navigation
           infinite
           height="520px"
+          control-color="blue"
         >
           <q-carousel-slide
             v-for="(foto, idx) in getFotosForCarousel()"
@@ -143,7 +144,7 @@
 
         <!-- Detalles con color visual -->
         <div class="q-mt-md row items-center q-gutter-sm">
-          <q-chip dense outline>Stock: {{ displayedStock() }}</q-chip>
+          <!--<q-chip dense outline>Stock: {{ displayedStock() }}</q-chip>-->
           <q-chip dense outline>Categoria: {{ producto.categoriasDescripcion || '-' }}</q-chip>
           <q-chip dense outline>Talla: {{ displayedTalla() }}</q-chip>
           <div class="row items-center q-gutter-xs">
@@ -154,13 +155,23 @@
       </div>
     </div>
 
-    <!-- Debug: resolved image URLs (temporary) -->
+    <!-- Debug: resolved image thumbnails (temporary) -->
     <div class="q-pa-sm">
-      <div class="text-caption text-grey-6">Debug: URLs resueltas para las fotos (haz click para abrir)</div>
-      <div class="q-mt-xs">
-        <div v-for="(u, i) in getResolvedImageUrls()" :key="i" class="q-mb-xs">
-          <a :href="u" target="_blank" rel="noreferrer">{{ u }}</a>
-        </div>
+      <div class="text-caption text-grey-6">Fotos disponibles (haz click para abrir en tamaño completo)</div>
+      <div class="q-mt-xs row q-gutter-sm">
+        <a
+          v-for="(u, i) in getResolvedImageUrls()"
+          :key="i"
+          :href="u"
+          target="_blank"
+          rel="noreferrer"
+          class="debug-img-thumbnail"
+        >
+          <q-img
+            :src="u"
+            style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;"
+          />
+        </a>
       </div>
     </div>
 

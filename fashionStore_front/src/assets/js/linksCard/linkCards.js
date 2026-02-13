@@ -37,11 +37,11 @@ export const cardsNomencladores = Object.freeze([
         icon: "people",
         link: "Usuario",
     },
-    {
-        title: "Gestores",
-        icon: "admin_panel_settings",
-        link: "Gestor",
-    },
+    /* {
+         title: "Gestores",
+         icon: "admin_panel_settings",
+         link: "Gestor",
+     },*/
     {
         title: "Mensajerías",
         icon: "local_shipping",
@@ -57,6 +57,12 @@ export const cardsNomencladores = Object.freeze([
         icon: "account_balance",
         link: "Contabilidad",
     },
+    {
+        title: "Banners",
+        icon: "account_balance",
+        link: "Banner",
+    },
+
 
 ]);
 

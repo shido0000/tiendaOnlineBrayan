@@ -463,3 +463,60 @@ export const dataColumnOtraVariante = Object.freeze([
     },
 ]);
 
+export const dataColumnBanner = Object.freeze([
+    {
+        name: 'textoTitulo',
+        align: 'center',
+        label: 'Título',
+        field: 'textoTitulo',
+        sortable: true
+    },
+    {
+        name: 'textoSubtitulo',
+        align: 'center',
+        label: 'Subtítulo',
+        field: 'textoSubtitulo',
+        sortable: true
+    }, {
+        name: 'textoBoton',
+        align: 'center',
+        label: 'Texto Botón',
+        field: 'textoBoton',
+        sortable: true
+    }, {
+        name: 'textoTitulo',
+        align: 'center',
+        label: 'Título',
+        field: 'textoTitulo',
+        sortable: true
+    },
+    {
+        name: 'imagen',
+        align: 'center',
+        label: 'Imagen',
+        field: 'imagen',
+        sortable: true
+    },
+    {
+        name: 'categoriaDescripcion',
+        align: 'center',
+        label: 'Categoría',
+        field: 'categoriaDescripcion',
+        sortable: true
+    },
+    {
+        name: 'esActivo',
+        align: 'center',
+        label: 'Activo',
+        field: 'esActivo',
+        sortable: true
+    },
+    {
+        name: "action",
+        align: "center",
+        label: "Acciones",
+        field: "action",
+        sortable: true,
+    },
+]);
+

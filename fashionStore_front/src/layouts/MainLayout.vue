@@ -16,7 +16,7 @@
             }}</q-tooltip></q-btn
           >
           <q-toolbar-title class="text-subtitle6 text-white">
-            FASHION STORE</q-toolbar-title
+            Bryma</q-toolbar-title
           >
         </div>
         <q-space />

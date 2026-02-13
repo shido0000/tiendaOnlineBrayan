@@ -30,7 +30,7 @@
 
           <div class="q-mb-md">
             <q-checkbox v-model="filters.novedades" label="Novedades" dense />
-            <q-checkbox class="q-ml-sm" v-model="filters.rebajas" label="Rebajas" dense />
+            <q-checkbox class="q-ml-sm" v-model="filters.rebajas" label="Ofertas" dense />
           </div>
 
           <div class="row justify-end q-mt-md">

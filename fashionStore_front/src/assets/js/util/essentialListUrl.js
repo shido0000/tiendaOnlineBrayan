@@ -80,6 +80,7 @@ export const routePermissions = {
     'AsientosContables': ['Administrador'],
     'ReporteContable': ['Administrador'],
     'Contabilidad': ['Administrador'],
+    'Banner': ['Administrador'],
     'CrearInformacion': ['Administrador'],
     'DiagnosticoNotificaciones': ['Administrador'],
     'NomenclatorsCard': ['Administrador']

@@ -166,6 +166,13 @@ const publicRoutes = [
                 meta: { requiresAuth: true }
             },
             {
+                path: 'Banner',
+                name: 'Banner',
+                component: () => import('src/pages/Nomenclators/Banner.vue'),
+                meta: { requiresAuth: true }
+            },
+
+            {
                 path: 'CrearInformacion',
                 name: 'CrearInformacion',
                 component: () => import('src/pages/extra/CrearInformacionPage.vue'),

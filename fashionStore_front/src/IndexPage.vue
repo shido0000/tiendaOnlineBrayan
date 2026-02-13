@@ -4,7 +4,7 @@
   <!-- centralized TopBar component -->
   <TopBar :categories="objeto.categoriasProductos" v-model:leftDrawer="leftDrawer" @update:searchCategory="selectedCategory = $event" />
     <!-- Banners de Promoción: full-viewport carousel -->
-    <q-carousel
+    <q-carousel v-if="bannersCargados.length>0"
       v-model="bannerSlide"
       animated
       navigation
@@ -103,11 +103,11 @@
 
   <q-separator style="height: 3px;"/>
 <!-- Rebajas (Amazon-like deals) -->
-<section class="q-px-lg q-py-md amazon-section responsive-section ">
+<section v-if="rebajasSlides.length > 0" class="q-px-lg q-py-md amazon-section responsive-section ">
 <div class="row items-center q-mb-md  " >
   <div class="col">
     <div class="text-h6 text-weight-bold ">
-      Rebajas
+      Ofertas
     </div>
   </div>
 
@@ -248,8 +248,19 @@ const infoInicial = {
 }
 const info = reactive({ ...infoInicial })
 
+const objetoBanner=ref({
+image:'',
+title:'',
+subtitle:'',
+ctaText:'',
+ctaLink:'',
+
+})
+
+const bannersCargados=ref([])
 // Amazon-like banner slides (image + headline + subtitle + CTA)
-const bannerSlides = [
+const bannerSlides = ref([])
+/*const bannerSlides = [
   {
     image: '/img/sunrise-in-summer-beach-background-free-vector.jpg',
     title: 'Productos',
@@ -271,7 +282,7 @@ const bannerSlides = [
     ctaText: 'Aprovechar',
     ctaLink: '/productos?rebajas=1'
   }
-]
+]*/
 const dialogLoad = ref(false)
 const leftDrawer = ref(false)
 const debugImg = true // set to true temporarily to print image debug info
@@ -499,6 +510,20 @@ onMounted(async () => {
   dialogLoad.value = true
 
    let elementosInicio = await loadGetDatosInicio('ObtenerDatosInicio')
+   bannersCargados.value = await loadGet('BannerPromocion/ObtenerListadoPaginado?activo=true')??[]
+
+  bannersCargados.value.forEach(element => {
+  const banner = {
+    image: element.imagen,
+    title: element.textoTitulo,
+    subtitle: element.textoSubtitulo,
+    ctaText: element.textoBoton,
+    ctaLink: element.rebajas ? '/productos?rebajas=1':`categorias/${element.categoriaProductoId}`
+  }
+  bannerSlides.value.push(banner)
+})
+
+
   // diagnostic dump to understand backend payload shape
 
   if (!elementosInicio) {
@@ -740,7 +765,7 @@ const abrirEnlace = (url, red) => {
 
 <style lang="scss" scoped>
 .banner-slide { padding: 0 !important; }
-.banner-bg {
+/*.banner-bg {
   min-height: 50vh;
   width: 100%;
   background-size: cover;
@@ -749,7 +774,30 @@ const abrirEnlace = (url, red) => {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+}*/
+.banner-bg {
+  min-height: 50vh;
+  width: 100%;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }
+
+/*.banner-bg {
+  width: 100%;
+  height: 66vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}*/
+
 .banner-overlay {
   position: absolute;
   inset: 0;

@@ -160,7 +160,7 @@
           </q-btn-dropdown>
 
           <q-btn   flat style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" label="Novedades" class="nav-btn " @click="() => router.push({ name: 'Productos', query: { novedades: 1 } })" />
-          <q-btn   flat style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" label="Rebajas" class="nav-btn" @click="() => router.push({ name: 'Productos', query: { rebajas: 1 } })" />
+          <q-btn   flat style="border: 1px solid #C7B5FF; border-radius: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.45);" label="Ofertas" class="nav-btn" @click="() => router.push({ name: 'Productos', query: { rebajas: 1 } })" />
         </div>
       </div>
     </div>

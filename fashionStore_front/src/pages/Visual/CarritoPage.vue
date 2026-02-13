@@ -144,6 +144,8 @@
   </div>
 
   <ConfirmarPedido ref="confirmarPedido" :desdeElCarrito="true" :productoItem="null" :cantidad="0"/>
+
+    <BarcodeScanner />
 </template>
 
 <script setup>
@@ -154,6 +156,7 @@ import { apiFotosBaseUrl } from 'src/boot/axios'
 import ConfirmarPedido from './components/ConfirmarPedido.vue'
 import { ref } from 'vue'
 import { getFotoFromVarianteWithFallback } from 'src/assets/js/util/funciones'
+import BarcodeScanner from './components/BarcodeScanner.vue'
 
 const cart = useCart()
 const items = ref(cart.items)

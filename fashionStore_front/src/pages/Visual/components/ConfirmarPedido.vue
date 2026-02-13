@@ -156,7 +156,7 @@
             <q-input v-model="form.email" label="Email" type="email" dense outlined class="q-mb-md" />
 
             <div class="text-subtitle1 text-weight-bold q-mt-lg q-mb-sm">Detalles Adicionales</div>
-            <q-select
+           <!-- <q-select
               class="q-mb-md"
               v-model="form.gestorId"
               outlined
@@ -176,6 +176,7 @@
             </q-select>
 
             <q-input :disable="form.gestorId===null||form.gestorId===''" v-model="form.impuestos" type="number" :min="0" label="Impuestos" dense outlined class="q-mb-md" />
+        -->
             <q-input v-model="form.direccion"
               label="Dirección (Calle Principal, número de vivienda, entre calles, municipio, reparto)"
               type="textarea" dense outlined class="q-mb-md" />

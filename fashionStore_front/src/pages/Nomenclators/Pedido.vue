@@ -385,6 +385,19 @@
           />
 
           <DialogLoad :dialogLoad="dialogLoad" />
+
+          <q-dialog v-model="dialogComprobante">
+  <q-card style="width: 400px; max-width: 90vw;">
+    <q-card-section>
+      <pre>{{ comprobanteTexto }}</pre>
+    </q-card-section>
+    <q-card-actions align="right">
+      <q-btn flat label="Imprimir" color="primary" @click="printComprobante" />
+      <q-btn flat label="Cerrar" color="primary" v-close-popup />
+    </q-card-actions>
+  </q-card>
+</q-dialog>
+
 </template>
 
 <script setup>
@@ -402,6 +415,9 @@ const isDialogoEliminarAbierto = ref(false)
 const dialogEditarPedido = ref(false)
 const pedidoConfirmado = ref(false)
 const rol = ref('')
+
+const dialogComprobante = ref(false)
+const comprobanteTexto = ref('')
 
 // Paginación
 const pagination = ref({
@@ -655,6 +671,10 @@ const confirmarPedido = async () => {
       pedidoConfirmado.value = true
       Success('Pedido confirmado exitosamente')
 
+      // Aquí recibes el comprobante como string
+      const comprobante = response.data // Mostrarlo en un diálogo o imprimir directamente
+      mostrarComprobante(comprobante)
+
       // Disparar evento para actualizar en tiempo real en todas las ventanas
       const event = new CustomEvent('nuevoPedidoConfirmado', {
         detail: {
@@ -848,6 +868,26 @@ const onRequest = async (props) => {
   pagination.value = props.pagination
   await load()
 }
+
+
+
+function mostrarComprobante(texto) {
+  comprobanteTexto.value = texto
+  dialogComprobante.value = true
+}
+
+// Función para imprimir
+function printComprobante() {
+  // Abrir ventana temporal con el comprobante y disparar impresión
+  const printWindow = window.open('', '', 'width=600,height=400')
+  printWindow.document.write('<pre>' + comprobanteTexto.value + '</pre>')
+  printWindow.document.close()
+  printWindow.focus()
+  printWindow.print()
+  printWindow.close()
+}
+
+
 </script>
 
 <style scoped lang="scss">
