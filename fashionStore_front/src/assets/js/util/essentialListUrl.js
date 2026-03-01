@@ -25,6 +25,10 @@ const allMenuItems = [
         title: 'CREAR INFORMACIÓN',
         link: 'CrearInformacion'
     },
+    {
+        title: 'VER CARRITO DE CLIENTES',
+        link: 'RealActiveCartsMonitor'
+    },
 ];
 
 /**
@@ -83,7 +87,9 @@ export const routePermissions = {
     'Banner': ['Administrador'],
     'CrearInformacion': ['Administrador'],
     'DiagnosticoNotificaciones': ['Administrador'],
-    'NomenclatorsCard': ['Administrador']
+    'NomenclatorsCard': ['Administrador'],
+    'TestActiveCartsMonitor': ['Administrador', 'Vendedor'],
+    'RealActiveCartsMonitor': ['Administrador', 'Vendedor']
 };
 
 /**

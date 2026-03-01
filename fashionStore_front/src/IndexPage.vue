@@ -59,7 +59,7 @@
             </template>
           </q-img>
           <q-card-section>
-            <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
+            <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.codigo || p.nombre || 'Sin título' }}</div>
             <div class="text-subtitle1 text-weight-bold">$ {{ p.precioVenta != null ? Number(p.precioVenta).toLocaleString('es-ES', { minimumFractionDigits:2 }) : '0.00' }}</div>
           </q-card-section>
           <q-card-actions align="right">
@@ -131,7 +131,7 @@
             </template>
           </q-img>
           <q-card-section>
-            <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.descripcion || p.nombre || 'Sin título' }}</div>
+            <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">{{ p.codigo || p.nombre || 'Sin título' }}</div>
             <div v-if="p.tieneDescuento" class="row items-center">
               <!-- Precio original tachado -->
               <div class="text-subtitle1 text-grey-6 q-mr-sm">

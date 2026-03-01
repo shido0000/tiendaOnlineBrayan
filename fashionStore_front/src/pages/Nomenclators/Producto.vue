@@ -91,7 +91,9 @@
                         : true) || 'Ya existe un codigo con ese valor',
                   ]"
       />
-       <q-input v-model="producto.sku" label="SKU *"  dense class="col-xs-12 col-md-4 q-py-md q-px-sm" />
+       <q-input v-model="producto.sku" label="SKU *"  dense class="col-xs-12 col-md-4 q-py-md q-px-sm" lazy-rules
+                  :rules="[(val) =>
+                      (val && val.length > 0) || 'Debe insertar un SKU']" />
       <q-select
                         class="col-xs-12 col-sm-12 col-md-4  "
                         v-model="producto.categoriasIds"
@@ -120,7 +122,7 @@
                         lazy-rules
                         :rules="[
                             (val) =>
-                                (val !== null && val !== '') ||
+                                (val !== null && val !== '' && val.length > 0) ||
                                 'Debe seleccionar un elemento',
                         ]"
                     >
@@ -160,7 +162,7 @@
                         v-model="producto.monedaCostoId"
                               outlined
             dense
-                        label="Moneda Costo*"
+                        label="Moneda Costo *"
                         emit-value
                         map-options
                         :use-input="
@@ -202,7 +204,7 @@
      <q-select
                     class="col-xs-12 col-md-3 q-py-md q-px-sm"
                         v-model="producto.monedaVentaId"
-                        label="Moneda Venta*"
+                        label="Moneda Venta *"
                         emit-value
                               outlined
             dense
@@ -276,9 +278,12 @@
       <div v-for="(variant, index) in producto.variants" :key="index" class="col-xs-12 q-pa-sm q-mb-md bordered">
         <div class="row col-xs-12 col-sm-12 col-md-12">
 
+       <q-input v-model="variant.skuVariante" label="SKU Variante *"  dense class="col-xs-12 col-md-3  q-px-sm" lazy-rules outlined
+                  :rules="[(val) =>
+                      (val && val.length > 0) || 'Debe insertar un SKU']" />
 
              <q-select
-           class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
+           class="col-xs-12 col-sm-12 col-md-2 q-px-sm"
                         v-model="variant.talla"
                               outlined
             dense
@@ -319,7 +324,7 @@
                         </template>
                     </q-select>
           <q-field
-class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
+class="col-xs-12 col-sm-12 col-md-2 q-px-sm"
   label="Color"
   stack-label
   outlined dense
@@ -394,7 +399,7 @@ class="col-xs-12 col-sm-12 col-md-3 q-px-sm"
                             </q-item>
                         </template>
                     </q-select>
-          <q-input v-model.number="variant.stock" label="Stock" type="number" outlined dense    class="col-xs-12 col-sm-12 col-md-3 q-px-sm" :min="1"/>
+          <q-input v-model.number="variant.stock" label="Stock" type="number" outlined dense    class="col-xs-12 col-sm-12 col-md-2 q-px-sm" :min="1"/>
 
           <!--<q-input v-model="variant.color" label="Color" outlined dense class="col-6" />-->
 
@@ -782,6 +787,7 @@ const obtenerElementoPorId = async (id) => {
     variants: (objeto.productoVariantes || []).map(v => ({
       id: v.id,
       productoId: v.productoId,
+      skuVariante: v.skuVariante,
       talla: v.talla,
       color: v.color,
       stock: v.stock,
@@ -995,6 +1001,7 @@ const producto = ref({
 function agregarVariante() {
   producto.value.variants.push({
     talla: '',
+    skuVariante: '',
     color: null,
     principal: true,
     stock: 1,
@@ -1089,6 +1096,13 @@ async function guardarProducto() {
 async function guardarProducto() {
   dialogLoad.value = true
   try {
+
+    if(producto.value?.variants.length===0){
+      Error("Debe agregar al menos una variante al producto")
+      dialogLoad.value = false
+      return
+    }
+    else{
     const url = producto.value?.id ? 'Producto/ActualizarConFotos' : 'Producto/CrearConFotos'
 
     const formData = new FormData()
@@ -1115,6 +1129,7 @@ async function guardarProducto() {
     if (Array.isArray(producto.value?.variants)) {
       producto.value.variants.forEach((variant, index) => {
         formData.append(`ProductoVariantes[${index}].ProductoId`, variant.id || '')
+        formData.append(`ProductoVariantes[${index}].SkuVariante`, variant.skuVariante || '')
         formData.append(`ProductoVariantes[${index}].Talla`, variant.talla || '')
         formData.append(`ProductoVariantes[${index}].Color`, variant.color || '')
         formData.append(`ProductoVariantes[${index}].Stock`, variant.stock || 0)
@@ -1127,9 +1142,11 @@ async function guardarProducto() {
         }
 
         // Fotos: separar existentes y nuevas
+        let tieneFotos = false
         if (Array.isArray(variant.fotos)) {
           variant.fotos.forEach(f => {
             if (f instanceof File) {
+              tieneFotos = true
               // Foto nueva
           if (!producto.value.id) {
         // CREAR → usa Fotos
@@ -1139,10 +1156,16 @@ async function guardarProducto() {
         formData.append(`ProductoVariantes[${index}].FotosNuevas`, f)
       }
             } else if (f.id) {
+              tieneFotos = true
               // Foto existente que se mantiene
               formData.append(`ProductoVariantes[${index}].FotosExistentesIds`, f.id)
             }
           })
+        }
+
+        // Si la variante no tiene fotos, agregar imagen por defecto
+        if (!tieneFotos) {
+          formData.append(`ProductoVariantes[${index}].FotoDefault`, '/img/sin-foto.jpg')
         }
       })
     }
@@ -1161,7 +1184,7 @@ async function guardarProducto() {
 
     await load()
     await close()
-  } catch (error) {
+  }} catch (error) {
     const mensajeError = error?.response?.data?.errorMessage || error?.message || 'Error al guardar'
     console.error('Error:', error?.response?.data)
     alert('Error: ' + mensajeError)
@@ -1169,6 +1192,7 @@ async function guardarProducto() {
     dialogLoad.value = false
   }
 }
+
 
 
 function cancelar() {

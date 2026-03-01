@@ -184,6 +184,18 @@ const publicRoutes = [
                 component: () => import('src/pages/Test/DiagnosticoNotificaciones.vue'),
                 meta: { requiresAuth: true }
             },
+            {
+                path: 'TestActiveCartsMonitor',
+                name: 'TestActiveCartsMonitor',
+                component: () => import('src/pages/Test/TestActiveCartsMonitor.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: 'RealActiveCartsMonitor',
+                name: 'RealActiveCartsMonitor',
+                component: () => import('src/pages/Test/RealActiveCartsMonitor.vue'),
+                meta: { requiresAuth: true }
+            },
         ]
     },
 

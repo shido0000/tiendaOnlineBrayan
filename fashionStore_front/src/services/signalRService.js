@@ -68,6 +68,12 @@ class SignalRService {
                 this.handlePedidoCancelado(data)
             })
 
+            // Evento de carrito actualizado
+            this.connection.on('CarritoActualizado', (data) => {
+                //console.log('🛒 Carrito actualizado:', data)
+                this.handleCarritoActualizado(data)
+            })
+
             // Eventos de conexión
             this.connection.onreconnected(() => {
                 // console.log('✅ Reconectado a SignalR')
@@ -265,11 +271,31 @@ class SignalRService {
         })
     }
 
+    handleCarritoActualizado(data) {
+        // Disparar evento personalizado para que componentes escuchen
+        const event = new CustomEvent('carrito-actualizado', {
+            detail: {
+                ...data,
+                timestamp: new Date().toISOString()
+            }
+        })
+        window.dispatchEvent(event)
+
+        // Ejecutar listeners personalizados
+        this.listeners.forEach(callback => {
+            try {
+                callback(data)
+            } catch (error) {
+                console.error('Error en listener de carrito:', error)
+            }
+        })
+    }
+
     async disconnect() {
         if (this.connection) {
             try {
                 await this.connection.stop()
-           //     console.log('🔌 Desconectado manualmente de SignalR')
+                //     console.log('🔌 Desconectado manualmente de SignalR')
             } catch (error) {
                 console.error('Error desconectando:', error)
             }
@@ -291,18 +317,18 @@ class SignalRService {
         // Cuando se confirma un pedido, simplemente dejar que el servidor notifique
         window.addEventListener('nuevoPedidoConfirmado', (event) => {
             //console.log('📢 Evento de nuevo pedido confirmado:', event.detail)
-          //  console.log('⏳ Esperando que el servidor emita PedidoActualizado a todos...')
+            //  console.log('⏳ Esperando que el servidor emita PedidoActualizado a todos...')
         })
 
         window.addEventListener('PedidoGenerado', (event) => {
-         //   console.log('📢 Evento de nuevo pedido confirmado:', event.detail)
-          //  console.log('⏳ Esperando que el servidor emita PedidoGenerado a vendedores y admin...')
+            //   console.log('📢 Evento de nuevo pedido confirmado:', event.detail)
+            //  console.log('⏳ Esperando que el servidor emita PedidoGenerado a vendedores y admin...')
         })
 
         // Cuando se cancela un pedido, simplemente dejar que el servidor notifique
         window.addEventListener('PedidoCancelado', (event) => {
-           // console.log('🗑️ Evento de pedido eliminado:', event.detail)
-           // console.log('⏳ Esperando que el servidor emita PedidoCancelado a todos...')
+            // console.log('🗑️ Evento de pedido eliminado:', event.detail)
+            // console.log('⏳ Esperando que el servidor emita PedidoCancelado a todos...')
         })
     }
 }

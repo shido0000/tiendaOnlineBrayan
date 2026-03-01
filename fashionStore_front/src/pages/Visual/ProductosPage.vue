@@ -74,7 +74,7 @@
               </q-img>
              <q-card-section>
   <div class="text-subtitle2 text-weight-medium q-mb-xs ellipsis">
-    {{ p.descripcion || p.nombre || 'Sin título' }}
+    {{ p.codigo || p.nombre || 'Sin título' }}
   </div>
 
   <!-- Mostrar precio normal o con descuento -->

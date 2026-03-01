@@ -9,7 +9,6 @@
         type="textarea"
         label="Sobre Nosotros"
         autogrow
-        maxlength="300"
         counter
         outlined
         class="q-mb-md"
@@ -22,7 +21,6 @@
         label="Política de Privacidad"
         autogrow
         outlined
-        maxlength="300"
         counter
         class="q-mb-md"
       />
@@ -34,7 +32,6 @@
         label="Términos y Condiciones"
         autogrow
         outlined
-        maxlength="300"
         counter
         class="q-mb-md"
       />
@@ -46,7 +43,6 @@
         label="Política de Devoluciones y Cambios"
         autogrow
         outlined
-        maxlength="300"
         counter
         class="q-mb-md"
       />
@@ -58,7 +54,6 @@
         label="Colabora con Nosotros"
         autogrow
         outlined
-        maxlength="300"
         counter
         class="q-mb-md"
       />
@@ -70,7 +65,6 @@
         label="Dirección de la tienda"
         autogrow
         outlined
-        maxlength="300"
         counter
         class="q-mb-md"
       />
@@ -82,7 +76,6 @@
         label="Horario de la tienda"
         autogrow
         outlined
-        maxlength="300"
         counter
         class="q-mb-md"
       />

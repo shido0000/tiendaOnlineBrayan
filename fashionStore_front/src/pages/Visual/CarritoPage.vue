@@ -164,6 +164,83 @@ const totalPrice = ref(cart.totalPrice)
 const confirmarPedido = ref(null)
 
 function obtenerFotoDelItem(item) {
+  console.log("item: ", item)
+
+  // Prioridad 1: foto directo del item (guardada desde cartStore)
+  if (item.foto) {
+    return getFotoUrl(item.foto)
+  }
+
+  // 🎯 NORMALIZAR: Obtener el producto real (maneja item.raw.raw del scanner)
+  const producto = item.raw?.raw || item.raw
+  if (!producto) return '/img/sin-foto.jpg'
+
+  // Prioridad 2: primer foto del producto normalizado
+  // Si tiene fotos como array de objetos
+  if (Array.isArray(producto.fotos) && producto.fotos.length > 0) {
+    console.log("producto.fotos: ", producto.fotos)
+    const foto = producto.fotos[0]
+    if (typeof foto === 'object') {
+      return getFotoUrl(foto.url || foto.imagen || foto.path)
+    } else {
+      return getFotoUrl(foto)
+    }
+  }
+
+  // Si tiene fotoUrl directo
+  if (producto.fotoUrl) {
+    return getFotoUrl(producto.fotoUrl)
+  }
+
+  // Si tiene variants (estructura alternativa)
+  if (Array.isArray(producto.variants) && producto.variants.length > 0) {
+    const variant = producto.variants[0]
+    if (Array.isArray(variant.fotos) && variant.fotos.length > 0) {
+      const foto = variant.fotos[0]
+      if (typeof foto === 'object') {
+        return getFotoUrl(foto.url || foto.imagen || foto.path)
+      } else {
+        return getFotoUrl(foto)
+      }
+    }
+    const fotoHeredada = getFotoFromVarianteWithFallback(variant, producto)
+    if (fotoHeredada) {
+      const heredada = typeof fotoHeredada === 'object'
+        ? (fotoHeredada.url || fotoHeredada.imagen || fotoHeredada.path)
+        : fotoHeredada
+      if (heredada) return getFotoUrl(heredada)
+    }
+  }
+
+  // Si tiene productoVariantes (estructura del API)
+  if (Array.isArray(producto.productoVariantes) && producto.productoVariantes.length > 0) {
+    const variant = producto.productoVariantes[0]
+    if (Array.isArray(variant.fotos) && variant.fotos.length > 0) {
+      const foto = variant.fotos[0]
+      if (typeof foto === 'object') {
+        return getFotoUrl(foto.url || foto.imagen || foto.path)
+      } else {
+        return getFotoUrl(foto)
+      }
+    }
+    // Si la variante no tiene foto, buscar en otras variantes del mismo producto
+    const fotoHeredada = getFotoFromVarianteWithFallback(variant, producto)
+    if (fotoHeredada) {
+      const heredada = typeof fotoHeredada === 'object'
+        ? (fotoHeredada.url || fotoHeredada.imagen || fotoHeredada.path)
+        : fotoHeredada
+      if (heredada) return getFotoUrl(heredada)
+    }
+  }
+
+  // Default
+  return '/img/sin-foto.jpg'
+}
+
+/*
+function obtenerFotoDelItem(item) {
+        console.log("item: ",item)
+
   // Prioridad 1: foto directo del item (guardada desde cartStore)
   if (item.foto) {
     return getFotoUrl(item.foto)
@@ -173,6 +250,9 @@ function obtenerFotoDelItem(item) {
   if (item.raw) {
     // Si tiene fotos como array de objetos (estructura ProductoDetallePage)
     if (Array.isArray(item.raw.fotos) && item.raw.fotos.length > 0) {
+        console.log("item.raw.fotos: ",item.raw.fotos)
+        console.log("item.raw.fotos[0]: ",item.raw.fotos[0])
+
       const foto = item.raw.fotos[0]
       if (typeof foto === 'object') {
         return getFotoUrl(foto.url || foto.imagen || foto.path)
@@ -228,7 +308,7 @@ function obtenerFotoDelItem(item) {
   // Default
   return '/img/sin-foto.jpg'
 }
-
+*/
 function getFotoUrl(foto) {
   if (!foto) return '/img/sin-foto.jpg'
   let candidate = foto
@@ -247,6 +327,28 @@ function clearAll() {
 }
 
 function getMaxStock(item) {
+  // 🎯 NORMALIZAR: Obtener el producto real
+  const producto = item.raw?.raw || item.raw
+
+  if (producto) {
+    let stock = producto.stock || producto.cantidadDisponible || producto.stockTotal
+    if (stock) return stock
+
+    if (Array.isArray(producto.productoVariantes) && producto.productoVariantes.length > 0) {
+      stock = producto.productoVariantes[0].stock
+      if (stock) return stock
+    }
+    if (Array.isArray(producto.variants) && producto.variants.length > 0) {
+      stock = producto.variants[0].stock
+      if (stock) return stock
+    }
+  }
+
+  // Fallback a valores directos del item
+  return item.stock || item.cantidadDisponible || item.stockTotal || 1
+}
+/*
+function getMaxStock(item) {
   // Intentar obtener stock desde el producto raw
   if (item.raw) {
     let stock = item.raw.stock || item.raw.cantidadDisponible || item.raw.stockTotal
@@ -263,7 +365,7 @@ function getMaxStock(item) {
   }
   // Fallback a valores directos del item
   return item.stock || item.cantidadDisponible || item.stockTotal || 1
-}
+}*/
 
 function remove(id) { cart.removeItem(id) }
 function onQtyChange(item) {

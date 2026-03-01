@@ -15,7 +15,7 @@ import {
     getTokenExpirationTime,
     getFullUserData,
     clearToken
-} from '@/assets/js/util/authHelper';
+} from 'src/assets/js/util/authHelper';
 
 export function useAuth() {
     // Estado reactivo del usuario

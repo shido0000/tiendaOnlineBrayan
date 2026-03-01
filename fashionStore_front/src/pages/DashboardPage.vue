@@ -132,6 +132,11 @@
       </q-card-section>
     </q-card>
 
+    <!-- Monitor de Carritos Activos - Solo para Admin y Vendedores -->
+    <div v-if="checkAnyRole(['admin', 'administrador', 'vendedor'])" class="q-mt-lg">
+      <ActiveCartsMonitor />
+    </div>
+
     <DialogLoad :dialogLoad="dialogLoad" />
   </div>
 </template>
@@ -143,10 +148,13 @@ import { reactive, onMounted, ref, computed } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { api } from 'src/boot/axios'
 import DialogLoad from 'src/components/DialogBoxes/DialogLoad.vue'
+import ActiveCartsMonitor from 'src/components/ActiveCartsMonitor.vue'
 import TestSignalR from './Test/TestSignalR.vue'
 import DiagnosticoSignalR from './Test/DiagnosticoSignalR.vue'
+import { useAuth } from 'src/assets/js/composables/useAuth'
 
 const dialogLoad = ref(false)
+const { checkAnyRole } = useAuth()
 Chart.register(...registerables)
 
 const stats = reactive({

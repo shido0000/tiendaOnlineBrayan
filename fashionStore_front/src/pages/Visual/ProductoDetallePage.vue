@@ -48,8 +48,8 @@
       <div class="col-12 col-md-6 q-mt-md ">
         <div class="product-header row items-center q-gutter-sm">
           <div class="col">
-            <div class="text-h5 text-weight-bold">{{ producto.nombre || producto.descripcion || 'Sin título' }}</div>
-            <div class="text-caption text-grey-7">Código: {{ displayedCodigo() }}</div>
+            <div class="text-h5 text-weight-bold">{{ displayedCodigo()  }}</div>
+            <div class="text-caption text-grey-7">Descripción: {{ producto.nombre || producto.descripcion || 'Sin título'() }}</div>
             <div class="text-caption text-grey-7">SKU: {{ displayedSKU() }}</div>
           </div>
           <div class="col-auto">
@@ -377,6 +377,7 @@ async function cargarProducto(id) {
     variants: (objeto?.productoVariantes || []).map(v => ({
       id: v.id,
       productoId: v.productoId,
+      sku: v.skuVariante,
       talla: v.talla,
       color: v.color,
       stock: v.stock,
@@ -553,6 +554,11 @@ function displayedCodigo() {
     return v?.codigo ?? producto.value?.codigo ?? '-'
   } catch (e) { return '-' }
 }
+
+/**
+ * Obtiene el SKU de la variante seleccionada o del producto
+ * Mapea desde skuVariante del backend
+ */
 function displayedSKU() {
   try {
     const sel = (selectedVariantIndex.value != null) ? selectedVariantIndex.value : null
