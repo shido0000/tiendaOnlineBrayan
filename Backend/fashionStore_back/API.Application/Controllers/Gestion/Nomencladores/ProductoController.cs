@@ -98,5 +98,12 @@ namespace API.Application.Controllers.Gestion.Nomencladores
             var result = await _ProductoService.ObtenerProductosPorCategoria(categoriaId);
             return Ok(result);
         }
+
+        [HttpGet("[action]/{sku}")]
+        public async Task<IActionResult> ObtenerPorSku(string sku)
+        {
+            var result = await _ProductoService.ObtenerPorSku(sku);
+            return Ok(result);
+        }
     }
 }

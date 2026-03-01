@@ -13,5 +13,6 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
         Task<List<Producto>> ObtenerProductosNovedades();
         Task<List<Producto>> ObtenerProductosRelacionados(List<Guid> categoriasIds, Guid productoActualId);
         Task<List<Producto>> ObtenerProductosPorCategoria(Guid categoriaId);
+        Task<ProductoEspecificoDto> ObtenerPorSku(string sku);
     }
 }

@@ -53,6 +53,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     Id = Guid.NewGuid(),
                     ProductoId = nuevoProducto.Id,
                     Talla = variante.Talla,
+                    SKUVariante = nuevoProducto.SKU + variante.SKUVariante,
                     Color = variante.Color,
                     Stock = variante.Stock,
                     Principal = variante.Principal,
@@ -171,6 +172,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 {
                     // Actualizar existente
                     varianteExistente.Talla = varianteDto.Talla;
+                    varianteExistente.SKUVariante = producto.SKU + varianteDto.SKUVariante;
                     varianteExistente.Color = varianteDto.Color;
                     varianteExistente.Stock = varianteDto.Stock;
                     varianteExistente.Principal = varianteDto.Principal;
@@ -238,6 +240,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     var nuevaVariante = new ProductoVariante
                     {
                         ProductoId = productoExistente.Id,
+                        SKUVariante = productoExistente.SKU + varianteDto.SKUVariante,
                         Talla = varianteDto.Talla,
                         Color = varianteDto.Color,
                         Stock = varianteDto.Stock,
@@ -366,6 +369,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                 {
                     Id = variant.Id,
                     ProductoId = variant.ProductoId,
+                    SKUVariante = variant.SKUVariante,
                     Talla = variant.Talla,
                     Color = variant.Color,
                     Stock = variant.Stock,
@@ -441,6 +445,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                                     Id = x.Id,
                                     ProductoId = x.ProductoId,
                                     Stock = x.Stock,
+                                    SKUVariante = x.SKUVariante,
                                     Talla = x.Talla,
                                     Principal = x.Principal,
                                     Color = x.Color,
@@ -474,7 +479,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
             var desde = hoy.AddDays(-10);
             //var listaNovedades= lista.Where(e => e.FechaCreado.Date >= desde && e.FechaCreado.Date <= hoy).ToList();
 
-            lista=lista.OrderByDescending(x => x.FechaCreado).ToList();
+            lista = lista.OrderByDescending(x => x.FechaCreado).ToList();
             return lista;
         }
 
@@ -548,6 +553,7 @@ namespace API.Domain.Services.Gestion.Nomencladores
                         Id = x.Id,
                         ProductoId = x.ProductoId,
                         Stock = x.Stock,
+                        SKUVariante = x.SKUVariante,
                         Talla = x.Talla,
                         Principal = x.Principal,
                         Color = x.Color,
@@ -589,6 +595,98 @@ namespace API.Domain.Services.Gestion.Nomencladores
                     .ThenInclude(e => e.Categoria)
                 .Where(e => e.EsActivo && e.ProductoCategorias.Any(pc => pc.CategoriaId == categoriaId))
                 .ToListAsync();
+        } 
+
+        public async Task<ProductoEspecificoDto> ObtenerPorSku(string sku)
+        {
+            DateTime fechaHoy = DateTime.Now;
+
+            var producto = await _repositorios.Productos
+                            .GetQuery()
+                            .AsNoTracking()
+                            .Include(e => e.ProductosVariantes)
+                                .ThenInclude(e => e.Fotos)
+                            .Include(e => e.ProductoCategorias)
+                                .ThenInclude(e => e.Categoria)
+                            .Include(e => e.ProductosVariantes)
+                                .ThenInclude(e => e.OtraVarianteProductoVariantes)
+                            .Include(e => e.ProductosVariantes)
+                                .ThenInclude(e => e.OtraVarianteProductoVariantes)
+                                     .ThenInclude(e => e.OtraVariante)
+                            .Include(e => e.ProductoDescuentos)
+                                .ThenInclude(e => e.Descuento)
+                            .Where(e => e.ProductosVariantes.Any(v => v.SKUVariante == sku))
+                            .FirstOrDefaultAsync()
+                            ?? throw new CustomException() { Status = StatusCodes.Status404NotFound, Message = "Producto no encontrado." };
+
+            var descuentoActivo = producto.ProductoDescuentos.FirstOrDefault(pd => pd.Descuento.EsActivo && pd.Descuento.FechaInicio.Date <= fechaHoy.Date && pd.Descuento.FechaFin.Date >= fechaHoy.Date);
+            decimal precioVentaDescuento = producto.PrecioVenta;
+            if (descuentoActivo != null)
+            {
+                var d = descuentoActivo.Descuento;
+                if (d.MontoFijo.HasValue && d.MontoFijo.Value > 0)
+                {
+                    precioVentaDescuento -= d.MontoFijo.Value;
+                }
+                else if (d.Porcentaje.HasValue && d.Porcentaje.Value > 0)
+                {
+                    precioVentaDescuento -= (precioVentaDescuento * d.Porcentaje.Value / 100);
+                }
+                if (precioVentaDescuento < 0)
+                    precioVentaDescuento = 0;
+            }
+
+            var productoDevolver = new ProductoEspecificoDto()
+            {
+                Id = producto.Id,
+                Codigo = producto.Codigo,
+                Descripcion = producto.Descripcion,
+                EsActivo = producto.EsActivo,
+                SKU = producto.SKU,
+                PrecioCosto = producto.PrecioCosto,
+                PrecioVenta = producto.PrecioVenta,
+
+                MonedaCostoId = producto.MonedaCostoId,
+                MonedaVentaId = producto.MonedaVentaId,
+                StockTotal = producto.StockTotal,
+                CategoriasIds = producto.ProductoCategorias.Select(e => e.CategoriaId).ToList(),
+                ProductoVariantes = new(),
+                CategoriasDescripcion = string.Join(", ", producto.ProductoCategorias.Select(e => e.Categoria.Nombre)),
+                TieneDescuento = producto.ProductoDescuentos.Any(pd =>
+                            pd.Descuento.EsActivo &&
+                            pd.Descuento.FechaInicio.Date <= fechaHoy.Date &&
+                            pd.Descuento.FechaFin.Date >= fechaHoy.Date),
+
+                PrecioVentaDescuento = precioVentaDescuento
+            };
+
+            foreach (var variant in producto.ProductosVariantes)
+            {
+                productoDevolver.ProductoVariantes.Add(new ProductoEspecificoVarianteDto
+                {
+                    Id = variant.Id,
+                    ProductoId = variant.ProductoId,
+                    SKUVariante = variant.SKUVariante,
+                    Talla = variant.Talla,
+                    Color = variant.Color,
+                    Stock = variant.Stock,
+                    Principal = variant.Principal,
+                    OtrasVariantesIds = variant.OtraVarianteProductoVariantes.Select(e => e.OtraVarianteId.Value).ToList(),
+                    EsActivo = variant.EsActivo.HasValue ? variant.EsActivo.Value : false,
+                    Fotos = variant.Fotos.Select(f => new ProductoFotoDto
+                    {
+                        Id = f.Id,
+                        ProductVariantId = f.ProductoVarianteId,
+                        Url = f.Url,
+                        Descripcion = f.Descripcion,
+                        EsPrincipal = f.EsPrincipal,
+                        Orden = f.Orden,
+                    }).ToList()
+                });
+            }
+
+            return productoDevolver;
         }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using API.Application.Dtos.Gestion.Nomencladores.CarritoDetalle;
+using System.Text.Json.Serialization;
 
 namespace API.Application.Dtos.Gestion.Nomencladores.Carrito
 {
@@ -6,6 +7,7 @@ namespace API.Application.Dtos.Gestion.Nomencladores.Carrito
     {
         [JsonIgnore]
         public new Guid Id { get; set; }
-        
+        public ICollection<CrearCarritoDetalleInputDto> Detalles { get; set; } = new List<CrearCarritoDetalleInputDto>();
+
     }
 }

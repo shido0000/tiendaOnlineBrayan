@@ -2,6 +2,7 @@
 {
     public class ProductoVariante : EntidadBase
     {
+        public string? SKUVariante { get; set; }  
         public Guid? ProductoId { get; set; }  
         public Producto? Producto { get; set; }  
         public string? Talla { get; set; }

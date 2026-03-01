@@ -18,9 +18,15 @@ namespace API.Application.Controllers.Reservacion.Enum
                 new { Descripcion = Talla.M.ToString(), Id = (int)Talla.M },
                 new { Descripcion = Talla.L.ToString(), Id = (int)Talla.L },
                 new { Descripcion = Talla.XL.ToString(), Id = (int)Talla.XL },
+                new { Descripcion = SepararMayusculas(Talla.SinTalla.ToString()), Id = (int)Talla.SinTalla },
             };
 
             return Ok(tipos);
         }
+        private string SepararMayusculas(string texto)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(texto, "([a-z])([A-Z])", "$1 $2");
+        }
+
     }
 }

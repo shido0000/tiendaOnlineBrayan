@@ -5,6 +5,7 @@ namespace API.Data.Dto
 {
     public class ProductoVarianteACrear
     {
+        public string? SKUVariante { get; set; }
         public Guid? ProductoId { get; set; }
         public string? Talla { get; set; }
         public string? Color { get; set; }

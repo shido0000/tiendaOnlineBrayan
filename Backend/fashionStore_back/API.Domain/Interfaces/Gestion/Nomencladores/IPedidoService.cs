@@ -13,5 +13,6 @@ namespace API.Domain.Interfaces.Gestion.Nomencladores
         Task<PedidoObtenidoDto?> ObtenerPedidoPorId(Guid id);
         Task<string> ActualizarPedidoConLineas(PedidoConfirmarDto dto);
         Task CancelarPedido(Guid id);
+        Task<List<PedidosPendientesDto>> ObtenerPedidosPendientes();
     }
 }

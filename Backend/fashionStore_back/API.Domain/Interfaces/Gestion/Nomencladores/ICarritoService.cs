@@ -1,9 +1,13 @@
-﻿using API.Data.Entidades.Gestion.Nomencladores;
+﻿using API.Data.Dto.Carrito;
+using API.Data.Dto.Pedido;
+using API.Data.Entidades.Gestion.Nomencladores;
 using API.Domain.Validators.Gestion.Nomencladores;
 
 namespace API.Domain.Interfaces.Gestion.Nomencladores
 {
     public interface ICarritoService : IBaseService<Carrito, CarritoValidator>
     {
+        Task<Guid> EnviarDatosAlCarrito(DatosCarritoDto datosCarritoDto);
+        Task<List<DatosObtenerCarritoDto>> ObtenerDatosCarritoReal();
     }
 }

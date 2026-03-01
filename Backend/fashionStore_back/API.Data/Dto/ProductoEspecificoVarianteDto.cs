@@ -6,6 +6,7 @@ namespace API.Data.Dto
     {
         public Guid? Id { get; set; }
         public Guid? ProductoId { get; set; }
+        public string? SKUVariante { get; set; }
         public string? Talla { get; set; }
         public string? Color { get; set; }
         public List<Guid> OtrasVariantesIds { get; set; } = new();

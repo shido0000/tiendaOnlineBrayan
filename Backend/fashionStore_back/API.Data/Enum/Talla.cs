@@ -12,6 +12,7 @@ namespace API.Data.Enum
         S = 1,
         M = 2,
         L = 3,
-        XL = 4
+        XL = 4,
+        SinTalla = 5,
     }
 }

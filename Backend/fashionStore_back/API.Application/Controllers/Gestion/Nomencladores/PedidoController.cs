@@ -99,5 +99,12 @@ namespace API.Application.Controllers.Gestion.Nomencladores
             await _PedidoService.CancelarPedido(id);
             return Ok();
         }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> ObtenerPedidosPendientes()
+        {
+            var result = await _PedidoService.ObtenerPedidosPendientes();
+            return Ok(result);
+        }
     }
 }

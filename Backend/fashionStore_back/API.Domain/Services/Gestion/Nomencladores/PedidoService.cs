@@ -803,17 +803,17 @@ namespace API.Domain.Services.Gestion.Nomencladores
 
                 // Generar comprobante
                 var printer = new ComprobantePrinter();
-                var ventaImprimir= await _repositorios.Ventas
+                var ventaImprimir = await _repositorios.Ventas
                                             .GetQuery()
-                                            .Include(e=>e.Detalles)
-                                                .ThenInclude(e=>e.ProductoVariante)
-                                                    .ThenInclude(e=>e.Producto)
-                                            .Include(e=>e.UsuarioVendedor)
-                                            .Include(e=>e.Pedido)
-                                                .ThenInclude(e=>e.Usuario)
+                                            .Include(e => e.Detalles)
+                                                .ThenInclude(e => e.ProductoVariante)
+                                                    .ThenInclude(e => e.Producto)
+                                            .Include(e => e.UsuarioVendedor)
+                                            .Include(e => e.Pedido)
+                                                .ThenInclude(e => e.Usuario)
                                             .Include(e => e.Pedido)
                                                 .ThenInclude(e => e.Moneda)
-                                            .FirstOrDefaultAsync(e=>e.Id == venta.Id);
+                                            .FirstOrDefaultAsync(e => e.Id == venta.Id);
 
                 var comprobante = printer.GenerarComprobante(ventaImprimir);
                 return comprobante;
@@ -1572,5 +1572,22 @@ namespace API.Domain.Services.Gestion.Nomencladores
         //    await _hubContext.Clients.All.SendAsync("PedidoCancelado", datosNotificacion);
         //}
 
+        public async Task<List<PedidosPendientesDto>> ObtenerPedidosPendientes()
+        {
+            var pedidos = await _repositorios.Pedidos
+                                .GetQuery()
+                                .AsNoTracking()
+                                .Where(e => e.Estado == EstadoPedido.Pendiente)
+                                .Select(e => new PedidosPendientesDto
+                                {
+                                    Id = e.Id,
+                                    Codigo = e.Codigo,
+                                    Total = e.Total,
+                                    FechaCreado = e.FechaCreado,
+                                })
+                                .OrderBy(e=>e.FechaCreado)
+                                .ToListAsync();
+            return pedidos ?? new List<PedidosPendientesDto>();
+        }
     }
 }

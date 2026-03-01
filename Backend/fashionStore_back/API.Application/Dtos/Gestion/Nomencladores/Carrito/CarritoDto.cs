@@ -1,4 +1,5 @@
 ﻿using API.Application.Dtos.Comunes;
+using API.Application.Dtos.Gestion.Nomencladores.CarritoDetalle;
 using API.Data.Entidades.Seguridad;
 
 namespace API.Application.Dtos.Gestion.Nomencladores.Carrito

@@ -21,7 +21,11 @@ namespace API.Domain.Services.Contabilidad
 
         public async Task<byte[]> ExportarLibroContableAsync(DateTime? desde, DateTime? hasta)
         {
-            desde ??= DateTime.MinValue;
+            //desde ??= DateTime.MinValue;
+            desde ??= await _repositorios.MovimientosContables
+                            .GetQuery()
+                            .AsNoTracking()
+                            .MinAsync(e => e.FechaCreado);
             hasta ??= DateTime.UtcNow.Date;
 
             // Obtener cuentas con saldos (sumar movimientos)
